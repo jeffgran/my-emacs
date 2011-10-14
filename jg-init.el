@@ -12,6 +12,7 @@
   (add-path "my-emacs/rails-minor-mode")
   (add-path "my-emacs/php-mode")
   (add-path "my-emacs/rvm.el")
+  (add-path "my-emacs/coffee-mode")
   (add-path "my-emacs/rspec-mode")
   (add-path "my-emacs/shoulda-mode")
   (add-path "my-emacs/nxhtml")
