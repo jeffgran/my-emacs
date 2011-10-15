@@ -17,7 +17,7 @@
   (add-path "rspec-mode")
   (add-path "shoulda-mode")
   (add-path "nxhtml")
-  (add-path "maxframe.el")
+  (add-path "maxframe")
 )
 
 (load "mode-compile-ext.el")

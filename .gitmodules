@@ -31,3 +31,6 @@
 [submodule "emacs-css-mode"]
 	path = emacs-css-mode
 	url = https://github.com/fberger/emacs-css-mode.git
+[submodule "maxframe"]
+	path = maxframe
+	url = git://github.com/rmm5t/maxframe.el.git
