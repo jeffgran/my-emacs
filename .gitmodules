@@ -25,9 +25,6 @@
 [submodule "rvm.el"]
 	path = rvm.el
 	url = https://github.com/senny/rvm.el.git
-[submodule "maxframe.el"]
-	path = maxframe.el
-	url = https://github.com/rmm5t/maxframe.el.git
 [submodule "coffee-mode"]
 	path = coffee-mode
 	url = https://github.com/defunkt/coffee-mode.git
