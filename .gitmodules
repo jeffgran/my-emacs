@@ -1,0 +1,3 @@
+[submodule "maxframe.el"]
+	path = maxframe.el
+	url = ./maxframe.el/
