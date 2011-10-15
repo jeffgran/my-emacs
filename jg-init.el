@@ -28,6 +28,3 @@
 (load-library "jg-functions")  ; custom functions I've written to make me faster :)
 (load-library "jg-setup")      ; basic stock on/off switches and stuff.
 (load-library "jg-mode")       ; my keys. they are sweeet.
-
-;; default project
-(set-project "indra")
