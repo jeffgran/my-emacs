@@ -1,0 +1,27 @@
+[submodule "Enhanced-Ruby-Mode"]
+	path = Enhanced-Ruby-Mode
+	url = https://github.com/jacott/Enhanced-Ruby-Mode.git
+[submodule "icicles"]
+	path = icicles
+	url = https://github.com/emacsmirror/icicles.git
+[submodule "nxhtml"]
+	path = nxhtml
+	url = https://github.com/emacsmirror/nxhtml.git
+[submodule "php-mode"]
+	path = php-mode
+	url = https://github.com/ejmr/php-mode.git
+[submodule "shoulda-mode"]
+	path = shoulda-mode
+	url = https://github.com/pezra/shoulda-mode.git
+[submodule "rspec-mode"]
+	path = rspec-mode
+	url = https://github.com/pezra/rspec-mode.git
+[submodule "rails-minor-mode"]
+	path = rails-minor-mode
+	url = https://github.com/remvee/emacs-rails.git
+[submodule "ruby-mode"]
+	path = ruby-mode
+	url = https://github.com/qoobaa/ruby-mode.git
+[submodule "rvm.el"]
+	path = rvm.el
+	url = https://github.com/senny/rvm.el.git
