@@ -1,26 +1,27 @@
 (require 'cl)
 (defvar emacs-root 
   (if (eq system-type 'darwin)
-      "/Users/jgran/"
-    "C:/"))
+      "/Users/jgran/my-emacs/"
+    "C:/emacs/my-emacs/"))
 (labels ((add-path (p) 
                    (add-to-list 'load-path 
                                 (concat emacs-root p))))
-  (add-path "my-emacs")
-  (add-path "my-emacs/emacs-goodies-el")
-  (add-path "my-emacs/ruby-mode")
-  (add-path "my-emacs/rails-minor-mode")
-  (add-path "my-emacs/php-mode")
-  (add-path "my-emacs/rvm.el")
-  (add-path "my-emacs/coffee-mode")
-  (add-path "my-emacs/rspec-mode")
-  (add-path "my-emacs/shoulda-mode")
-  (add-path "my-emacs/nxhtml")
+  (add-path "") ; root
+  (add-path "emacs-goodies-el")
+  (add-path "ruby-mode")
+  (add-path "Enhanced-Ruby-Mode")
+  (add-path "rails-minor-mode")
+  (add-path "php-mode")
+  (add-path "rvm.el")
+  (add-path "coffee-mode")
+  (add-path "rspec-mode")
+  (add-path "shoulda-mode")
+  (add-path "nxhtml")
+  (add-path "maxframe.el")
 )
 
 (load "mode-compile-ext.el")
 (load "nxhtml/autostart.el")
-
 
 (load-library "jg-colors")     ; my color scheme setup
 (load-library "jg-modes")      ; my various major/minor modes and their setups

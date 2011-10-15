@@ -18,21 +18,21 @@
       mumamo-margin-use (quote (right-margin 13))
       nxml-degraded t)
 
-(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . eruby-nxhtml-mumamo-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 (add-to-list 'auto-mode-alist '("\\.dryml$" . eruby-nxhtml-mumamo-mode))
 
 ;; Ruby mode
+
+(setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
+(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
+(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rxml$" . ruby-mode))
+(add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 
-
-;(add-to-list 'load-path "~/.emacs.d/Enhanced-Ruby-Mode") ; must be added after any path containing old ruby-mode
-;(setq enh-ruby-program "/bin/ruby") ; so that still works if ruby points to ruby1.8
-(require 'ruby-mode)
-
-(require 'rails)
+;(require 'rails)
 
 ;; RNC mode
 (require 'rnc-mode)
