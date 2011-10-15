@@ -28,3 +28,6 @@
 [submodule "maxframe.el"]
 	path = maxframe.el
 	url = ./maxframe.el/
+[submodule "coffee-mode"]
+	path = coffee-mode
+	url = https://github.com/defunkt/coffee-mode.git
