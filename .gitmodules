@@ -31,3 +31,6 @@
 [submodule "coffee-mode"]
 	path = coffee-mode
 	url = https://github.com/defunkt/coffee-mode.git
+[submodule "emacs-css-mode"]
+	path = emacs-css-mode
+	url = https://github.com/fberger/emacs-css-mode.git
