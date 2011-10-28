@@ -14,6 +14,7 @@
    cua-highlight-region-shift-only nil
 )
 
+
 (custom-set-variables
  '(blink-cursor-mode t)
  '(cua-mode t nil (cua-base))
@@ -37,3 +38,17 @@
 ;(cua-mode t)
 (global-hl-line-mode 1)
 (icomplete-mode 1)
+
+
+
+;; windows specific stuff
+(if (eq system-type 'windows-nt)
+    (progn
+      (setq find-program "C:/GnuWin32/bin/find.exe")
+      (setq grep-program "C:/GnuWin32/bin/grep.exe")
+))
+
+(if (eq system-type 'darwin)
+    (progn
+      (set-project "indra")
+))
