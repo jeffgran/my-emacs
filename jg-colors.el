@@ -29,6 +29,7 @@
  '(mumamo-background-chunk-submode1 ((((class color) (min-colors 88) (background dark)) (:background "#000000"))))
  '(region ((t (:underline t :background "#000050"))))
  '(paren-match ((t (:background "darkseagreen4"))))
+ '(trailing-whitespace ((t (:background "#111111"))))
  '(show-paren-match ((t (:foreground "black" :background "wheat"))))
  '(show-paren-mismatch ((((class color)) (:foreground "white" :background "red"))))
  '(speedbar-button-face ((((class color) (background dark)) (:foreground "green4"))))

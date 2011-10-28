@@ -23,8 +23,9 @@
 
 ;; Ruby mode
 
-(setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
-(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
+;; (setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
+;; (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
+(require 'ruby-mode)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))

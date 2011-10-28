@@ -2,18 +2,19 @@
 ;;***********
 ;; Navigation
 ;;***********
-(define-key jg-mode-map (kbd "C-;") 'forward-char-select)
-(define-key jg-mode-map (kbd "C-j") 'backward-char-select)
-(define-key jg-mode-map (kbd "C-'") 'forward-word-select)
-(define-key jg-mode-map (kbd "C-h") 'backward-word-select)
+(define-key jg-mode-map (kbd "C-;") 'forward-char)
+(define-key jg-mode-map (kbd "C-j") 'backward-char)
+(define-key jg-mode-map (kbd "C-'") 'forward-word)
+(define-key jg-mode-map (kbd "C-h") 'backward-word)
+(define-key jg-mode-map (kbd "C-t") 'exchange-point-and-mark)
 ;; (define-key jg-mode-map (kbd "C-:") 'forward-char-select)
 ;; (define-key jg-mode-map (kbd "C-S-j") 'backward-char-select)
 ;; (define-key jg-mode-map (kbd "C-S-h") 'backward-word-select)
 
-(define-key jg-mode-map (kbd "M-j") 'backward-char-unselect)
-(define-key jg-mode-map (kbd "M-;") 'forward-char-unselect)
-(define-key jg-mode-map (kbd "M-h") 'backward-word-unselect)
-(define-key jg-mode-map (kbd "M-'") 'forward-word-unselect)
+;(define-key jg-mode-map (kbd "M-j") 'backward-char-unselect)
+;(define-key jg-mode-map (kbd "M-;") 'forward-char-unselect)
+;(define-key jg-mode-map (kbd "M-h") 'backward-word-unselect)
+;(define-key jg-mode-map (kbd "M-'") 'forward-word-unselect)
 
 (define-key jg-mode-map (kbd "M-i") 'back-to-indentation)
 
@@ -25,8 +26,8 @@
 (define-key jg-mode-map (kbd "M-N") 'duplicate-current-line-down)
 (define-key jg-mode-map (kbd "M-p") 'move-line-up)
 (define-key jg-mode-map (kbd "M-n") 'move-line-down)
-(define-key jg-mode-map (kbd "M-o") 'open-line-above)
 (define-key jg-mode-map (kbd "M-RET") 'open-line-below)
+(define-key jg-mode-map (kbd "<M-S-return>") 'open-line-above)
 ;(define-key jg-mode-map (kbd "RET") 'newline)
 
 (define-key jg-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
@@ -62,6 +63,8 @@
 (define-key jg-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-mode-map (kbd "C-S-r") 'query-replace)
 
+(define-key jg-mode-map (kbd "M-f") 'forward-to-char)
+(define-key jg-mode-map (kbd "M-r") 'backward-to-char)
 
 ;;***********************
 ;; Macros
@@ -77,8 +80,8 @@
 
 (define-key jg-mode-map (kbd "C-<escape>") 'kill-this-buffer)
 (define-key jg-mode-map (kbd "M-<escape>") 'kill-all-buffers)
-(define-key jg-mode-map (kbd "M-g") 'repeat)
-(define-key jg-mode-map (kbd "M-TAB") 'other-window)
+;(define-key jg-mode-map (kbd "M-g") 'repeat)
+(define-key jg-mode-map (kbd "M-o") 'other-window)
 (define-key jg-mode-map (kbd "M-1") 'delete-other-windows)
 (define-key jg-mode-map (kbd "C-x p") 'project-switch)
 

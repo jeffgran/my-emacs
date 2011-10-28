@@ -9,7 +9,7 @@
   (add-path "") ; root
   (add-path "emacs-goodies-el")
   (add-path "ruby-mode")
-  (add-path "Enhanced-Ruby-Mode")
+  ;(add-path "Enhanced-Ruby-Mode")
   (add-path "rails-minor-mode")
   (add-path "php-mode")
   (add-path "rvm.el")

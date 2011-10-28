@@ -12,7 +12,6 @@
    x-select-enable-clipboard t
    shift-select-mode nil
    cua-highlight-region-shift-only nil
-   transient-mark-mode nil
 )
 
 (custom-set-variables

@@ -236,6 +236,31 @@
 )
 
 
+(defun prompt-for-char (char)
+  "Get a character from the minibuffer prompt"
+  (interactive "cChar: ")
+  (if (char-table-p translation-table-for-input)
+      (setq char (or (aref translation-table-for-input char) char)))
+  char
+)
+
+
+(defun point-to-char (char arg)
+  "Move to ARG'th occurrence of CHAR."
+  (search-forward
+   (char-to-string char) nil nil arg)
+)
+
+(defun forward-to-char ()
+  (interactive)
+  (point-to-char (call-interactively 'prompt-for-char) 1)
+)
+(defun backward-to-char ()
+  (interactive)
+  (point-to-char (call-interactively 'prompt-for-char) -1)
+)
+
+
 ;; I found this on the internet somewhere
 (defun semnav-up (arg)
   (interactive "p")
@@ -269,7 +294,9 @@ Subsequent calls mark higher levels of sexps."
           (goto-char (match-end 0))
         (unless (memq (char-before) '(?\) ?\"))
           (forward-sexp)))
-      (mark-sexp -1))))
+      (mark-sexp -1)))
+  (setq mark-active t)
+)
 
 ;; I found these two on the internet somewhere
 ;; copy/cut whole line when nothing is selected
