@@ -1,4 +1,4 @@
-;; Markdown support
+; Markdown support
 (autoload 'markdown-mode "markdown-mode.el" 
   "Major mode for editing Markdown files" t)
 (add-to-list 'auto-mode-alist '("\\.text$" . markdown-mode))
@@ -22,7 +22,6 @@
 (add-to-list 'auto-mode-alist '("\\.dryml$" . eruby-nxhtml-mumamo-mode))
 
 ;; Ruby mode
-
 ;; (setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
 ;; (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (require 'ruby-mode)
@@ -103,6 +102,12 @@
 ;;   (add-hook 'after-change-functions 'colorize-compilation-buffer)
 ;;   )
 ;; )
+
+
+;; use c++ for torquescript
+(add-to-list 'auto-mode-alist '("\\.cs$" . c++-mode))
+(setq c-basic-offset 4)
+
 
 (require 'srb-adaptive-wrap-mode)
 ;;; srb-adaptive-wrap hooks

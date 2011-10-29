@@ -80,7 +80,9 @@
 
 (define-key jg-mode-map (kbd "C-<escape>") 'kill-this-buffer)
 (define-key jg-mode-map (kbd "M-<escape>") 'kill-all-buffers)
+
 ;(define-key jg-mode-map (kbd "M-g") 'repeat)
+
 (define-key jg-mode-map (kbd "M-o") 'other-window)
 (define-key jg-mode-map (kbd "M-1") 'delete-other-windows)
 (define-key jg-mode-map (kbd "C-x p") 'project-switch)
