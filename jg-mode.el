@@ -4,9 +4,15 @@
 ;;***********
 (define-key jg-mode-map (kbd "C-;") 'forward-char)
 (define-key jg-mode-map (kbd "C-j") 'backward-char)
+  (define-key ruby-mode-map (kbd "C-j") nil) ;; unbind the ruby C-j because it conflicts
 (define-key jg-mode-map (kbd "C-'") 'forward-word)
 (define-key jg-mode-map (kbd "C-h") 'backward-word)
 (define-key jg-mode-map (kbd "C-t") 'exchange-point-and-mark)
+
+(define-key jg-mode-map (kbd "C-g") 'forward-to-char)
+(define-key jg-mode-map (kbd "C-b") 'backward-to-char)
+
+
 ;; (define-key jg-mode-map (kbd "C-:") 'forward-char-select)
 ;; (define-key jg-mode-map (kbd "C-S-j") 'backward-char-select)
 ;; (define-key jg-mode-map (kbd "C-S-h") 'backward-word-select)
@@ -63,9 +69,6 @@
 (define-key jg-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-mode-map (kbd "C-S-r") 'query-replace)
 
-(define-key jg-mode-map (kbd "M-f") 'forward-to-char)
-(define-key jg-mode-map (kbd "M-r") 'backward-to-char)
-
 ;;***********************
 ;; Macros
 ;;***********************
@@ -78,14 +81,14 @@
 (define-key jg-mode-map (kbd "C-\"") 'string-wrap)
 
 
-(define-key jg-mode-map (kbd "C-<escape>") 'kill-this-buffer)
-(define-key jg-mode-map (kbd "M-<escape>") 'kill-all-buffers)
-;(define-key jg-mode-map (kbd "M-g") 'repeat)
+(define-key jg-mode-map (kbd "C-w") 'kill-this-buffer)
+(define-key jg-mode-map (kbd "M-w") 'kill-all-buffers)
+(define-key jg-mode-map (kbd "C-q") 'keyboard-quit)
+(define-key jg-mode-map (kbd "M-g") 'repeat)
 (define-key jg-mode-map (kbd "M-o") 'other-window)
 (define-key jg-mode-map (kbd "M-1") 'delete-other-windows)
 (define-key jg-mode-map (kbd "C-x p") 'project-switch)
-
-
+(define-key jg-mode-map (kbd "C-x r") 'rename-this-buffer-and-file)
 
 
 (define-minor-mode jg-mode "JG Mode Keys" t " [JG]" 'jg-mode-map)
@@ -96,5 +99,15 @@
 (add-hook 'isearch-mode-hook
  (lambda ()
   (define-key isearch-mode-map (kbd "C-f") 'isearch-repeat-forward)
+  (define-key isearch-mode-map (kbd "C-q") 'isearch-abort)
+  (define-key isearch-mode-map (kbd "TAB") 'isearch-complete)
+  (define-key minibuffer-local-isearch-map (kbd "TAB") 'isearch-complete-edit)
+ )
+)
+
+;; turn jg-mode off for the minibuffer
+(add-hook 'minibuffer-setup-hook
+ (lambda ()
+  (jg-mode 0)
  )
 )

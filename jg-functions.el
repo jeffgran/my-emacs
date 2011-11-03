@@ -236,13 +236,38 @@
 )
 
 
-(defun prompt-for-char (char)
+;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Point-to-char stuff
+;;;;;;;;;;;;;;;;;;;;;;;;
+(defvar point-to-char-last-char nil)
+(defvar point-to-char-use-last-char nil)
+
+
+(defun prompt-for-char ();;(char)
   "Get a character from the minibuffer prompt"
-  (interactive "cChar: ")
-  (if (char-table-p translation-table-for-input)
-      (setq char (or (aref translation-table-for-input char) char)))
+  (interactive)
+  (setq char (read-key "Char:"))
+  (message (char-to-string char))
+  (if (or (equal ?\C-g char) (equal ?\C-b char))
+      (setq point-to-char-use-last-char t))
+  (if point-to-char-use-last-char
+      (progn 
+        ;(message "use last char!")
+        (setq char point-to-char-last-char)
+        (setq point-to-char-use-last-char nil))
+      (progn
+        ;(message "don't use last char!")
+        (if (char-table-p translation-table-for-input)
+            (setq char (or (aref translation-table-for-input char) char)))
+        ;(message (char-to-string char))
+        (setq point-to-char-last-char char)
+        )
+      )
+  (local-set-key (kbd "C-6") nil)
+  ;(message "hi")
   char
 )
+
 
 
 (defun point-to-char (char arg)
@@ -259,6 +284,10 @@
   (interactive)
   (point-to-char (call-interactively 'prompt-for-char) -1)
 )
+
+;;;;;;;;;;;;;;;;;;;;;;;;
+;; / Point-to-char stuff
+;;;;;;;;;;;;;;;;;;;;;;;;
 
 
 ;; I found this on the internet somewhere
@@ -315,4 +344,22 @@ Subsequent calls mark higher levels of sexps."
      (list (line-beginning-position)
            (line-beginning-position 2)))))
 
+
+;; written by steve yegge, I believe
+(defun rename-this-buffer-and-file ()
+  "Renames current buffer and file it is visiting."
+  (interactive)
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let ((new-name (read-file-name "New name: " filename)))
+        (cond ((get-buffer new-name)
+               (error "A buffer named '%s' already exists!" new-name))
+              (t
+               (rename-file filename new-name 1)
+               (rename-buffer new-name)
+               (set-visited-file-name new-name)
+               (set-buffer-modified-p nil)
+               (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
 
