@@ -32,7 +32,7 @@
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 
-;(require 'rails)
+(require 'rails)
 
 ;; RNC mode
 (require 'rnc-mode)
