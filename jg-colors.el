@@ -5,7 +5,32 @@
 
 
 (custom-set-faces
- '(default ((t (:inherit nil :stipple nil :background "#000000" :foreground "#eeeeee" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 125 :width normal :foundry "Apple" :family "Menlo"))))
+     '(default ((t (:inherit nil 
+                             :stipple nil 
+                             :background "#000000" 
+                             :foreground "#eeeeee" 
+                             :inverse-video nil 
+                             :box nil 
+                             :strike-through nil 
+                             :overline nil 
+                             :underline nil 
+                             :slant normal 
+                             :weight normal 
+                             :height 125 
+                             :width normal 
+                             :foundry 
+                             (if (eq system-type 'darwin)
+                                 "Apple"
+                               "Bitstream"
+                               )
+                             :family
+                             (if (eq system-type 'darwin)
+                                 "Menlo"
+                               "Bitstream Vera Sans Mono"
+                               )
+
+                             ))))
+   
  '(background "blue")
  '(font-lock-builtin-face ((((class color) (background dark)) (:foreground "#999"))))
  '(font-lock-comment-face ((t (:italic t :foreground "Green4"))))
