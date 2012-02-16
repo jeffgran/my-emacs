@@ -24,8 +24,8 @@
 
 (define-key jg-mode-map (kbd "M-i") 'back-to-indentation)
 
-;(define-key jg-mode-map (kbd "C-S-p") 'up-ten-lines)
-;(define-key jg-mode-map (kbd "C-S-n") 'down-ten-lines)
+(define-key jg-mode-map (kbd "C-S-n") 'scroll-up)
+(define-key jg-mode-map (kbd "C-S-p") 'scroll-down)
 (define-key jg-mode-map (kbd "C-l") 'goto-line)
 
 (define-key jg-mode-map (kbd "M-P") 'duplicate-current-line-up)
