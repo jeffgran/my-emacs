@@ -1,3 +1,14 @@
+; Magit # I don't really like it. command line is faster and more clear.
+;(add-to-list 'exec-path "/usr/local/git/bin/")
+;(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/")
+;(require 'magit)
+;(global-set-key (kbd "M-g") 'magit-status)
+
+
+;; Elscreen (tabs/session management)
+(load "elscreen" "ElScreen" t)
+
+
 ; Markdown support
 (autoload 'markdown-mode "markdown-mode.el" 
   "Major mode for editing Markdown files" t)
@@ -10,21 +21,21 @@
 ;; HTML mode
 ;; nXhtml mode (new and improved)
 (setq
-      nxhtml-global-minor-mode t
+      nxhtml-global-minor-mode nil
       mumamo-chunk-coloring 'submode-colored
       nxhtml-skip-welcome t
       indent-region-mode t
       rng-nxml-auto-validate-flag nil
-      mumamo-margin-use (quote (right-margin 13))
+      ;;mumamo-margin-use (quote (right-margin 13))
       nxml-degraded t)
 
 (add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 (add-to-list 'auto-mode-alist '("\\.dryml$" . eruby-nxhtml-mumamo-mode))
 
 ;; Ruby mode
-;; (setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
-;; (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
-(require 'ruby-mode)
+(setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
+(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
+;(require 'ruby-mode)
 (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
@@ -150,5 +161,8 @@
 
 (require 'linum)
 (global-linum-mode 1)
+
+(add-hook 'nxhtml-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
+(add-hook 'after-change-major-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
 
 (require 'wcy-swbuff)

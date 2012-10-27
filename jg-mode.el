@@ -33,8 +33,16 @@
 (define-key jg-mode-map (kbd "M-p") 'move-line-up)
 (define-key jg-mode-map (kbd "M-n") 'move-line-down)
 (define-key jg-mode-map (kbd "M-RET") 'open-line-below)
-(define-key jg-mode-map (kbd "<M-S-return>") 'open-line-above)
+(define-key jg-mode-map (kbd "<M-C-return>") 'open-line-above)
 ;(define-key jg-mode-map (kbd "RET") 'newline)
+
+
+;screens (tabs)
+(define-key jg-mode-map (kbd "s-t") 'elscreen-create)
+(define-key jg-mode-map (kbd "s-w") 'elscreen-kill)
+(define-key jg-mode-map (kbd "s-}") 'elscreen-previous)
+(define-key jg-mode-map (kbd "s-{") 'elscreen-next)
+
 
 (define-key jg-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
 (define-key jg-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
@@ -80,11 +88,12 @@
 (define-key jg-mode-map (kbd "M-SPC") 'extend-selection)
 (define-key jg-mode-map (kbd "C-\"") 'string-wrap)
 
+(define-key jg-mode-map (kbd "C-M-c") 'layout-content)
 
 (define-key jg-mode-map (kbd "C-w") 'kill-this-buffer)
 (define-key jg-mode-map (kbd "M-w") 'kill-all-buffers)
 (define-key jg-mode-map (kbd "C-q") 'keyboard-quit)
-(define-key jg-mode-map (kbd "M-g") 'repeat)
+;(define-key jg-mode-map (kbd "M-g") 'repeat)
 (define-key jg-mode-map (kbd "M-o") 'other-window)
 (define-key jg-mode-map (kbd "M-1") 'delete-other-windows)
 (define-key jg-mode-map (kbd "C-x p") 'project-switch)

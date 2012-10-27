@@ -18,6 +18,8 @@
   (add-path "shoulda-mode")
   (add-path "nxhtml")
   (add-path "maxframe.el")
+  (add-path "elscreen")
+  (add-path "apel")
 )
 
 (load "mode-compile-ext.el")

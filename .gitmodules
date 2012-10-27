@@ -34,3 +34,9 @@
 [submodule "maxframe"]
 	path = maxframe
 	url = git://github.com/rmm5t/maxframe.el.git
+[submodule "elscreen"]
+	path = elscreen
+	url = https://github.com/knu/elscreen.git
+[submodule "apel"]
+	path = apel
+	url = ./apel

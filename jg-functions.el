@@ -63,6 +63,11 @@
   (snippet-insert "<%= $. %>")
 )
 
+(defun layout-content ()
+  (interactive)
+  (snippet-insert "<%= content_for(:$${title}) { $. } %>")
+)
+
 (defun css-curlies ()
   (interactive)
   (snippet-insert " {\n$.\n}")
@@ -214,19 +219,24 @@
 
 (defun project-switch ()
   (interactive)
-  (let ((project (completing-read "Which project?: " '(("indra")("olex")))))
+  (let ((project (completing-read "Which project?: " '(("olex3")("indra")("discovery")))))
     (set-project project)
 ))
 
 (defun set-project (project)
   (if (string= "indra" project)
-      (progn (rvm-use "ruby-1.9.2" "global")
+      (progn (rvm-use "ruby-1.9.2-p290" "indra")
              (fuzzy-find-project-root "~/openlogic/indra")
              ))
-  
-  (if (string= "olex" project)
-      (progn (rvm-use "ree-1.8.6" "rails2310")
+
+  (if (string= "olex3" project)
+      (progn (rvm-use "ruby-1.9.2-p290" "olex3")
              (fuzzy-find-project-root "~/openlogic/olex")
+             ))
+
+  (if (string= "discovery" project)
+      (progn (rvm-use "jruby-1.6.5.1" "")
+             (fuzzy-find-project-root "~/openlogic/discovery")
              ))
 )
 

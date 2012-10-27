@@ -50,5 +50,5 @@
 
 (if (eq system-type 'darwin)
     (progn
-      (set-project "indra")
+      (set-project "olex3")
 ))
