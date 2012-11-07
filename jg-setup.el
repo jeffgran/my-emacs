@@ -20,11 +20,11 @@
  '(cua-mode t nil (cua-base))
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)
- '(speedbar-frame-parameters 
-   (quote ((minibuffer) 
-           (width . 20) 
+ '(speedbar-frame-parameters
+   (quote ((minibuffer)
+           (width . 20)
            (border-width . 0)
-           (menu-bar-lines . 0) 
+           (menu-bar-lines . 0)
            (tool-bar-lines . 0)
            (unsplittable . t)
            (set-background-color "black"))))
@@ -38,6 +38,16 @@
 ;(cua-mode t)
 (global-hl-line-mode 1)
 (icomplete-mode 1)
+
+;;osx keys
+(setq mac-option-key-is-meta nil)
+(setq mac-command-key-is-meta t)
+(setq mac-command-modifier 'meta)
+(setq mac-option-modifier 'alt)
+
+
+;; fix some prelude stuff
+(add-hook 'prog-mode-hook 'whitespace-turn-off t)
 
 
 

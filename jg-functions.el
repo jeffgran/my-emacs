@@ -1,28 +1,5 @@
 ;; JG functions
 
-;; move lines up and down
-(defun move-line (n)
-  "Move the current line up or down by N lines."
-  (interactive "p")
-  (setq col (current-column))
-  (beginning-of-line) (setq start (point))
-  (end-of-line) (forward-char) (setq end (point))
-  (let ((line-text (delete-and-extract-region start end)))
-    (forward-line n)
-    (insert line-text)
-    ;; restore point to original column in moved line
-    (forward-line -1)
-    (forward-char col)))
-
-(defun move-line-up (n)
-  "Move the current line up by N lines."
-  (interactive "p")
-  (move-line (if (null n) -1 (- n))))
-
-(defun move-line-down (n)
-  "Move the current line down by N lines."
-  (interactive "p")
-  (move-line (if (null n) 1 n)))
 
 ;; duplicate a line
 (defun duplicate-current-line (num)
@@ -49,7 +26,7 @@
 (defun kill-all-buffers ()
     "Kill all other buffers."
     (interactive)
-    (mapc 'kill-buffer 
+    (mapc 'kill-buffer
                 (buffer-list)))
 
 
@@ -95,128 +72,6 @@
 )
 
 
-(defun increase-select (n word)
-  (let (p1 p2)
-    (if mark-active
-	(progn
-	  (if (> 0 n)
-	      (progn
-		(setq p1 (region-beginning))
-		(setq p2 (region-end)))
-	    (progn
-		(setq p2 (region-beginning))
-		(setq p1 (region-end))))
-	  )
-      (progn 
-	  (setq p1 (point))
-	  (setq p2 (point))
-	  )
-      )
-    (goto-char p1)
-    (if word
-        (forward-word n)
-      (forward-char n))
-    (push-mark p2)
-    (setq mark-active t)
-    )
-  )
-
-(defun decrease-select (n word)
-  (let (p1 p2)
-    (if mark-active
-	(progn
-	  (if (> 0 n)
-	      (progn
-		(setq p1 (region-beginning))
-		(setq p2 (region-end)))
-	    (progn
-		(setq p2 (region-beginning))
-		(setq p1 (region-end))))
-	  )
-      (progn 
-	  (setq p1 (point))
-	  (setq p2 (point))
-	  )
-      )
-    (goto-char p2)
-    (if word
-        (backward-word (- 0 n))
-      (backward-char (- 0 n)))
-    (push-mark p1)
-    (setq mark-active t)
-    )
-  )
-
-(defun backward-word-select ()
-  (interactive)
-  (if mark-active
-      (increase-select -1 t)
-    (backward-word))
-)
-
-(defun forward-word-select ()
-  (interactive)
-  (if mark-active
-      (increase-select 1 t)
-    (forward-word))
-)
-
-(defun backward-char-select ()
-  (interactive)
-  (if mark-active
-      (increase-select -1 nil)
-    (backward-char))
-)
-
-(defun forward-char-select ()
-  (interactive)
-  (if mark-active
-      (increase-select 1 nil)
-    (forward-char))
-)
-
-(defun backward-word-unselect ()
-  (interactive)
-  (decrease-select -1 t)
-)
-
-(defun forward-word-unselect ()
-  (interactive)
-  (decrease-select 1 t)
-)
-
-(defun backward-char-unselect ()
-  (interactive)
-  (decrease-select -1 nil)
-)
-
-(defun forward-char-unselect ()
-  (interactive)
-  (decrease-select 1 nil)
-)
-
-(defun string-wrap ()
-  (interactive)
-  (if mark-active
-      (progn
-        (save-excursion
-          (setq p1 (region-beginning))
-          (setq p2 (region-end))
-          (goto-char p2)
-          (insert "\"")
-          (goto-char p1)
-          (insert "\"")
-          ))))
-
-
-(defun jg-rgrep (regexp)
-   "Run `rgrep' with REGEXP, \"*.rb\" FILES"
-   (interactive
-    (progn
-      (grep-compute-defaults)
-      (list (grep-read-regexp))))
-   (rgrep regexp "*.rb *.erb *.dryml *.rhtml *.rxml *.css *.js" "/users/jgran/openlogic/olex/")) 
-
 (defun project-switch ()
   (interactive)
   (let ((project (completing-read "Which project?: " '(("olex3")("indra")("discovery")))))
@@ -225,12 +80,12 @@
 
 (defun set-project (project)
   (if (string= "indra" project)
-      (progn (rvm-use "ruby-1.9.2-p290" "indra")
+      (progn (rvm-use "ruby-1.9.3-p286" "indra")
              (fuzzy-find-project-root "~/openlogic/indra")
              ))
 
   (if (string= "olex3" project)
-      (progn (rvm-use "ruby-1.9.2-p290" "olex3")
+      (progn (rvm-use "ruby-1.9.3-p286" "olex")
              (fuzzy-find-project-root "~/openlogic/olex")
              ))
 
@@ -240,10 +95,32 @@
              ))
 )
 
+
+;; yank from the kill ring in reverse
 (defun paste-unshift ()
   (interactive)
   (yank-pop -1)
 )
+
+
+
+
+
+;; (defadvice ?-?-? (before open-new-tab activate)
+;;   "Opens all buffers in a new tab."
+;;   ;;(elscreen-create)
+;; )
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -261,7 +138,7 @@
   (if (or (equal ?\C-g char) (equal ?\C-b char))
       (setq point-to-char-use-last-char t))
   (if point-to-char-use-last-char
-      (progn 
+      (progn
         ;(message "use last char!")
         (setq char point-to-char-last-char)
         (setq point-to-char-use-last-char nil))
@@ -282,8 +159,10 @@
 
 (defun point-to-char (char arg)
   "Move to ARG'th occurrence of CHAR."
+  (setq case-fold-search nil) ;;temporarily set case sensitivity true
   (search-forward
    (char-to-string char) nil nil arg)
+  (setq case-fold-search t) ;; set it back
 )
 
 (defun forward-to-char ()
@@ -315,45 +194,6 @@
   (up-list arg))
 
 
-;; I found this on the internet somewhere
-(defun extend-selection (arg &optional incremental)
-  "Mark the symbol surrounding point.
-Subsequent calls mark higher levels of sexps."
-  (interactive (list (prefix-numeric-value current-prefix-arg)
-                     (or (and transient-mark-mode mark-active)
-                         (eq last-command this-command))))
-  (if incremental
-      (progn
-        (semnav-up (- arg))
-        (forward-sexp)
-        (mark-sexp -1))
-    (if (> arg 1)
-        (extend-selection (1- arg) t)
-      (if (looking-at "\\=\\(\\s_\\|\\sw\\)*\\_>")
-          (goto-char (match-end 0))
-        (unless (memq (char-before) '(?\) ?\"))
-          (forward-sexp)))
-      (mark-sexp -1)))
-  (setq mark-active t)
-)
-
-;; I found these two on the internet somewhere
-;; copy/cut whole line when nothing is selected
-(defadvice kill-ring-save (before slick-copy activate compile)
-  "When called interactively with no active region, copy a single line instead."
-  (interactive
-   (if (region-active-p) (list (region-beginning) (region-end))
-     (message "Copied line")
-     (list (line-beginning-position)
-           (line-beginning-position 2)))))
-
-(defadvice kill-region (before slick-cut activate compile)
-  "When called interactively with no active region, kill a single line instead."
-  (interactive
-   (if (region-active-p) (list (region-beginning) (region-end))
-     (list (line-beginning-position)
-           (line-beginning-position 2)))))
-
 
 ;; written by steve yegge, I believe
 (defun rename-this-buffer-and-file ()
@@ -373,3 +213,56 @@ Subsequent calls mark higher levels of sexps."
                (set-buffer-modified-p nil)
                (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
 
+
+(defun move-text-internal (arg)
+   (cond
+    ((and mark-active transient-mark-mode)
+     (if (> (point) (mark))
+            (exchange-point-and-mark))
+     (let ((column (current-column))
+              (text (delete-and-extract-region (point) (mark))))
+       (forward-line arg)
+       (move-to-column column t)
+       (set-mark (point))
+       (insert text)
+       (exchange-point-and-mark)
+       (setq deactivate-mark nil)))
+    (t
+     (beginning-of-line)
+     (when (or (> arg 0) (not (bobp)))
+       (forward-line)
+       (when (or (< arg 0) (not (eobp)))
+            (transpose-lines arg))
+       (forward-line -1)))))
+
+(defun move-text-down (arg)
+   "Move region (transient-mark-mode active) or current line
+  arg lines down."
+   (interactive "*p")
+   (move-text-internal arg))
+
+(defun move-text-up (arg)
+   "Move region (transient-mark-mode active) or current line
+  arg lines up."
+   (interactive "*p")
+   (move-text-internal (- arg)))
+
+(defun duplicate-current-line-or-region (arg)
+  "Duplicates the current line or region ARG times.
+If there's no region, the current line will be duplicated. However, if
+there's a region, all lines that region covers will be duplicated."
+  (interactive "p")
+  (let (beg end (origin (point)))
+    (if (and mark-active (> (point) (mark)))
+        (exchange-point-and-mark))
+    (setq beg (line-beginning-position))
+    (if mark-active
+        (exchange-point-and-mark))
+    (setq end (line-end-position))
+    (let ((region (buffer-substring-no-properties beg end)))
+      (dotimes (i arg)
+        (goto-char end)
+        (newline)
+        (insert region)
+        (setq end (point)))
+      (goto-char (+ origin (* (length region) arg) arg)))))

@@ -7,9 +7,9 @@
                    (add-to-list 'load-path 
                                 (concat emacs-root p))))
   (add-path "") ; root
-  (add-path "emacs-goodies-el")
+  ;;(add-path "emacs-goodies-el")
   (add-path "ruby-mode")
-  ;(add-path "Enhanced-Ruby-Mode")
+  ;;(add-path "Enhanced-Ruby-Mode")
   (add-path "rails-minor-mode")
   (add-path "php-mode")
   (add-path "rvm.el")
@@ -20,13 +20,22 @@
   (add-path "maxframe.el")
   (add-path "elscreen")
   (add-path "apel")
+  (add-path "back-button")
 )
+
+
+;; color theme stuff. TODO refactor this like above
+(add-to-list 'custom-theme-load-path "/Users/jgran/my-emacs/color-themes")
+(add-to-list 'custom-theme-load-path "/Users/jgran/my-emacs/color-themes/emacs-color-theme-solarized")
+(load-theme 'solarized-dark t)
+
 
 (load "mode-compile-ext.el")
 (load "nxhtml/autostart.el")
 
-(load-library "jg-colors")     ; my color scheme setup
+
+;;(load-library "jg-colors")     ; my color scheme setup
 (load-library "jg-modes")      ; my various major/minor modes and their setups
-(load-library "jg-functions")  ; custom functions I've written to make me faster :)
+(load-library "jg-functions")  ;; custom functions I've written to make me faster :)
 (load-library "jg-setup")      ; basic stock on/off switches and stuff.
 (load-library "jg-mode")       ; my keys. they are sweeet.

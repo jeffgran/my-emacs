@@ -40,3 +40,6 @@
 [submodule "apel"]
 	path = apel
 	url = ./apel
+[submodule "back-button"]
+	path = back-button
+	url = https://github.com/rolandwalker/back-button.git
