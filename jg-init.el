@@ -27,14 +27,19 @@
 ;; color theme stuff. TODO refactor this like above
 (add-to-list 'custom-theme-load-path "/Users/jgran/my-emacs/color-themes")
 (add-to-list 'custom-theme-load-path "/Users/jgran/my-emacs/color-themes/emacs-color-theme-solarized")
-(load-theme 'solarized-dark t)
+(add-to-list 'custom-theme-load-path "/Users/jgran/my-emacs/color-themes/jg-zenburn")
+
+(disable-theme 'zenburn) ;; this leaves traces behind unless you disable it first
+(load-theme 'jg-zenburn)
+
+;;(load-theme 'solarized-dark t)
 
 
 (load "mode-compile-ext.el")
 (load "nxhtml/autostart.el")
 
 
-;;(load-library "jg-colors")     ; my color scheme setup
+;; ;;(load-library "jg-colors")     ; my color scheme setup
 (load-library "jg-modes")      ; my various major/minor modes and their setups
 (load-library "jg-functions")  ;; custom functions I've written to make me faster :)
 (load-library "jg-setup")      ; basic stock on/off switches and stuff.

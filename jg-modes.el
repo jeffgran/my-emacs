@@ -1,18 +1,56 @@
-; Magit # I don't really like it. command line is faster and more clear.
-;(add-to-list 'exec-path "/usr/local/git/bin/")
-;(add-to-list 'load-path "/usr/local/share/emacs/site-lisp/")
-;(require 'magit)
-;(global-set-key (kbd "M-g") 'magit-status)
-
-
 ;; undo stuff prelude is trying to force on me
-(setq before-save-hook nil)
+(setq before-save-hook nil) ;; cleaning up whitespace for me.
+(setq prelude-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
+(setq prelude-interactive-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
+(add-hook 'prog-mode-hook 'whitespace-turn-off t)
+(whitespace-mode -1)
 
-;; Elscreen (tabs/session management)
-(load "elscreen" "ElScreen" t)
+;; only turn the tabs stuff on in windowed mode (not the terminal)
 
-;; my custom elscreen buffer list (separate buffer list per screen). :)
-(require 'jg-elscreen-buffer-list)
+(if window-system
+    (progn
+      ;; Elscreen (tabs/session management)
+      ;; my custom elscreen buffer list (separate buffer list per screen). :)
+      (load "elscreen" "ElScreen" t)
+      (setq elscreen-tab-display-kill-screen nil) ;; turn off the [x] button for the mouse
+      (setq elscreen-tab-display-control nil) ;; turn off the <-> tab switch button for the mouse
+      (setq elscreen-display-screen-number nil) ;; turn off the tab number display in the mode-line
+      (require 'jg-elscreen-buffer-list)
+      ))
+
+
+;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
+(require 'pbcopy)
+(turn-on-pbcopy)
+
+
+;; prelude gives me helm and yasnippet... I think I might like this
+;; way of accessing the snippets better
+(require 'helm-c-yasnippet)
+;; about fuzzy matching for helm
+;; ,----[ C-h v helm-mp-matching-method RET ]
+;; | helm-mp-matching-method is a variable defined in `helm-match-plugin.el'.
+;; | Its value is multi3
+;; |
+;; | Documentation:
+;; | Matching method for helm match plugin.
+;; | You can set here different methods to match candidates in helm.
+;; | Here are the possible value of this symbol and their meaning:
+;; | - multi1: Respect order, prefix of pattern must match.
+;; | - multi2: Same but with partial match.
+;; | - multi3: The best, multiple regexp match, allow negation.
+;; | - multi3p: Same but prefix must match.
+;; | Default is multi3.
+;; |
+;; | You can customize this variable.
+;; `----
+
+
+
+
+;; icicles... don't think I like it
+;;(require 'icicles)
+
 
 ; Markdown support
 (autoload 'markdown-mode "markdown-mode.el"
@@ -37,15 +75,6 @@
 (add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 (add-to-list 'auto-mode-alist '("\\.dryml$" . eruby-nxhtml-mumamo-mode))
 
-;; Ruby mode
-;;(setq enh-ruby-program "/Users/jgran/.rvm/rubies/ruby-1.9.2-p0/bin/ruby") ; so that still works if ruby points to ruby1.8
-;;(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
-;;(require 'ruby-mode)
-;; (add-to-list 'auto-mode-alist '("\\.rb$" . ruby-mode))
-;; (add-to-list 'auto-mode-alist '("Rakefile" . ruby-mode))
-;; (add-to-list 'auto-mode-alist '("\\.rake$" . ruby-mode))
-;; (add-to-list 'auto-mode-alist '("\\.rxml$" . ruby-mode))
-;; (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 
 
 (require 'erc)
@@ -60,8 +89,10 @@
 (require 'rnc-mode)
 (add-to-list 'auto-mode-alist '("\\.rnc$" . rnc-mode))
 
+
 ;; php mode
 (require 'php-mode)
+
 
 ;; js mode
 (setq js-indent-level 2)
@@ -85,12 +116,15 @@
 ;; doesn't seem to work to override existing css-mode?
 ;(add-to-list 'load-path "~/.emacs.d/emacs-css-mode")
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
-(add-hook 'css-mode-hook
-          (lambda()
-            (local-set-key (kbd "RET") 'open-line-below)))
+;; (add-hook 'css-mode-hook
+;;           (lambda()
+;;             (local-set-key (kbd "RET") 'open-line-below)))
 
 
 (require 'rvm)
+(rvm-use-default)
+;;(rvm-autodetect-ruby) ;; using my project switcher now instead of this.
+
 (require 'rspec-mode)
 (require 'shoulda-mode)
 (setq shoulda-use-rvm t)

@@ -56,10 +56,9 @@
 
 (defun open-line-above ()
   (interactive)
+  (beginning-of-line)
+  (newline)
   (forward-line -1)
-  (end-of-line nil)
-  (open-line 1)
-  (forward-line 1)
   (indent-for-tab-command)
 )
 
@@ -72,28 +71,87 @@
 )
 
 
-(defun project-switch ()
+
+
+;;*************************************************
+;;*************************************************
+
+(defun ido-jg-set-project-root ()
   (interactive)
-  (let ((project (completing-read "Which project?: " '(("olex3")("indra")("discovery")))))
-    (set-project project)
+  (let* ((dir-path (ido-read-directory-name "[JG] Select project root: "))
+         (dir-name (nth 1 (reverse (split-string dir-path "/")))))
+    (message dir-path)
+    (message dir-name)
+    (setq fuzzy-find-project-root dir-path)
+    (elscreen-screen-nickname dir-name)
+    (rvm-elscreen-activate-corresponding-ruby dir-path)
+
+    (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+      (set-alist 'screen-properties 'fuzzy-find-project-root dir-path)
+      (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
 ))
 
-(defun set-project (project)
-  (if (string= "indra" project)
-      (progn (rvm-use "ruby-1.9.3-p286" "indra")
-             (fuzzy-find-project-root "~/openlogic/indra")
-             ))
 
-  (if (string= "olex3" project)
-      (progn (rvm-use "ruby-1.9.3-p286" "olex")
-             (fuzzy-find-project-root "~/openlogic/olex")
-             ))
+;; TODO add the ablitity to pass the path to the real rvm func, that
+;; way we don't have to use a separate (almost identical) func
+(defun rvm-elscreen-activate-corresponding-ruby (path)
+    "activate the corresponding ruby version for the path passed in.
+This function searches for an .rvmrc file and activates the configured ruby.
+If no .rvmrc file is found, the default ruby is used insted."
+    (interactive)
+    (when (rvm-working-p)
+      (let* ((rvmrc-path (rvm--rvmrc-locate path))
+             (rvmrc-info (if rvmrc-path (rvm--rvmrc-read-version rvmrc-path) nil)))
+        (if rvmrc-info (rvm-use (first rvmrc-info) (second rvmrc-info))
+          (rvm-use-default)))))
 
-  (if (string= "discovery" project)
-      (progn (rvm-use "jruby-1.6.5.1" "")
-             (fuzzy-find-project-root "~/openlogic/discovery")
-             ))
-)
+
+
+(defadvice rvm-use (after rvm-elscreen-save-info activate)
+"Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
+  (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+    (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
+    (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
+    (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
+))
+
+
+(defun rvm-elscreen-recall () 
+"Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
+  (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
+         (rvm-ruby (get-alist 'rvm-ruby screen-properties))
+         (rvm-gemset (get-alist 'rvm-gemset screen-properties)))
+    (if (and rvm-ruby rvm-gemset)
+        (rvm-use rvm-ruby rvm-gemset)
+      (rvm-use-default))))
+
+;; hrm.. TODO make this easier to add/update/recall properties with less boilerplate. :(
+(defun elscreen-fuzzy-find-recall () 
+  "Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
+  (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
+         (fuzzy-root (get-alist 'fuzzy-find-project-root screen-properties)))
+    (if fuzzy-root
+        (setq fuzzy-find-project-root fuzzy-root)
+      (setq fuzzy-find-project-root "~/my-emacs"))))
+
+
+;; Upon switching to a new screen, recall the rvm setup
+(add-hook 'elscreen-goto-hook 'rvm-elscreen-recall)
+(add-hook 'elscreen-kill-hook 'rvm-elscreen-recall)
+;; and the fuzzy project root
+(add-hook 'elscreen-goto-hook 'elscreen-fuzzy-find-recall)
+(add-hook 'elscreen-kill-hook 'elscreen-fuzzy-find-recall)
+
+
+
+
+
+
+
+
+
+
+
 
 
 ;; yank from the kill ring in reverse
@@ -101,24 +159,6 @@
   (interactive)
   (yank-pop -1)
 )
-
-
-
-
-
-;; (defadvice ?-?-? (before open-new-tab activate)
-;;   "Opens all buffers in a new tab."
-;;   ;;(elscreen-create)
-;; )
-
-
-
-
-
-
-
-
-
 
 
 
@@ -135,7 +175,7 @@
   (interactive)
   (setq char (read-key "Char:"))
   (message (char-to-string char))
-  (if (or (equal ?\C-g char) (equal ?\C-b char))
+  (if (or (equal ?\C-t char) (equal ?\C-b char))
       (setq point-to-char-use-last-char t))
   (if point-to-char-use-last-char
       (progn
@@ -266,3 +306,4 @@ there's a region, all lines that region covers will be duplicated."
         (insert region)
         (setq end (point)))
       (goto-char (+ origin (* (length region) arg) arg)))))
+

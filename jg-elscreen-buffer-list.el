@@ -52,6 +52,9 @@
     )
 
 (defun jg-elscreen-filter-buffer-list (the-list real-buffer-list)
+  "Filter the 'real list' (the result of the original (buffer-list) call, which is a c function and returns them in order of 
+most recently used) only keeping the ones that are in the-list. The purpose is to effectively sort the-list in order of most 
+recently used."
   (delq nil
         (mapcar (lambda (x) 
                   (and 
@@ -60,27 +63,56 @@
                 real-buffer-list)))
 
 
-
+;; these two are to add any newly shown buffer to the jg buffer list of the current screen
 (defadvice display-buffer (after jg-elscreen-display-buffer-advice activate)
   ;;(message (buffer-name (current-buffer)))
   (jg-elscreen-add-buffer-to-list (current-buffer)))
-
 (defadvice switch-to-buffer (after jg-elscreen-switch-to-buffer-advice activate)
   ;;(message (buffer-name (current-buffer)))
   (jg-elscreen-add-buffer-to-list (current-buffer)))
 
 
+
+
 (defadvice buffer-list (around jg-elscreen-buffer-list activate)
+  "make the built-in function (buffer-list) return MY buffer list instead"
   (setq ad-return-value (jg-elscreen-get-buffer-list))
 )
 
 
-;; turn off the jg buffer-list for this, so I have means to look at them all if I want to.
+(defadvice elscreen-kill (before jg-elscreen-kill-buffers activate)
+  "when you kill a screen, kill all the buffers in its list."
+  (mapcar '(lambda (b) (kill-buffer b)) (jg-elscreen-get-buffer-list))
+  )
+
+(defadvice switch-to-prev-buffer (around jg-elscreen-switch-to-prev-buffer activate) 
+"this is for when you kill a buffer. it looks for a buffer to show next. we
+want to make sure it only shows one from the list of buffers in the current
+screen"
+  ;; nth 1 means the 'next' one (the 'first' one is the current one we're closing)
+  (let* ((last-buffer (nth 1 (jg-elscreen-get-buffer-list)))
+         (the-buffer (or (and (not (eq last-buffer (window-buffer (selected-window))))
+                              last-buffer)
+                         (get-buffer "*scratch*"))))
+    (set-window-buffer (selected-window) the-buffer)
+    ))
+
+
+(defadvice kill-buffer (around jg-elscreen-dont-kill-scratch activate)
+  (unless (string= (buffer-name (current-buffer)) "*scratch*")
+      ad-do-it)
+)
+
+
 (defadvice ibuffer (around jg-elscreen-turn-off-buffer-list-advice activate)
+"turn off the jg buffer-list for this, so I have means to look at them all if I want to."
   (ad-deactivate 'buffer-list)
   ad-do-it
   (ad-activate 'buffer-list)
 )
+
+
+
 
 
 ;; these are more low-level commands that didn't end up working out advising them.

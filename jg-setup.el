@@ -10,7 +10,7 @@
    kept-old-versions 2
    version-control t                               ; use versioned backups
    x-select-enable-clipboard t
-   shift-select-mode nil
+   ;;shift-select-mode nil
    cua-highlight-region-shift-only nil
 )
 
@@ -45,20 +45,13 @@
 (setq mac-command-modifier 'meta)
 (setq mac-option-modifier 'alt)
 
-
-;; fix some prelude stuff
-(add-hook 'prog-mode-hook 'whitespace-turn-off t)
-
-
+;; save the "session" of windows/buffers/etc
+;; um, this doesn't really seem to work very well.
+;;(desktop-save-mode 1)
 
 ;; windows specific stuff
 (if (eq system-type 'windows-nt)
     (progn
       (setq find-program "C:/GnuWin32/bin/find.exe")
       (setq grep-program "C:/GnuWin32/bin/grep.exe")
-))
-
-(if (eq system-type 'darwin)
-    (progn
-      (set-project "olex3")
 ))
