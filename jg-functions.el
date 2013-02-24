@@ -75,20 +75,37 @@
 
 ;;*************************************************
 ;;*************************************************
+(defvar jg-default-project-root "~/my-emacs/")
+
+(defun jg-project-root () 
+  (or (jg-elscreen-get-current-property 'jg-project-root)
+      jg-default-project-root)
+)
+
+(defun jg-elscreen-get-current-property (name)
+  (let* ((properties (elscreen-get-screen-property (elscreen-get-current-screen)))
+         (property (get-alist name properties)))
+    property
+    )
+)
 
 (defun ido-jg-set-project-root ()
   (interactive)
   (let* ((dir-path (ido-read-directory-name "[JG] Select project root: "))
          (dir-name (nth 1 (reverse (split-string dir-path "/")))))
-    (message dir-path)
-    (message dir-name)
+    ;;; (message dir-path)
+    ;;; (message dir-name)
+
+    (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+      (set-alist 'screen-properties 'jg-project-root dir-path)
+      (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
+
     (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
     (rvm-elscreen-activate-corresponding-ruby dir-path)
-
-    (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-      (set-alist 'screen-properties 'fuzzy-find-project-root dir-path)
-      (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
+    (if (file-exists-p (concat dir-path "TAGS"))
+        (visit-project-tags)
+      (build-ctags dir-path))
 ))
 
 
@@ -116,7 +133,7 @@ If no .rvmrc file is found, the default ruby is used insted."
 ))
 
 
-(defun rvm-elscreen-recall () 
+(defun rvm-elscreen-recall ()
 "Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
   (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
          (rvm-ruby (get-alist 'rvm-ruby screen-properties))
@@ -125,27 +142,38 @@ If no .rvmrc file is found, the default ruby is used insted."
         (rvm-use rvm-ruby rvm-gemset)
       (rvm-use-default))))
 
-;; hrm.. TODO make this easier to add/update/recall properties with less boilerplate. :(
-(defun elscreen-fuzzy-find-recall () 
-  "Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
-  (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
-         (fuzzy-root (get-alist 'fuzzy-find-project-root screen-properties)))
-    (if fuzzy-root
-        (setq fuzzy-find-project-root fuzzy-root)
-      (setq fuzzy-find-project-root "~/my-emacs"))))
+;; different approach: advise the fuzzy-find method to use whatever the current property is
+;; more lazy/functional approach
+(defun jg-fuzzy-find ()
+  "Wrapper around `fuzzy-find-project-root' to use the current `jg-project-root'
+as the fuzzy-find root"
+  (interactive)
+  (let ((fuzzy-find-project-root (jg-project-root)))
+    (fuzzy-find-in-project)
+    )
+)
+
+
 
 
 ;; Upon switching to a new screen, recall the rvm setup
 (add-hook 'elscreen-goto-hook 'rvm-elscreen-recall)
 (add-hook 'elscreen-kill-hook 'rvm-elscreen-recall)
-;; and the fuzzy project root
-(add-hook 'elscreen-goto-hook 'elscreen-fuzzy-find-recall)
-(add-hook 'elscreen-kill-hook 'elscreen-fuzzy-find-recall)
 
 
+;; advise the interactive forms of these functions (cut and copy) to
+;; use the current line if nothing is selected (no region)
+(put 'kill-ring-save 'interactive-form
+     '(interactive
+       (if (use-region-p)
+           (list (region-beginning) (region-end))
+         (list (line-beginning-position) (line-beginning-position 2)))))
 
-
-
+(put 'kill-region 'interactive-form      
+     '(interactive
+       (if (use-region-p)
+           (list (region-beginning) (region-end))
+         (list (line-beginning-position) (line-beginning-position 2)))))
 
 
 
@@ -161,6 +189,51 @@ If no .rvmrc file is found, the default ruby is used insted."
 )
 
 
+(defun clear-shell ()
+  (interactive)
+  (let ((comint-buffer-maximum-size 0))
+    (comint-truncate-buffer)))
+
+
+;; open a new shell with a better name,
+;; in the root of the current project
+(defun jg-new-shell ()
+  (interactive)
+  (let ((default-directory (jg-project-root)))
+        (shell (generate-new-buffer-name "$shell")))
+)
+
+(defun jg-ansi-colorize-buffer ()
+  (interactive)
+  (ansi-color-apply-on-region (point-min) (point-max))
+)
+
+
+;; run a shell command and print the output at point
+(defun shell-command-insert-output-here ()
+  (interactive)
+  (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
+    (call-interactively 'shell-command)
+    )
+  )
+
+;; run a shell command on the selected region, and replace it with the output
+(defun shell-command-on-region-replace ()
+  (interactive)
+  (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
+    (call-interactively 'shell-command-on-region)
+    )
+  )
+
+(defun fix-stdin-buffer ()
+  (cond
+   ;; When opening a stdin temp file from a pipe in the shell, via ~/.bash/ebuffer
+   ((string-match "___STDIN-.+" (buffer-name))
+    (comint-mode)
+    (ansi-color-for-comint-mode-on)
+    (jg-ansi-colorize-buffer)
+    )))
+(add-hook 'server-visit-hook 'fix-stdin-buffer)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -306,4 +379,50 @@ there's a region, all lines that region covers will be duplicated."
         (insert region)
         (setq end (point)))
       (goto-char (+ origin (* (length region) arg) arg)))))
+
+
+;; ------------------------------------------------------------------------
+;; from http://mattbriggs.net/blog/2012/03/18/awesome-emacs-plugins-ctags/
+(defun build-ctags (&optional passed-root)
+  (interactive)
+  (message "building project tags")
+  (let ((root (or passed-root (jg-project-root))))
+    (shell-command (concat "ctags -e -R --extra=+fq --exclude=db --exclude=test --exclude=jars --exclude=vendor --exclude=.git --exclude=public -f " root "TAGS " root))
+    (visit-project-tags))
+  (message "tags built successfully"))
+(defun visit-project-tags ()
+  (interactive)
+  (let ((tags-file (concat (jg-project-root) "TAGS")))
+    (visit-tags-table tags-file)
+    (message (concat "Loaded " tags-file))))
+;; ------------------------------------------------------------------------
+
+
+;; from http://stackoverflow.com/questions/3139970/open-a-file-at-line-with-filenameline-syntax
+(defun find-file-at-point-with-line()
+  "if file has an attached line num goto that line, ie boom.rb:12"
+  (interactive)
+  (setq line-num 0)
+  (save-excursion
+    (search-forward-regexp "[^ ]:" (point-max) t)
+    (if (looking-at "[0-9]+")
+         (setq line-num (string-to-number (buffer-substring (match-beginning 0) (match-end 0))))))
+  (find-file-at-point)
+  (if (not (equal line-num 0))
+      (goto-line line-num)))
+
+
+
+(defun isearch-yank-symbol-string ()
+  "*Put symbol at current point into search string."
+  (interactive)
+  (let ((sym (symbol-at-point)))
+    (if sym
+        (progn
+          (setq isearch-regexp nil
+                isearch-string (symbol-name sym)
+                isearch-message (mapconcat 'isearch-text-char-description isearch-string "")
+                isearch-yank-flag t))
+      (ding)))
+  (isearch-search-and-update))
 

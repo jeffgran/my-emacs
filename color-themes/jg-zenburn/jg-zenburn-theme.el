@@ -62,9 +62,9 @@
       (jg-zenburn-bg-1 "#103063")
       (jg-zenburn-bg-05 "#102a33")
       (jg-zenburn-bg "#000000")
-      (jg-zenburn-bg+1 "#162a1e")
-      (jg-zenburn-bg+2 "#1e301e")
-      (jg-zenburn-bg+3 "#253d28")
+      (jg-zenburn-bg+1 "#1f1f26")
+      (jg-zenburn-bg+2 "#262630")
+      (jg-zenburn-bg+3 "#2a2a39")
 
       (jg-zenburn-red+1 "#dd5288")
       (jg-zenburn-red "#cd3278")
@@ -72,8 +72,12 @@
       (jg-zenburn-red-2 "#ad1258")
       (jg-zenburn-red-3 "#8d0238")
       (jg-zenburn-red-4 "#6d0028")
+      (jg-zenburn-red-5 "#3d0008")
 
       (jg-zenburn-orange "#FDA739")
+      (jg-zenburn-orange-2 "#b96300")
+      (jg-zenburn-orange-3 "#974100")
+      (jg-zenburn-orange-4 "#520900")
 
       (jg-zenburn-yellow "#FFEA77")
       (jg-zenburn-yellow-1 "#dfca67")
@@ -208,8 +212,6 @@
    `(elscreen-tab-current-screen-face ((t (:background ,jg-zenburn-blue-5 :foreground ,jg-zenburn-cyan+1 :style released-button :underline nil))))
    `(elscreen-tab-other-screen-face ((t (:background ,jg-zenburn-blue-6 :foreground ,jg-zenburn-cyan-2 :style released-button  :underline nil))))
 
-   `(wcy-switch-buffer-active-buffer-face ((t (:background ,jg-zenburn-blue-2))))
-   `(wcy-switch-buffer-inactive-buffer-face ((t (:background ,jg-zenburn-blue-5))))
 
    `(cua-rectangle ((t (:background ,jg-zenburn-red-3))))
 
@@ -249,8 +251,8 @@
    `(font-latex-title-4 ((t (:inherit variable-pitch :weight bold))))
 
    ;; auto-complete
-   `(ac-candidate-face ((t (:background ,jg-zenburn-bg+3 :foreground "black"))))
-   `(ac-selection-face ((t (:background ,jg-zenburn-blue-4 :foreground ,jg-zenburn-fg))))
+   `(ac-selection-face ((t (:background ,jg-zenburn-blue-5 :foreground ,jg-zenburn-cyan+1))))
+   `(ac-candidate-face ((t (:background ,jg-zenburn-blue-6 :foreground ,jg-zenburn-cyan))))
    `(popup-tip-face ((t (:background ,jg-zenburn-yellow-2 :foreground "black"))))
    `(popup-scroll-bar-foreground-face ((t (:background ,jg-zenburn-blue-5))))
    `(popup-scroll-bar-background-face ((t (:background ,jg-zenburn-bg-1))))
@@ -286,12 +288,12 @@
    `(eshell-ls-symlink ((t (:foreground ,jg-zenburn-cyan :weight bold))))
 
    ;; flymake
-   `(flymake-errline ((t (:foreground ,jg-zenburn-red-1 :weight bold :underline t))))
-   `(flymake-warnline ((t (:foreground ,jg-zenburn-yellow-1 :weight bold :underline t))))
+   `(flymake-errline ((t (:background ,jg-zenburn-red-5 :weight bold :underline t))))
+   `(flymake-warnline ((t (:background ,jg-zenburn-orange-4 :weight bold :underline t))))
 
    ;; flyspell
-   `(flyspell-duplicate ((t (:foreground ,jg-zenburn-yellow-1 :weight bold :underline t))))
-   `(flyspell-incorrect ((t (:foreground ,jg-zenburn-red-1 :weight bold :underline t))))
+   `(flyspell-duplicate ((t (:underline t))))
+   `(flyspell-incorrect ((t (:underline t))))
 
    ;; erc
    `(erc-action-face ((t (:inherit erc-default-face))))

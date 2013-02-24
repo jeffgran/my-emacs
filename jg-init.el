@@ -21,6 +21,7 @@
   (add-path "elscreen")
   (add-path "apel")
   (add-path "back-button")
+  (add-path "readline-complete.el")
 )
 
 
@@ -44,3 +45,11 @@
 (load-library "jg-functions")  ;; custom functions I've written to make me faster :)
 (load-library "jg-setup")      ; basic stock on/off switches and stuff.
 (load-library "jg-mode")       ; my keys. they are sweeet.
+
+
+;; Beginning of the el4r block:
+(add-to-list 'load-path "/usr/local/share/emacs/site-lisp")
+(require 'el4r)
+(el4r-boot)
+;; End of the el4r block.
+

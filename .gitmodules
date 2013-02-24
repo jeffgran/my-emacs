@@ -43,3 +43,6 @@
 [submodule "back-button"]
 	path = back-button
 	url = https://github.com/rolandwalker/back-button.git
+[submodule "readline-complete.el"]
+	path = readline-complete.el
+	url = ./readline-complete.el/
