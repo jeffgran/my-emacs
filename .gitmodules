@@ -31,21 +31,21 @@
 [submodule "emacs-css-mode"]
 	path = emacs-css-mode
 	url = https://github.com/fberger/emacs-css-mode.git
-[submodule "maxframe"]
-	path = maxframe
-	url = git://github.com/rmm5t/maxframe.el.git
+[submodule "maxframe.el"]
+	path = maxframe.el
+	url = https://github.com/rmm5t/maxframe.el.git
 [submodule "elscreen"]
 	path = elscreen
 	url = https://github.com/knu/elscreen.git
 [submodule "apel"]
 	path = apel
-	url = ./apel
+	url = https://github.com/jeffgran/APEL.git
 [submodule "back-button"]
 	path = back-button
 	url = https://github.com/rolandwalker/back-button.git
 [submodule "readline-complete.el"]
 	path = readline-complete.el
-	url = ./readline-complete.el/
+	url = https://github.com/monsanto/readline-complete.el.git
 [submodule "jg-quicknav"]
 	path = jg-quicknav
-	url = ./jg-quicknav/
+	url = https://github.com/jeffgran/jg-quicknav.git
