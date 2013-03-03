@@ -144,7 +144,7 @@ If no .rvmrc file is found, the default ruby is used insted."
 
 ;; different approach: advise the fuzzy-find method to use whatever the current property is
 ;; more lazy/functional approach
-(defun jg-fuzzy-find ()
+(defun jg-fuzzy-find-in-project ()
   "Wrapper around `fuzzy-find-project-root' to use the current `jg-project-root'
 as the fuzzy-find root"
   (interactive)
@@ -152,6 +152,12 @@ as the fuzzy-find root"
     (fuzzy-find-in-project)
     )
 )
+
+(defun what-face (pos)
+  (interactive "d")
+  (let ((face (or (get-char-property (point) 'read-face-name)
+                  (get-char-property (point) 'face))))
+    (if face (message "Face: %s" face) (message "No face at %d" pos))))
 
 
 
@@ -189,6 +195,9 @@ as the fuzzy-find root"
 )
 
 
+;; ==========================================================================
+;; *shell* mode stuff
+;; -----------------
 (defun clear-shell ()
   (interactive)
   (let ((comint-buffer-maximum-size 0))
@@ -234,6 +243,36 @@ as the fuzzy-find root"
     (jg-ansi-colorize-buffer)
     )))
 (add-hook 'server-visit-hook 'fix-stdin-buffer)
+
+
+
+;; from http://stackoverflow.com/questions/7987494/emacs-shell-mode-display-is-too-wide-after-splitting-window
+(defun comint-fix-window-size ()
+  "Change process window size."
+  (when (derived-mode-p 'comint-mode)
+    (set-process-window-size (get-buffer-process (current-buffer))
+                             (window-height)
+                             (window-width))))
+(defun my-shell-mode-hook ()
+  ;; add this hook as buffer local, so it runs once per window.
+  (add-hook 'window-configuration-change-hook 'comint-fix-window-size nil t))
+(add-hook 'shell-mode-hook 'my-shell-mode-hook)
+;; ==========================================================================
+
+
+;; ssh-mode
+;; open a new ssh shell with a better name,
+(defun jg-open-ssh ()
+  (interactive)
+  
+  ;; now set up some stuff in the new buffer
+  (let ((ssh-buffer (call-interactively 'ssh))
+        (prev-buffer (current-buffer)))
+    (set-buffer ssh-buffer)
+    (rename-buffer (concat ssh-remote-user "@" ssh-host) t)
+    (set-buffer prev-buffer)
+    )
+)
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -425,4 +464,7 @@ there's a region, all lines that region covers will be duplicated."
                 isearch-yank-flag t))
       (ding)))
   (isearch-search-and-update))
+
+
+
 

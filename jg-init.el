@@ -22,6 +22,8 @@
   (add-path "apel")
   (add-path "back-button")
   (add-path "readline-complete.el")
+  (add-path "jg-quicknav")
+  ;;(add-path "visual-mark-ring-mode")
 )
 
 

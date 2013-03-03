@@ -1,12 +1,20 @@
 ;; undo stuff prelude is trying to force on me
-(setq before-save-hook nil) ;; cleaning up whitespace for me.
-(setq prelude-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
-(setq prelude-interactive-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
-(add-hook 'prog-mode-hook 'whitespace-turn-off t)
-(whitespace-mode -1)
+;;(setq before-save-hook nil) ;; cleaning up whitespace for me.
+;;(setq prelude-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
+;;(setq prelude-interactive-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
+;;(add-hook 'prog-mode-hook 'whitespace-turn-off t)
+;;(whitespace-mode -1)
+
+
+(add-to-list 'auto-mode-alist '("\\.el" . emacs-lisp-mode))
+(add-hook 'emacs-lisp-mode-hook '(lambda ()
+                                   (paredit-mode t)
+                                   ))
+
+
+
 
 ;; only turn the tabs stuff on in windowed mode (not the terminal)
-
 (if window-system
     (progn
       ;; Elscreen (tabs/session management)
@@ -23,6 +31,9 @@
 (require 'pbcopy)
 (turn-on-pbcopy)
 
+(require 'jg-paredit)
+
+(require 'jg-quicknav)
 
 ;; prelude gives me helm and yasnippet... I think I might like this
 ;; way of accessing the snippets better
@@ -73,7 +84,6 @@
  nxml-degraded t)
 
 (add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
-(add-to-list 'auto-mode-alist '("\\.dryml$" . eruby-nxhtml-mumamo-mode))
 
 
 
@@ -113,12 +123,14 @@
           '(lambda() (coffee-custom)))
 
 
+
 ;; doesn't seem to work to override existing css-mode?
-                                        ;(add-to-list 'load-path "~/.emacs.d/emacs-css-mode")
+;;(add-to-list 'load-path "~/.emacs.d/emacs-css-mode")
 (add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
-;; (add-hook 'css-mode-hook
-;;           (lambda()
-;;             (local-set-key (kbd "RET") 'open-line-below)))
+
+
+;;(require 'shell-script-mode)
+(add-to-list 'auto-mode-alist '("\\.aliases$" . sh-mode))
 
 
 (require 'rvm)
@@ -129,6 +141,11 @@
 (require 'shoulda-mode)
 (setq shoulda-use-rvm t)
 (setq rspec-use-rvm t)
+
+;; make comments automatically go to multiple lines for long ones
+(auto-fill-mode t)
+(setq comment-auto-fill-only-comments t)
+
 
 (add-hook 'ruby-mode-hook
           (lambda ()
@@ -141,6 +158,18 @@
             )
           )
 
+(add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Gemfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Guardfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-mode))
+
+
+
 (require 'rspec-mode)
 (require 'ansi-color)
 
@@ -152,6 +181,9 @@
 (add-to-list 'auto-mode-alist '("\\.cs$" . c++-mode))
 (setq c-basic-offset 4)
 
+
+(require 'centered-cursor-mode)
+(setq ccm-recenter-at-end-of-file t)
 
 (require 'srb-adaptive-wrap-mode)
 ;;; srb-adaptive-wrap hooks
@@ -173,6 +205,8 @@
 (require 'back-button)
 (back-button-mode 1)
 
+;; (autoload 'visual-mark-ring-mode "visual-mark-ring-mode"
+;;   "Displays the position of marks in the mark-ring" t)
 
 
 (require 'fuzzy-find-in-project)
@@ -191,30 +225,32 @@
 (require 'wcy-swbuff)
 
 
-;; term-mode stuff
 
 ;; kill the buffer upon completion of the process.
-;; kill emacs instead?
-(add-hook 'term-exec-hook (lambda ()
-                            (let* ((buff (current-buffer))
-                                   (proc (get-buffer-process buff)))
-                              (lexical-let ((buff buff))
-                                (set-process-sentinel proc (lambda (process event)
-                                                             (if (string= event "finished\n")
-                                                                 (progn
-                                                                   (kill-buffer buff)
-                                                                   (delete-frame))
-                                                               )))))))
+(defun kill-buffer-on-exit-shell ()
+  (let* ((buff (current-buffer))
+         (proc (get-buffer-process buff)))
+    (lexical-let ((buff buff))
+      (set-process-sentinel proc (lambda (process event)
+                                   (if (string= event "finished\n")
+                                       (progn
+                                         (kill-buffer buff)
+                                         )
+                                     ))))))
+
+;; term-mode 
+(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
+
+
 
 ;; shell mode
+(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 (add-hook 'shell-mode-hook (lambda ()
                              (linum-mode) ;; toggle it off i guess? using ARG=nil doesn't work
                              ))
 
 
 
-
-(require 'ansi-color)
 
 (defadvice display-message-or-buffer (before ansi-color activate)
   "Process ANSI color codes in shell output."
@@ -228,9 +264,13 @@
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
+
+
 (require 'dired+)
 
-;; sweet auto-complete?
+
+
+;; sweet auto-complete!
 (require 'auto-complete-config)
 (add-to-list 'ac-dictionary-directories "~/my-emacs//ac-dict")
 (ac-config-default)
@@ -251,15 +291,25 @@
 (define-key ac-completing-map (kbd "RET") 'ac-complete)
 (define-key ac-completing-map (kbd "TAB") 'auto-complete)
 
+;; (defadvice ac-start (after jg-ac-tab-again-if-only-one-candidate activate)
+;;   (message "%d" (length ac-candidates))
+;;   (if ac-dwim-enable (ac-complete))
+;;   )
 
 (setq explicit-shell-file-name "/usr/local/bin/bash")
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
 (require 'readline-complete)
+
+(add-to-list 'ac-modes 'ssh-mode)
+(add-hook 'ssh-mode-hook 'ac-rlc-setup-sources)
+(add-hook 'ssh-mode-hook 'jg-setup-ac-rlc)
+
 (add-to-list 'ac-modes 'shell-mode)
 (add-hook 'shell-mode-hook 'ac-rlc-setup-sources)
 (add-hook 'shell-mode-hook 'jg-setup-ac-rlc)
+
 (defun jg-setup-ac-rlc ()
   ;; for some reason have to override these again here
   (setq ac-auto-start nil)

@@ -20,8 +20,22 @@
    comint-scroll-show-maximum-output nil           ; don't scroll to bottom maybe?
    comint-prompt-read-only t                       ; what it says
 
+   ssh-directory-tracking-mode t
+
    enable-recursive-minibuffers t                  ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
+
+   ;; dired
+   dired-listing-switches "-alhopF"
+   tags-add-tables t
 )
+
+(setq helm-split-window-default-side 'right)
+
+;; (require 'ecb)
+;; (ecb-layout-define "jg" right
+;;   "creates jg layout with just methods"
+;;   (ecb-set-methods-buffer)
+;;   (select-window (next-window)))
 
 
 ;; default encoding for new buffers, among other default settings and fallbacks.

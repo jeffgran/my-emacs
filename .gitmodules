@@ -46,3 +46,6 @@
 [submodule "readline-complete.el"]
 	path = readline-complete.el
 	url = ./readline-complete.el/
+[submodule "jg-quicknav"]
+	path = jg-quicknav
+	url = ./jg-quicknav/

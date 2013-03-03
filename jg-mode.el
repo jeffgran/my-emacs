@@ -11,7 +11,7 @@
 (define-key jg-navigation-mode-map (kbd "C-j") 'backward-char)
 (define-key jg-navigation-mode-map (kbd "C-'") 'forward-word)
 (define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
-(define-key jg-navigation-mode-map (kbd "C-t") 'exchange-point-and-mark)
+;;(define-key jg-navigation-mode-map (kbd "C-t") 'exchange-point-and-mark)
 
 
 
@@ -43,6 +43,8 @@
       (define-key jg-navigation-mode-map (kbd "C-m") nil)
       (define-key jg-navigation-mode-map (kbd "H-m") 'move-to-window-line-top-bottom)
       ))
+
+
 
 ;; "windows" (in emacs parlance)
 (define-key jg-navigation-mode-map (kbd "M-o") 'other-window)
@@ -79,7 +81,7 @@
 (define-key jg-navigation-mode-map (kbd "M-C-SPC") 'er/contract-region)
 
 
-(define-key jg-navigation-mode-map (kbd "C-S-o") 'fuzzy-find-in-project)
+(define-key jg-navigation-mode-map (kbd "C-S-o") 'jg-fuzzy-find-in-project)
 (define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
 
 
@@ -88,8 +90,11 @@
 (define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
 
 (define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
+;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 (define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
-(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
+;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
+(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
+;;(define-key jg-navigation-mode-map (kbd "M-o") 'helm-find-files)
 
 
 
@@ -99,6 +104,8 @@
 ;; same, but only within the current file
 (define-key jg-navigation-mode-map (kbd "C-,") 'back-button-local-backward)
 (define-key jg-navigation-mode-map (kbd "C-.") 'back-button-local-forward)
+
+(define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
 
 ;; isearch
 (define-key jg-navigation-mode-map (kbd "C-f") 'isearch-forward)
@@ -115,12 +122,14 @@
 (define-key jg-navigation-mode-map (kbd "M-x") 'smex)
 
 ;; let's put the shell commands under the M-s prefix
-(define-key jg-navigation-mode-map (kbd "M-S") 'jg-new-shell) ;; Shell command, insert output Other buffer.
-(define-key jg-navigation-mode-map (kbd "M-s a") 'shell-command) ;; Shell command, insert output Other buffer.
+(define-key jg-navigation-mode-map (kbd "M-S") 'jg-new-shell) ;; new shell in the current project root
+(define-key jg-navigation-mode-map (kbd "M-s a") 'shell-command)
 (define-key jg-navigation-mode-map (kbd "M-s o") 'async-shell-command) ;; Shell command, insert output Other buffer.
 (define-key jg-navigation-mode-map (kbd "M-s R") 'shell-command-on-region-replace) ;; Shell command on Region, Replace region with output.
 (define-key jg-navigation-mode-map (kbd "M-s r") 'shell-command-on-region) ;; Shell command on Region.
 (define-key jg-navigation-mode-map (kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+
+(define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
 
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
 
@@ -140,6 +149,7 @@
 
 (define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-up)
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
+(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
 (define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
 (define-key jg-code-mode-map (kbd "<M-C-return>") 'open-line-above)
 
@@ -192,6 +202,7 @@
 (define-key jg-code-mode-map (kbd "C-{") 'css-curlies)
 (define-key jg-code-mode-map (kbd "C-#") 'comment-or-uncomment-region)
 ;;(define-key jg-code-mode-map (kbd "TAB") 'hippie-expand)
+(define-key jg-code-mode-map (kbd "A-q") 'fill-paragraph)
 
 
 
@@ -221,6 +232,7 @@
 
 ;; other things i rebind
 (define-key jg-code-mode-map (kbd "M-C-x") 'eval-expression)
+(define-key shell-mode-map (kbd "M-C-x") 'eval-expression)
 
 
 ;; set up a new help key prefix since I use C-h for movement
@@ -251,7 +263,6 @@
 
 ;; don't break my C-j
 (require 'paredit)
-(define-key ruby-mode-map (kbd "C-j") nil) ;; unbind the ruby C-j because it conflicts
 (define-key paredit-mode-map (kbd "C-j") nil)
 
 
@@ -264,15 +275,18 @@
 (define-key ruby-tools-mode-map (kbd "C-;") nil)
 ;;(define-key ruby-tools-mode-map (kbd "#") nil)
 
+(define-key ruby-mode-map (kbd "TAB") nil)
+(define-key ruby-mode-map (kbd "C-j") nil) ;; unbind the ruby C-j because it conflicts
+
 (define-key ruby-tools-mode-map (kbd "M-'") 'ruby-tools-to-single-quote-string)
 (define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
 (define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
 
 
-;; "Add my keybindings for ido."
 ;; for some reason they don't take effect unless I bind them every time, in this hook.
 (add-hook 'ido-setup-hook 'ido-jg-keys)
 (defun ido-jg-keys ()
+  "Add my keybindings for ido."
   (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
   (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)
   )
@@ -350,12 +364,19 @@
 ;; dired stuff
 (define-key dired-mode-map "B" 'dired-up-directory)
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
+(add-hook 'dired-mode-hook 'disable-jg-code-mode)
 
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
 (define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
 (define-key shell-mode-map (kbd "C-S-f") 'rgrep)
+(define-key shell-mode-map (kbd "C-S-v") 'cua-paste-pop)
+(define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
+(define-key shell-mode-map (kbd "M-.") 'comint-restore-input)
 (define-key shell-mode-map (kbd "TAB") nil)
+;; ssh-mode
+(require 'ssh)
+(define-key ssh-mode-map (kbd "TAB") nil)
 
 ;; scratch buffer
 ;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
