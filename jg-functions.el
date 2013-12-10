@@ -103,6 +103,7 @@
     (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
     (rvm-elscreen-activate-corresponding-ruby dir-path)
+    (cd dir-path)
     (if (file-exists-p (concat dir-path "TAGS"))
         (visit-project-tags)
       (build-ctags dir-path))
@@ -153,6 +154,7 @@ as the fuzzy-find root"
     )
 )
 
+;; from the internet somewhere. stackoverflow I think
 (defun what-face (pos)
   (interactive "d")
   (let ((face (or (get-char-property (point) 'read-face-name)
@@ -201,7 +203,8 @@ as the fuzzy-find root"
 (defun clear-shell ()
   (interactive)
   (let ((comint-buffer-maximum-size 0))
-    (comint-truncate-buffer)))
+    (comint-truncate-buffer)
+    (move-end-of-line 1)))
 
 
 ;; open a new shell with a better name,
@@ -266,13 +269,14 @@ as the fuzzy-find root"
   (interactive)
   
   ;; now set up some stuff in the new buffer
-  (let ((ssh-buffer (call-interactively 'ssh))
-        (prev-buffer (current-buffer)))
-    (set-buffer ssh-buffer)
-    (rename-buffer (concat ssh-remote-user "@" ssh-host) t)
-    (set-buffer prev-buffer)
-    )
-)
+  (let ((ssh-buffer (call-interactively 'ssh)))
+    (with-current-buffer ssh-buffer
+      (rename-buffer (concat ssh-remote-user "@" ssh-host) t)
+      ;; (make-local-variable 'explicit-shell-file-name)
+      ;; (setq explicit-shell-file-name nil)
+      (make-local-variable 'shell-file-name)
+      (setq shell-file-name "/bin/bash")
+      )))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
@@ -438,6 +442,8 @@ there's a region, all lines that region covers will be duplicated."
 
 
 ;; from http://stackoverflow.com/questions/3139970/open-a-file-at-line-with-filenameline-syntax
+;; (modified by jg)
+(require 'ffap)
 (defun find-file-at-point-with-line()
   "if file has an attached line num goto that line, ie boom.rb:12"
   (interactive)
@@ -446,9 +452,13 @@ there's a region, all lines that region covers will be duplicated."
     (search-forward-regexp "[^ ]:" (point-max) t)
     (if (looking-at "[0-9]+")
          (setq line-num (string-to-number (buffer-substring (match-beginning 0) (match-end 0))))))
-  (find-file-at-point)
-  (if (not (equal line-num 0))
-      (goto-line line-num)))
+  (if (ffap-file-at-point)
+      (progn
+        (find-file (ffap-file-at-point))
+        (when (not (equal line-num 0))
+          (goto-line line-num)
+          (recenter-top-bottom)))
+    (ding)))
 
 
 
@@ -468,3 +478,13 @@ there's a region, all lines that region covers will be duplicated."
 
 
 
+;; (defun le::save-buffer-force-backup (arg)
+;;   "save buffer, always with a 2 \\[universal-argument]'s
+;; see `save-buffer'
+;; With ARG, don't force backup.
+;; "
+;;   (interactive "P")
+;;   (if (consp arg)
+;;       (save-buffer)
+;;     (save-buffer 16)))
+;; (global-set-key [remap save-buffer] 'le::save-buffer-force-backup)

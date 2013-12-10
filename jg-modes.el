@@ -1,3 +1,9 @@
+;;; TODO:;;;   but still use jg-code-mode. Use paredit and rainbow delimiters as well.
+;;;
+;;;
+;;;
+
+
 ;; undo stuff prelude is trying to force on me
 ;;(setq before-save-hook nil) ;; cleaning up whitespace for me.
 ;;(setq prelude-lisp-coding-hook 'rainbow-delimiters-mode) ;; setting annoying paredit mode
@@ -56,9 +62,11 @@
 ;; | You can customize this variable.
 ;; `----
 
-(setq helm-idle-delay 0.03)
-(setq helm-input-idle-delay 0.03)
-(setq helm-quick-update t)
+(setq helm-idle-delay 0
+      helm-input-idle-delay 0
+      helm-quick-update nil
+      helm-buffer-max-length 70
+      )
 
 
 
@@ -124,9 +132,9 @@
 
 
 
-;; doesn't seem to work to override existing css-mode?
-;;(add-to-list 'load-path "~/.emacs.d/emacs-css-mode")
-(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
+;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
+;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
+(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
 
 
 ;;(require 'shell-script-mode)
@@ -146,19 +154,36 @@
 (auto-fill-mode t)
 (setq comment-auto-fill-only-comments t)
 
-
+;;(require 'ruby-end)
 (add-hook 'ruby-mode-hook
-          (lambda ()
-            (make-local-variable 'paragraph-start)
-            (setq paragraph-start (concat "@[[:alpha:]]+\\|" paragraph-start))
-            (make-local-variable 'paragraph-separate)
-            (setq paragraph-separate (concat "---+\\|" paragraph-separate))
-            ;; turn electric pair mode off; ruby has its own electricity
-            (electric-pair-mode -1)
-            )
-          )
+          '(lambda ()
+             ;;(make-local-variable 'paragraph-start)
+             ;;(setq paragraph-start (concat "@[[:alpha:]]+\\|" paragraph-start))
+             ;;
+             ;;(make-local-variable 'paragraph-separate)
+             ;;(setq paragraph-separate (concat "---+\\|" paragraph-separate))
+             ;;(ruby-end-mode t)
+             ;;
+             ;; turn electric pair mode off; ruby has its own electricity
+             (electric-pair-mode -1)
+             (ruby-electric-mode t)))
+
+(defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
+  "undo some stuff ruby-electric tries to force on us"
+  ;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
+  (define-key ruby-mode-map (kbd "TAB") nil)
+  (define-key ruby-mode-map (kbd "RET") nil)
+  (define-key ruby-mode-map (kbd "C-m") nil)
+  (define-key ruby-mode-map (kbd "SPC") nil)
+  (define-key ruby-mode-map (kbd "C-j") nil)
+  (define-key ruby-mode-map (kbd "C-M-n") nil)
+  (define-key ruby-mode-map (kbd "C-M-p") nil))
+
+
+
 
 (add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-mode))
@@ -168,7 +193,24 @@
 (add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-mode))
 
+(setq enh-ruby-program "~/.rvm/rubies/ruby-1.9.3-p327/bin/ruby") ; so that still works if ruby points to ruby1.8 or jruby
+(require 'ruby-mode)
+(setq ruby-deep-indent-paren     nil
+      ruby-hanging-indent-level  2
+      ruby-extra-keywords        '("raise"))
+(ruby-local-enable-extra-keywords)
 
+
+
+;; stolen from ruby-mode to make expand-region work with enhanced ruby mode
+(defconst ruby-block-end-re "\\<end\\>")
+(defconst ruby-block-beg-keywords
+  '("class" "module" "def" "if" "unless" "case" "while" "until" "for" "begin" "do")
+  "Keywords at the beginning of blocks.")
+(defconst ruby-block-beg-re
+  (regexp-opt ruby-block-beg-keywords)
+  "Regexp to match the beginning of blocks.")
+(require 'expand-region)
 
 (require 'rspec-mode)
 (require 'ansi-color)
@@ -245,10 +287,6 @@
 
 ;; shell mode
 (add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
-(add-hook 'shell-mode-hook (lambda ()
-                             (linum-mode) ;; toggle it off i guess? using ARG=nil doesn't work
-                             ))
-
 
 
 
@@ -272,7 +310,7 @@
 
 ;; sweet auto-complete!
 (require 'auto-complete-config)
-(add-to-list 'ac-dictionary-directories "~/my-emacs//ac-dict")
+(add-to-list 'ac-dictionary-directories "~/my-emacs/ac-dict")
 (ac-config-default)
 (global-auto-complete-mode t)
 
@@ -296,7 +334,7 @@
 ;;   (if ac-dwim-enable (ac-complete))
 ;;   )
 
-(setq explicit-shell-file-name "/usr/local/bin/bash")
+;;(setq explicit-shell-file-name "/usr/local/bin/bash")
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
@@ -305,6 +343,8 @@
 (add-to-list 'ac-modes 'ssh-mode)
 (add-hook 'ssh-mode-hook 'ac-rlc-setup-sources)
 (add-hook 'ssh-mode-hook 'jg-setup-ac-rlc)
+
+(setq tramp-shell-prompt-pattern ".*[#$%>] *")
 
 (add-to-list 'ac-modes 'shell-mode)
 (add-hook 'shell-mode-hook 'ac-rlc-setup-sources)
@@ -338,4 +378,92 @@
 ;;notes
 ;; try (tags-search)
 ;; try (find-tag)
-;;(global-set-key (kbd "C-8")  'ctags-search)
+
+
+;; scad mode
+(autoload 'scad-mode "scad-mode" "Major mode for editing SCAD code." t)
+(add-to-list 'auto-mode-alist '("\\.scad$" . scad-mode))
+(add-to-list 'auto-mode-alist '("\\.escad$" . scad-mode))
+
+
+(require 'mu4e)
+(require 'tls)
+(setq tls-program '("openssl s_client -debug -crlf -connect %h:%p -ssl2 -ign_eof"))
+
+
+(setq
+ mu4e-maildir "~/.maildir/openlogic"                      ; top-level Maildir
+ mu4e-sent-folder   "/Sent Items"                         ; folder for sent messages
+ mu4e-drafts-folder "/Drafts"                             ; unfinished messages
+ mu4e-trash-folder  "/Deleted Messages"                   ; trashed messages 
+ 
+ mu4e-get-mail-command "mbsync -a"
+ mu4e-update-interval 300                                 ; update every 5 minutes
+
+ 
+ mu4e-headers-date-format "%Y-%m-%d"                      ; date format
+ mu4e-headers-time-format "%H:%M"                         ; time format
+ message-kill-buffer-on-exit t
+ mu4e-use-fancy-chars nil
+ 
+ mu4e-view-show-images t
+ mu4e-view-image-max-width 1000
+ mu4e-html2text-command "html2text -utf8 -width 72 -nobs")
+
+(setq mu4e-headers-fields
+      '((:human-date    .  15)
+        (:flags         .  10)
+        (:from          .  25)
+        (:subject       .  nil)))
+
+
+(setq
+ message-send-mail-function 'smtpmail-send-it
+ send-mail-function 'smtpmail-send-it
+ ;;smtpmail-local-domain "localhost"
+ smtpmail-local-domain nil ;"openlogic.com"
+ ;;smtpmail-smtp-server "pod51018.outlook.com"
+ smtpmail-smtp-server "localhost"
+ ;;smtpmail-default-smtp-server "pod51018.outlook.com"
+ smtpmail-default-smtp-server "localhost"
+ ;;smtpmail-smtp-service 587
+ smtpmail-smtp-service 1025
+ ;;smtpmail-stream-type 'tls
+ smtpmail-stream-type nil
+ smtpmail-queue-dir "~/.smtp-mail-queue")
+
+
+;;(setq smtpmail-debug-info nil) ; only to debug problems
+
+(require 'smtpmail)
+
+(setq mu4e-reply-to-address "jeff.gran@openlogic.com"
+      user-mail-address "jeff.gran@openlogic.com"
+      user-full-name  "Jeff Gran")
+
+(setq mu4e-attachment-dir "~/Downloads")
+
+(defconst mu4e~main-buffer-name "Mu4e-main"
+  "*internal* Name of the mu4e main view buffer.")
+
+(add-to-list 'mu4e-bookmarks
+             '("maildir:/INBOX"       "Inbox"     ?i))
+(add-to-list 'mu4e-bookmarks
+             '("flag:flagged"         "Flagged"   ?f))
+
+(setq mu4e-headers-results-limit 500)
+
+;; (setq mu4e-confirm-quit nil
+;;       
+;;       mu4e-html2text-command "html2text -utf8 -width 72")
+
+
+;; (define-key mu4e-main-mode-map (kbd "q") 'mu4e-quit-session)
+;; (define-key mu4e-headers-mode-map (kbd "M-u") 'mu4e-update-mail-show-window)
+
+
+
+
+;;; org mode
+(setq org-todo-keywords
+       '((sequence "TODO" "WORKING" "DONE")))

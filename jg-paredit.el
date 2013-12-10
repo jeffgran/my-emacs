@@ -1,4 +1,9 @@
 (require 'paredit)
+(require 'rainbow-delimiters)
+
+(provide 'jg-paredit)
+
+
 (defvar jg-paredit-mode-map (make-sparse-keymap) "jg-paredit-mode-map.")
 (define-minor-mode jg-paredit-mode "JG Paredit Keys" nil " [JGp]" 'jg-paredit-mode-map)
 
@@ -9,7 +14,9 @@
 
 (add-hook 'paredit-mode-hook '(lambda ()
                                 (jg-paredit-mode t)
-                                (define-key jg-code-mode-map (kbd "C-k") 'paredit-kill)
+                                (define-key paredit-mode-map (kbd "C-k") 'paredit-kill)
+                                ;;(setq overriding-local-map paredit-mode-map)
+                                (rainbow-delimiters-mode t)
                                 ))
 
 
@@ -18,6 +25,7 @@
 (define-key jg-paredit-mode-map (kbd "RET") 'paredit-newline)
 (define-key jg-paredit-mode-map (kbd "DEL") 'jg-delete-region-or-paredit-delete)
 (define-key jg-paredit-mode-map (kbd "C-<backspace>") 'paredit-backward-kill-word)
+(define-key jg-paredit-mode-map (kbd "M-<backspace>") 'backward-kill-sexp)
 
 
 ;; movement by list element
@@ -64,8 +72,5 @@
   (interactive)
   (if (region-active-p)
       (call-interactively 'delete-region)
-    (paredit-backward-delete)
-    )
-  )
+    (paredit-backward-delete)))
 
-(provide 'jg-paredit)

@@ -2,6 +2,7 @@
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
 
+
 (setq
    backup-by-copying t                             ; don't clobber symlinks
    backup-directory-alist '(("." . "~/.saves"))    ; don't litter my fs tree
@@ -16,7 +17,7 @@
    ;explicit-shell-file-name "/bin/bash"           ; for remote ssh sessions, for which shell to run remotely?
    comint-scroll-to-bottom-on-output nil           ; always add output at the bottom
    comint-scroll-to-bottom-on-input nil            ; always put input at the bottom 
-   ;;shell-command-switch "-ic"                     ; for local bash, use -ic instead of -c so i can use my bash_aliases
+   ;;shell-command-switch "-ic"                    ; for local bash, use -ic instead of -c so i can use my bash_aliases
    comint-scroll-show-maximum-output nil           ; don't scroll to bottom maybe?
    comint-prompt-read-only t                       ; what it says
 
@@ -25,11 +26,20 @@
    enable-recursive-minibuffers t                  ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
 
    ;; dired
-   dired-listing-switches "-alhopF"
-   tags-add-tables t
+   dired-listing-switches "-AlhopF"
+   
+   tags-add-tables t                               ; when loading up a second tags table, "add" it to the tags,
+                                                   ; instead of replacing (or asking which)
+
+   
 )
 
+(setq font-lock-global-modes t)
+
 (setq helm-split-window-default-side 'right)
+
+
+(toggle-diredp-find-file-reuse-dir 1)
 
 ;; (require 'ecb)
 ;; (ecb-layout-define "jg" right

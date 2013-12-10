@@ -74,9 +74,10 @@
       (jg-zenburn-red-4 "#6d0028")
       (jg-zenburn-red-5 "#3d0008")
 
-      (jg-zenburn-orange "#FDA739")
-      (jg-zenburn-orange-2 "#b96300")
-      (jg-zenburn-orange-3 "#974100")
+      (jg-zenburn-orange "#FF7b39")
+      (jg-zenburn-orange-1 "#e55517")
+      (jg-zenburn-orange-2 "#b94300")
+      (jg-zenburn-orange-3 "#972100")
       (jg-zenburn-orange-4 "#520900")
 
       (jg-zenburn-yellow "#FFEA77")
@@ -108,7 +109,10 @@
       (jg-zenburn-blue-5 "#004083")
       (jg-zenburn-blue-6 "#002043")
 
-      (jg-zenburn-purple "#9E76FB")
+      (jg-zenburn-purple "#bE76dB")
+      (jg-zenburn-purple-1 "#8c54ba")
+      (jg-zenburn-purple-2 "#6a3290")
+      (jg-zenburn-purple-3 "#4a1670")
 
       (jg-zenburn-magenta "#FA4785"))
 
@@ -198,10 +202,10 @@
    `(font-lock-doc-face ((t (:foreground ,jg-zenburn-green+1))))
    `(font-lock-doc-string-face ((t (:foreground ,jg-zenburn-blue-2))))
    `(font-lock-function-name-face ((t (:foreground ,jg-zenburn-blue))))
-   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue-4 :weight bold))))
+   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-cyan-3 :weight bold))))
    `(font-lock-negation-char-face ((t (:foreground ,jg-zenburn-fg))))
    `(font-lock-preprocessor-face ((t (:foreground ,jg-zenburn-blue+1))))
-   `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange))))
+   `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange-1))))
    `(font-lock-type-face ((t (:foreground ,jg-zenburn-green))))
    `(font-lock-variable-name-face ((t (:foreground ,jg-zenburn-yellow))))
    `(font-lock-warning-face ((t (:foreground ,jg-zenburn-yellow-1 :weight bold :underline t))))
@@ -214,6 +218,11 @@
    `(elscreen-tab-current-screen-face ((t (:background ,jg-zenburn-blue-5 :foreground ,jg-zenburn-cyan+1 :style released-button :underline nil))))
    `(elscreen-tab-other-screen-face ((t (:background ,jg-zenburn-blue-6 :foreground ,jg-zenburn-cyan-2 :style released-button  :underline nil))))
 
+   ;; ruby stuff
+   `(ruby-op-face ((t (:foreground ,jg-zenburn-cyan+1))))
+   `(ruby-string-delimiter-face ((t (:foreground ,jg-zenburn-orange-2))))
+   ;;`(ruby-heredoc-delimiter-face ((t (:foreground ,jg-zenburn-orange-1))))
+   
 
    `(cua-rectangle ((t (:background ,jg-zenburn-red-3))))
 
@@ -366,6 +375,12 @@
    `(erc-timestamp-face ((t (:foreground ,jg-zenburn-green+1))))
    `(erc-underline-face ((t (:underline t))))
 
+
+   ;; mu4e
+   `(mu4e-unread-face ((t (:bold t :foreground ,jg-zenburn-green))))
+   `(mu4e-flagged-face ((t (:bold t :foreground ,jg-zenburn-yellow))))
+
+   
    ;; gnus
    `(gnus-group-mail-1 ((t (:bold t :inherit gnus-group-mail-1-empty))))
    `(gnus-group-mail-1-empty ((t (:inherit gnus-group-news-1-empty))))
@@ -632,8 +647,8 @@
    `(rst-level-6-face ((t (:foreground ,jg-zenburn-green-1))))
 
    ;; show-paren
-   `(show-paren-mismatch ((t (:foreground ,jg-zenburn-red-3 :background ,jg-zenburn-bg :weight bold))))
-   `(show-paren-match ((t (:foreground ,jg-zenburn-blue-1 :background ,jg-zenburn-bg :weight bold))))
+   `(show-paren-mismatch ((t (:foreground ,jg-zenburn-red-3 :weight bold))))
+   `(show-paren-match ((t (:underline t))))
 
    ;; sml-mode-line
    '(sml-modeline-end-face ((t :inherit default :width condensed)))
@@ -722,16 +737,17 @@
    (custom-theme-set-variables
     'jg-zenburn
     `(ansi-color-names-vector [,jg-zenburn-bg ,jg-zenburn-red ,jg-zenburn-green ,jg-zenburn-yellow
-                                              ,jg-zenburn-blue ,jg-zenburn-magenta ,jg-zenburn-cyan ,jg-zenburn-fg])
+                                              ,jg-zenburn-blue-4 ,jg-zenburn-magenta ,jg-zenburn-cyan-2 ,jg-zenburn-fg])
 
     ;; fill-column-indicator
     `(fci-rule-color ,jg-zenburn-bg-05))
 
 ;;; colors for the ansi-term
-   (eval-after-load 'term
-     `(setq ansi-term-color-vector
-            (vector 'unspecified ,jg-zenburn-bg ,jg-zenburn-red ,jg-zenburn-green ,jg-zenburn-yellow
-                    ,jg-zenburn-blue ,jg-zenburn-magenta ,jg-zenburn-cyan ,jg-zenburn-fg)))))
+   ;; (eval-after-load 'term
+   ;;   `(setq ansi-term-color-vector
+   ;;          (vector 'unspecified ,jg-zenburn-bg ,jg-zenburn-red ,jg-zenburn-green ,jg-zenburn-yellow
+   ;;                  ,jg-zenburn-blue-4 ,jg-zenburn-magenta ,jg-zenburn-cyan-1 ,jg-zenburn-fg)))
+   ))
 
 ;;;###autoload
 (and load-file-name

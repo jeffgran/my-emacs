@@ -47,7 +47,7 @@
 
 
 ;; "windows" (in emacs parlance)
-(define-key jg-navigation-mode-map (kbd "M-o") 'other-window)
+(define-key jg-navigation-mode-map (kbd "M-0") 'other-window)
 (define-key jg-navigation-mode-map (kbd "M-1") 'delete-other-windows)
 (define-key jg-navigation-mode-map (kbd "M-2") 'split-window-below)
 (define-key jg-navigation-mode-map (kbd "M-3") 'split-window-right)
@@ -57,7 +57,9 @@
 (define-key jg-navigation-mode-map (kbd "M-t") 'elscreen-create)
 (define-key jg-navigation-mode-map (kbd "M-w") 'elscreen-kill)
 (define-key jg-navigation-mode-map (kbd "M-{") 'elscreen-previous)
+(define-key jg-navigation-mode-map (kbd "<C-M-left>") 'elscreen-previous)
 (define-key jg-navigation-mode-map (kbd "M-}") 'elscreen-next)
+(define-key jg-navigation-mode-map (kbd "<C-M-right>") 'elscreen-next)
 (define-key jg-navigation-mode-map (kbd "A-0") '(lambda () (interactive) (elscreen-goto 0)))
 (define-key jg-navigation-mode-map (kbd "A-1") '(lambda () (interactive) (elscreen-goto 1)))
 (define-key jg-navigation-mode-map (kbd "A-2") '(lambda () (interactive) (elscreen-goto 2)))
@@ -80,6 +82,8 @@
 (define-key jg-navigation-mode-map (kbd "M-SPC") 'er/expand-region)
 (define-key jg-navigation-mode-map (kbd "M-C-SPC") 'er/contract-region)
 
+(define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
+
 
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'jg-fuzzy-find-in-project)
 (define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
@@ -94,7 +98,10 @@
 (define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
 (define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
-;;(define-key jg-navigation-mode-map (kbd "M-o") 'helm-find-files)
+(define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
+(define-key jg-navigation-mode-map (kbd "C-/") '(lambda ()
+                                                  (interactive)
+                                                  (dired default-directory)))
 
 
 
@@ -132,6 +139,7 @@
 (define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
 
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+(define-key jg-navigation-mode-map (kbd "C-c 0") 'prelude-copy-file-name-to-clipboard)
 
 ;;*************************************************
 ;;            End JG Navigation Mode
@@ -151,7 +159,20 @@
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
 (define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
 (define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
-(define-key jg-code-mode-map (kbd "<M-C-return>") 'open-line-above)
+(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
+(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+
+(setq cua-rectangle-mark-key (kbd "C-M-RET"))
+(setq cua-rectangle-mark-key (kbd "<C-M-return>"))
+(define-key cua-global-keymap (kbd "C-M-RET") 'cua-set-rectangle-mark)
+(define-key cua-global-keymap (kbd "<C-M-return>") 'cua-set-rectangle-mark)
+
+(define-key cua-global-keymap (kbd "C-RET") nil)
+(define-key cua-global-keymap (kbd "<C-return>") nil)
+;(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+;(define-key global-map (kbd "<C-return>") 'open-line-above)
+;(global-set-key (kbd "<C-return>") 'open-line-above)
+;(define-key jg-code-mode-map (kbd "M-C-RET") 'cua-set-rectangle-mark)
 
 (define-key jg-code-mode-map (kbd "C-S-C") 'kill-ring-save)
 (define-key jg-code-mode-map (kbd "C-S-K") 'kill-whole-line)
@@ -204,6 +225,7 @@
 ;;(define-key jg-code-mode-map (kbd "TAB") 'hippie-expand)
 (define-key jg-code-mode-map (kbd "A-q") 'fill-paragraph)
 
+(define-key jg-navigation-mode-map (kbd "A-SPC") '(lambda () (interactive) (insert-char ?_ 1)))
 
 
 
@@ -267,20 +289,46 @@
 
 
 
-;; fix the ruby-tools keymap
+;; fix the ruby keymaps
+(require 'ruby-electric)
 (require 'ruby-tools)
+(require 'ruby-end)
+
+
+;; ruby tools mode map ("rt")
 (define-key ruby-tools-mode-map (kbd "C-'") nil)
 (define-key ruby-tools-mode-map (kbd "C-\"") nil)
 (define-key ruby-tools-mode-map (kbd "C-:") nil)
 (define-key ruby-tools-mode-map (kbd "C-;") nil)
-;;(define-key ruby-tools-mode-map (kbd "#") nil)
-
-(define-key ruby-mode-map (kbd "TAB") nil)
-(define-key ruby-mode-map (kbd "C-j") nil) ;; unbind the ruby C-j because it conflicts
-
-(define-key ruby-tools-mode-map (kbd "M-'") 'ruby-tools-to-single-quote-string)
+(define-key ruby-tools-mode-map (kbd "M-'") nil)
 (define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
 (define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
+;;(define-key ruby-tools-mode-map (kbd "M-'") 'ruby-tools-to-single-quote-string)
+
+
+;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
+(define-key ruby-mode-map (kbd "TAB") nil)
+(define-key ruby-mode-map (kbd "RET") nil)
+(define-key ruby-mode-map (kbd "C-m") nil)
+(define-key ruby-mode-map (kbd "SPC") nil)
+
+
+(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
+;; I want to define the below to nil -- but ruby-end-return doesn't work for do blocks. :(
+;;(define-key ruby-end-mode-map (kbd "SPC") nil)
+(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
+
+
+
+;; some extra keys for ruby mode.
+(define-key ruby-mode-map (kbd "M-h") 'ruby-backward-sexp)
+(define-key ruby-mode-map (kbd "M-'") 'ruby-forward-sexp)
+(define-key ruby-mode-map (kbd "C-M-h") 'ruby-beginning-of-block)
+(define-key ruby-mode-map (kbd "C-M-'") 'ruby-end-of-block)
+
+
+
+
 
 
 ;; for some reason they don't take effect unless I bind them every time, in this hook.
@@ -313,6 +361,7 @@
 (add-hook 'erc-mode-hook 'disable-jg-code-mode)
 (add-hook 'eshell-mode-hook 'disable-jg-code-mode)
 (add-hook 'shell-mode-hook 'disable-jg-code-mode)
+(add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
 
 (defun c-k-clear-for-term-mode ()
@@ -322,15 +371,12 @@
 
 
 (defadvice term-mode (after term-mode-fixes ())
-  (linum-mode 0)
   (disable-jg-code-mode)
-  (c-k-clear-for-term-mode)
-  )
+  (c-k-clear-for-term-mode))
 
 (defun term-send-C-r ()
   (interactive)
-  (term-send-raw-string "\C-r")
-  )
+  (term-send-raw-string "\C-r"))
 
 
 ;; enable cua and transient mark modes in term-line-mode
@@ -338,7 +384,7 @@
   (set (make-local-variable 'cua-mode) t)
   (set (make-local-variable 'transient-mark-mode) t)
   (define-key (current-local-map) (kbd "M-RET") 'term-char-mode)
-  (define-key (current-local-map) (kbd "M-SPC") 'er/expand-region)
+  ;;(define-key (current-local-map) (kbd "M-SPC") 'er/expand-region)
   (define-key (current-local-map) (kbd "M-C-SPC") 'er/contract-region)
   (c-k-clear-for-term-mode)
   ;;
@@ -362,13 +408,34 @@
 (ad-activate 'term-char-mode)
 
 ;; dired stuff
-(define-key dired-mode-map "B" 'dired-up-directory)
+(defun jg-dired-updir ()
+  (interactive)
+  (find-alternate-file ".."))
+(define-key dired-mode-map "B" 'jg-dired-updir) ; "updir", but let's me reuse the directory
+(define-key dired-mode-map (kbd "C-,") 'jg-dired-updir)
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
+(define-key dired-mode-map "q" 'kill-this-buffer)
+(define-key dired-mode-map (kbd "C-g") 'kill-this-buffer)
+(define-key dired-mode-map (kbd "M-x") 'smex)
+(define-key dired-mode-map (kbd "M-0") 'other-window)
+(define-key dired-mode-map (kbd "M-1") 'delete-other-windows)
+
+(define-key dired-mode-map (kbd "C-o") 'jg-quicknav)
+;; (define-key dired-mode-map (kbd "C-o") 'dired-display-file)
+
+(define-key dired-mode-map (kbd "C-TAB") 'wcy-switch-buffer-forward)
+(define-key dired-mode-map (kbd "C-S-TAB") 'wcy-switch-buffer-backward)
+
+(define-key dired-mode-map (kbd "C-f") 'jg-quicknav-dired)
+
+
 (add-hook 'dired-mode-hook 'disable-jg-code-mode)
+(add-hook 'dired-mode-hook '(lambda () (jg-navigation-mode -1)))
+;;(add-hook 'dired-mode-hook '(lambda () (interactive) (describe-function 'dired-mode)))
 
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
-(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
+;;(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
 (define-key shell-mode-map (kbd "C-S-f") 'rgrep)
 (define-key shell-mode-map (kbd "C-S-v") 'cua-paste-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
@@ -381,3 +448,7 @@
 ;; scratch buffer
 ;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
 
+
+(add-hook 'mu4e-main-mode-hook 'disable-jg-code-mode)
+(add-hook 'mu4e-headers-mode-hook 'disable-jg-code-mode)
+(add-hook 'mu4e-view-mode-hook 'disable-jg-code-mode)
