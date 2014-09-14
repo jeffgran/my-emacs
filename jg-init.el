@@ -55,6 +55,7 @@
    php-mode
    js3-mode ;; javascript
    zoom-frm
+   smartparens ; instead of paredit, gives "wrap" commands too
 
    ;; ideas I wanna maybe try
    ; cycbuf ; instead of wcy-swbuff

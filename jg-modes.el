@@ -25,6 +25,10 @@
 
 (require 'jg-paredit)
 
+(require 'smartparens-config)
+(smartparens-global-mode t)
+(show-smartparens-global-mode t)
+
 (require 'jg-quicknav)
 
 (require 'view)
@@ -319,13 +323,13 @@
 ;; )
 
 ;; Rsense + Autocomplete
-(setq rsense-home "/usr/local/Cellar/rsense/0.3/libexec/")
-(require 'rsense)
+;; (setq rsense-home "/usr/local/Cellar/rsense/0.3/libexec/")
+;; (require 'rsense)
 
-(add-hook 'ruby-mode-hook
-          (lambda ()
-            (add-to-list 'ac-sources 'ac-source-rsense-method)
-            (add-to-list 'ac-sources 'ac-source-rsense-constant)))
+;; (add-hook 'ruby-mode-hook
+;;           (lambda ()
+;;             (add-to-list 'ac-sources 'ac-source-rsense-method)
+;;             (add-to-list 'ac-sources 'ac-source-rsense-constant)))
 
 (setq tags-revert-without-query t)
 (global-set-key (kbd "C-c C-t") 'ctags-create-or-update-tags-table)
