@@ -36,6 +36,7 @@
    ac-js2
    coffee-mode
    ruby-mode
+   mmm-mode ; multi major mode
    ;;enh-ruby-mode
    ruby-electric
    rsense
