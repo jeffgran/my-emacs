@@ -1,28 +1,5 @@
 ;; JG functions
 
-
-;; duplicate a line
-(defun duplicate-current-line (num)
-  (interactive)
-  (beginning-of-line nil)
-  (let ((b (point)))
-    (end-of-line nil)
-    (copy-region-as-kill b (point)))
-  (beginning-of-line num)
-  (open-line 1)
-  (yank)
-  (back-to-indentation))
-
-(defun duplicate-current-line-up ()
-  (interactive)
-  (duplicate-current-line 1)
-)
-
-(defun duplicate-current-line-down ()
-  (interactive)
-  (duplicate-current-line 2)
-)
-
 (defun kill-all-buffers ()
     "Kill all other buffers."
     (interactive)
@@ -30,29 +7,29 @@
                 (buffer-list)))
 
 
-(defun view-percent ()
-  (interactive)
-  (snippet-insert "<% $. %>")
-)
+;; (defun view-percent ()
+;;   (interactive)
+;;   (snippet-insert "<% $. %>")
+;; )
 
-(defun view-percent-equal ()
-  (interactive)
-  (snippet-insert "<%= $. %>")
-)
+;; (defun view-percent-equal ()
+;;   (interactive)
+;;   (snippet-insert "<%= $. %>")
+;; )
 
-(defun layout-content ()
-  (interactive)
-  (snippet-insert "<%= content_for(:$${title}) { $. } %>")
-)
+;; (defun layout-content ()
+;;   (interactive)
+;;   (snippet-insert "<%= content_for(:$${title}) { $. } %>")
+;; )
 
-(defun css-curlies ()
-  (interactive)
-  (snippet-insert " {\n$.\n}")
-  (forward-line 1)
-  (indent-for-tab-command)
-  (forward-line -1)
-  (indent-for-tab-command)
-)
+;; (defun css-curlies ()
+;;   (interactive)
+;;   (snippet-insert " {\n$.\n}")
+;;   (forward-line 1)
+;;   (indent-for-tab-command)
+;;   (forward-line -1)
+;;   (indent-for-tab-command)
+;; )
 
 (defun open-line-above ()
   (interactive)
@@ -102,7 +79,7 @@
 
     (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
-    (rvm-elscreen-activate-corresponding-ruby dir-path)
+    ;;(rvm-elscreen-activate-corresponding-ruby dir-path)
     (cd dir-path)
     (if (file-exists-p (concat dir-path "TAGS"))
         (visit-project-tags)
@@ -212,8 +189,7 @@ as the fuzzy-find root"
 (defun jg-new-shell ()
   (interactive)
   (let ((default-directory (jg-project-root)))
-        (shell (generate-new-buffer-name "$shell")))
-)
+    (shell (generate-new-buffer-name "$shell"))))
 
 (defun jg-ansi-colorize-buffer ()
   (interactive)
@@ -234,8 +210,7 @@ as the fuzzy-find root"
   (interactive)
   (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
     (call-interactively 'shell-command-on-region)
-    )
-  )
+    ))
 
 (defun fix-stdin-buffer ()
   (cond
@@ -286,49 +261,71 @@ as the fuzzy-find root"
 (defvar point-to-char-use-last-char nil)
 
 
-(defun prompt-for-char ();;(char)
+(defun prompt-for-char ()
   "Get a character from the minibuffer prompt"
   (interactive)
   (setq char (read-key "Char:"))
-  (message (char-to-string char))
-  (if (or (equal ?\C-t char) (equal ?\C-b char))
-      (setq point-to-char-use-last-char t))
-  (if point-to-char-use-last-char
+  
+  (if (characterp char)
       (progn
-        ;(message "use last char!")
-        (setq char point-to-char-last-char)
-        (setq point-to-char-use-last-char nil))
-      (progn
-        ;(message "don't use last char!")
-        (if (char-table-p translation-table-for-input)
-            (setq char (or (aref translation-table-for-input char) char)))
-        ;(message (char-to-string char))
-        (setq point-to-char-last-char char)
-        )
-      )
-  (local-set-key (kbd "C-6") nil)
-  ;(message "hi")
-  char
-)
-
+        (if (or (equal ?\C-t char) (equal ?\C-b char))
+            (setq point-to-char-use-last-char t))
+        (if point-to-char-use-last-char
+            (progn
+              (message (char-to-string point-to-char-last-char))
+                                        ;(message "use last char!")
+              (setq char point-to-char-last-char)
+              (setq point-to-char-use-last-char nil))
+          (progn
+            (message (char-to-string char))
+                                        ;(message "don't use last char!")
+                                        ;(message (char-to-string char))
+            (setq point-to-char-last-char char)
+            )
+          )
+        (local-set-key (kbd "C-6") nil)
+                                        ;(message "hi")
+        char)
+    ;; else
+    (progn
+      (message "not a charater")
+      (print char t)
+      nil)
+    ))
 
 
 (defun point-to-char (char arg)
   "Move to ARG'th occurrence of CHAR."
-  (setq case-fold-search nil) ;;temporarily set case sensitivity true
-  (search-forward
-   (char-to-string char) nil nil arg)
-  (setq case-fold-search t) ;; set it back
-)
+  (if (and char (characterp char))
+      (progn
+        (setq case-fold-search nil) ;;temporarily set case sensitivity true
+        (if (and (> arg 0) (eq (char-after (point)) char))
+            (setq arg (+ 1 arg)))
+        (if (and (< arg 0) (eq (char-after (- (point) 1)) char))
+            (setq arg (- arg 1)))
+        (search-forward
+         (char-to-string char) nil t arg)
+        (setq case-fold-search t) ;; set it back
+        char)
+    char))
 
-(defun forward-to-char ()
-  (interactive)
-  (point-to-char (call-interactively 'prompt-for-char) 1)
-)
-(defun backward-to-char ()
-  (interactive)
-  (point-to-char (call-interactively 'prompt-for-char) -1)
-)
+(defun forward-to-char (arg)
+  (interactive "p")
+  (let ((char (progn
+                (if (or (eq last-command this-command) (eq last-command 'backward-to-char))
+                    point-to-char-last-char
+                  (call-interactively 'prompt-for-char)))
+              )))
+  (point-to-char char arg))
+
+(defun backward-to-char (arg)
+  (interactive "p")
+  (let ((char (progn
+                (if (or (eq last-command this-command) (eq last-command 'forward-to-char))
+                    point-to-char-last-char
+                  (call-interactively 'prompt-for-char)))
+              )))
+  (point-to-char char (- arg)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;; / Point-to-char stuff
@@ -370,26 +367,67 @@ as the fuzzy-find root"
                (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
 
 
+;; dunno where I found this but then I modified it.
 (defun move-text-internal (arg)
-   (cond
-    ((and mark-active transient-mark-mode)
-     (if (> (point) (mark))
-            (exchange-point-and-mark))
-     (let ((column (current-column))
-              (text (delete-and-extract-region (point) (mark))))
-       (forward-line arg)
-       (move-to-column column t)
-       (set-mark (point))
-       (insert text)
-       (exchange-point-and-mark)
-       (setq deactivate-mark nil)))
-    (t
-     (beginning-of-line)
-     (when (or (> arg 0) (not (bobp)))
-       (forward-line)
-       (when (or (< arg 0) (not (eobp)))
-            (transpose-lines arg))
-       (forward-line -1)))))
+  (cond
+   ((and mark-active transient-mark-mode)
+    (let* ((point-was-backwards (progn
+                                  (if (> (point) (mark))
+                                      (progn (exchange-point-and-mark) t)
+                                    nil)
+                                  ))
+           (original-point-column (current-column))
+           (original-mark-column (prog2
+                                     (exchange-point-and-mark)
+                                     (current-column)
+                                   (exchange-point-and-mark))))
+      (let* ((beg (line-beginning-position))
+             (end (progn
+                    (exchange-point-and-mark)
+                    (if (and (eq (line-beginning-position) (point))
+                             (not (eq beg (point))))
+                        (line-beginning-position)
+                      (+ 1 (line-end-position)))))
+             (text   (delete-and-extract-region beg end)))
+        (forward-line arg)
+        (beginning-of-line)
+        (insert text)
+        (if point-was-backwards
+            (progn
+              (backward-char (length text))
+              (move-to-column original-point-column)
+              (set-mark (point))
+              (beginning-of-line)
+              (forward-char (length text))
+              (unless (eq 0 original-mark-column)
+                (progn (backward-char)
+                       (move-to-column original-mark-column)))
+              )
+          (progn
+            (unless (eq 0 original-mark-column)
+              (backward-char))
+            (move-to-column original-mark-column)
+            (set-mark (point))
+            (unless (eq 0 original-mark-column)
+              (end-of-line))
+            (backward-char (- (length text) 1))
+            (move-to-column original-point-column)
+            ))
+        
+        (setq deactivate-mark nil)
+        )))
+   (t
+    (let ((original-column (current-column)))
+      (beginning-of-line)
+      
+      (when (or (> arg 0) (not (eobp)))
+        (forward-line)
+        (when (or (< arg 0) (not (bobp)))
+          (transpose-lines arg))
+        (forward-line -1)
+        (forward-char original-column)
+        )))
+   ))
 
 (defun move-text-down (arg)
    "Move region (transient-mark-mode active) or current line
@@ -408,21 +446,78 @@ as the fuzzy-find root"
 If there's no region, the current line will be duplicated. However, if
 there's a region, all lines that region covers will be duplicated."
   (interactive "p")
-  (let (beg end (origin (point)))
-    (if (and mark-active (> (point) (mark)))
+  (let ((beg nil)
+        (end nil)
+        (original-point (point))
+        (original-mark (mark))
+        (mark-was-active mark-active)
+        (point-was-backwards (> (point) (mark))))
+    (if (and mark-active point-was-backwards)
         (exchange-point-and-mark))
     (setq beg (line-beginning-position))
-    (if mark-active
-        (exchange-point-and-mark))
-    (setq end (line-end-position))
+    (setq end (progn
+                (if mark-was-active
+                    ;; now make the point the end, not the beginning
+                    (exchange-point-and-mark))
+                
+                (if (and (eq (line-beginning-position) (point))
+                         (not (eq beg (point))))
+                    (point)
+                  (+ 1 (line-end-position)))))
     (let ((region (buffer-substring-no-properties beg end)))
-      (dotimes (i arg)
+      (dotimes (i (abs arg))
         (goto-char end)
-        (newline)
         (insert region)
         (setq end (point)))
-      (goto-char (+ origin (* (length region) arg) arg)))))
+      (if (> arg 0)
+          (progn
+            (set-mark (+ original-mark (* arg (length region))))
+            (goto-char (+ original-point (* arg (length region)))))
+        (progn
+          (set-mark original-mark)
+          (goto-char original-point)))
+      (setq deactivate-mark (not mark-was-active)))))
 
+(defun duplicate-current-line-or-region-up (arg)
+  (interactive "p")
+  (duplicate-current-line-or-region (- (or arg 1))))
+
+
+;; written by me
+(defun select-whole-line-or-lines ()
+  (interactive)
+  (if (and mark-active (> (point) (mark)))
+    (exchange-point-and-mark))
+  (let ((end-pos (if mark-active (mark) (point))))
+    (set-mark (line-beginning-position))
+    (goto-char end-pos)
+    (end-of-line)
+    (forward-char)))
+
+
+;; written by me
+(defun select-whole-line-or-lines-backwards ()
+  (interactive)
+  (if (and mark-active (< (point) (mark)))
+      (exchange-point-and-mark))
+  (let ((beg-pos
+         (if (and mark-active (eq (char-after (point)) (string-to-char "\n")) (eq (char-before (mark)) (string-to-char "\n")) )
+             (and (message "here") (- (mark) 1)) ;; extend back another line if we're already at the beginning
+           (if mark-active
+               (mark)
+             (point)))))
+    (set-mark
+     (if (and mark-active (> (point) (mark)) (eq (char-before (point)) (string-to-char "\n")) (not (eq (char-after (point)) (string-to-char "\n"))))
+         (- (line-beginning-position) 1)
+       (line-end-position)))
+    (goto-char beg-pos)
+    (beginning-of-line)
+    ))
+
+(defun kill-whole-line-or-lines ()
+  (interactive)
+  (call-interactively 'select-whole-line-or-lines)
+  (kill-region (point) (mark)))
 
 ;; ------------------------------------------------------------------------
 ;; from http://mattbriggs.net/blog/2012/03/18/awesome-emacs-plugins-ctags/
@@ -433,6 +528,7 @@ there's a region, all lines that region covers will be duplicated."
     (shell-command (concat "ctags -e -R --extra=+fq --exclude=db --exclude=test --exclude=jars --exclude=vendor --exclude=.git --exclude=public -f " root "TAGS " root))
     (visit-project-tags))
   (message "tags built successfully"))
+
 (defun visit-project-tags ()
   (interactive)
   (let ((tags-file (concat (jg-project-root) "TAGS")))

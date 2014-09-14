@@ -48,7 +48,7 @@
 	url = https://github.com/monsanto/readline-complete.el.git
 [submodule "jg-quicknav"]
 	path = jg-quicknav
-	url = https://github.com/jeffgran/jg-quicknav.git
+	url = git@github.com:jeffgran/jg-quicknav.git
 [submodule "expand-region.el"]
 	path = expand-region.el
 	url = https://github.com/magnars/expand-region.el.git

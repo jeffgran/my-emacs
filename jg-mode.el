@@ -5,11 +5,13 @@
 ;;*************************************************
 ;;               JG Navigation Mode
 ;;*************************************************
-
+(setq shift-select-mode nil)
 (define-key jg-navigation-mode-map (kbd "C-;") 'forward-char)
+(define-key jg-navigation-mode-map (kbd "C-S-;") 'forward-char)
 ;;(define-key jg-navigation-mode-map (kbd "M-^") 'forward-char) ;; hack to use key translation in iterm to get this to work right in terminal
 (define-key jg-navigation-mode-map (kbd "C-j") 'backward-char)
 (define-key jg-navigation-mode-map (kbd "C-'") 'forward-word)
+(define-key jg-navigation-mode-map (kbd "C-\"") nil)
 (define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
 ;;(define-key jg-navigation-mode-map (kbd "C-t") 'exchange-point-and-mark)
 
@@ -81,6 +83,10 @@
 ;; select by semantic units. super helpful!
 (define-key jg-navigation-mode-map (kbd "M-SPC") 'er/expand-region)
 (define-key jg-navigation-mode-map (kbd "M-C-SPC") 'er/contract-region)
+
+;; my custom selection stuff
+(define-key jg-navigation-mode-map (kbd "M-e") 'select-whole-line-or-lines)
+(define-key jg-navigation-mode-map (kbd "M-a") 'select-whole-line-or-lines-backwards)
 
 (define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
 
@@ -155,12 +161,14 @@
 ;;***************************
 
 
-(define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-up)
+(define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-or-region-up)
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
-(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
-(define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
-(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
-(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+(define-key jg-code-mode-map (kbd "M-k") 'kill-whole-line-or-lines)
+
+;(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
+;(define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
+;(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
+;(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
 
 (setq cua-rectangle-mark-key (kbd "C-M-RET"))
 (setq cua-rectangle-mark-key (kbd "<C-M-return>"))
@@ -290,33 +298,32 @@
 
 
 ;; fix the ruby keymaps
-(require 'ruby-electric)
-(require 'ruby-tools)
-(require 'ruby-end)
+;;(require 'ruby-electric)
+;;(require 'ruby-tools)
+;;(require 'ruby-end)
 
 
 ;; ruby tools mode map ("rt")
-(define-key ruby-tools-mode-map (kbd "C-'") nil)
-(define-key ruby-tools-mode-map (kbd "C-\"") nil)
-(define-key ruby-tools-mode-map (kbd "C-:") nil)
-(define-key ruby-tools-mode-map (kbd "C-;") nil)
-(define-key ruby-tools-mode-map (kbd "M-'") nil)
-(define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
-(define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
-;;(define-key ruby-tools-mode-map (kbd "M-'") 'ruby-tools-to-single-quote-string)
+;; (define-key ruby-tools-mode-map (kbd "C-'") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-\"") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-:") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-;") nil)
+;; (define-key ruby-tools-mode-map (kbd "M-'") nil)
+;; (define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
+;; (define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
 
 
 ;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
-(define-key ruby-mode-map (kbd "TAB") nil)
-(define-key ruby-mode-map (kbd "RET") nil)
-(define-key ruby-mode-map (kbd "C-m") nil)
-(define-key ruby-mode-map (kbd "SPC") nil)
+;; (define-key ruby-mode-map (kbd "TAB") nil)
+;; (define-key ruby-mode-map (kbd "RET") nil)
+;; (define-key ruby-mode-map (kbd "C-m") nil)
+;; (define-key ruby-mode-map (kbd "SPC") nil)
 
 
-(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
+;;(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
 ;; I want to define the below to nil -- but ruby-end-return doesn't work for do blocks. :(
 ;;(define-key ruby-end-mode-map (kbd "SPC") nil)
-(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
+;;(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
 
 
 
