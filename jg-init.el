@@ -53,11 +53,11 @@
    ;;rvm
    php-mode
    js3-mode ;; javascript
+   zoom-frm
 
    ;; ideas I wanna maybe try
    ; cycbuf ; instead of wcy-swbuff
    ; ggtags ; instead of or also with? ctags
-   ; zoom-frm ; instead of default text-scale-increase and friends
    ; adaptive-wrap ; instead of srb-adaptive-wrap
    ; redo+ ; instead of redo.el
    ; do i really need mode-compile.el?
