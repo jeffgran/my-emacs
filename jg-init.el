@@ -32,6 +32,7 @@
    back-button
    ;; auto-complete
    ;; auto-complete-pcmp
+   company
    ac-js2
    coffee-mode
    ruby-mode
