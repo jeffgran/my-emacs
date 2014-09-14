@@ -1,54 +1,15 @@
-[submodule "Enhanced-Ruby-Mode"]
-	path = Enhanced-Ruby-Mode
-	url = https://github.com/jacott/Enhanced-Ruby-Mode.git
 [submodule "icicles"]
 	path = icicles
 	url = https://github.com/emacsmirror/icicles.git
 [submodule "nxhtml"]
 	path = nxhtml
 	url = https://github.com/emacsmirror/nxhtml.git
-[submodule "php-mode"]
-	path = php-mode
-	url = https://github.com/ejmr/php-mode.git
-[submodule "shoulda-mode"]
-	path = shoulda-mode
-	url = https://github.com/pezra/shoulda-mode.git
-[submodule "rspec-mode"]
-	path = rspec-mode
-	url = https://github.com/pezra/rspec-mode.git
-[submodule "rails-minor-mode"]
-	path = rails-minor-mode
-	url = https://github.com/remvee/emacs-rails.git
-[submodule "ruby-mode"]
-	path = ruby-mode
-	url = https://github.com/qoobaa/ruby-mode.git
-[submodule "rvm.el"]
-	path = rvm.el
-	url = https://github.com/senny/rvm.el.git
-[submodule "coffee-mode"]
-	path = coffee-mode
-	url = https://github.com/defunkt/coffee-mode.git
-[submodule "emacs-css-mode"]
-	path = emacs-css-mode
-	url = https://github.com/fberger/emacs-css-mode.git
-[submodule "maxframe.el"]
-	path = maxframe.el
-	url = https://github.com/rmm5t/maxframe.el.git
-[submodule "elscreen"]
-	path = elscreen
-	url = https://github.com/knu/elscreen.git
 [submodule "apel"]
 	path = apel
 	url = https://github.com/jeffgran/APEL.git
-[submodule "back-button"]
-	path = back-button
-	url = https://github.com/rolandwalker/back-button.git
 [submodule "readline-complete.el"]
 	path = readline-complete.el
 	url = https://github.com/monsanto/readline-complete.el.git
 [submodule "jg-quicknav"]
 	path = jg-quicknav
 	url = git@github.com:jeffgran/jg-quicknav.git
-[submodule "expand-region.el"]
-	path = expand-region.el
-	url = https://github.com/magnars/expand-region.el.git

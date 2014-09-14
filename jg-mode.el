@@ -144,6 +144,8 @@
 
 (define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
 
+(define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
+
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
 (define-key jg-navigation-mode-map (kbd "C-c 0") 'prelude-copy-file-name-to-clipboard)
 
@@ -237,25 +239,9 @@
 
 
 
-;; not useful any more. was a trick to help convert hobo dryml templates
-;;(define-key jg-code-mode-map (kbd "C-M-c") 'layout-content)
-
-;;(define-key jg-code-mode-map (kbd "A-w") '(lambda () (interactive) (switch-to-buffer "*scratch*") (prelude-kill-other-buffers)) )
-
 
 
 (define-key jg-code-mode-map (kbd "C-x r") 'rename-this-buffer-and-file)
-
-
-;;**************
-;; yasnippet
-;;**************
-;; take away tab because I want that to be tab-complete
-;; (define-key yas-minor-mode-map (kbd "C-c ; u") 'yas-expand) ;;keybinding I'll never want
-;; (setq yas-trigger-key nil)
-;; ;; trigger yasnippet with helm interface
-;; (define-key jg-code-mode-map (kbd "C-y") 'helm-c-yas-complete)
-
 
 
 
@@ -285,11 +271,18 @@
 
 
 
+
+
 ;; ==========================================================
 ;; Other modes and hooks I have to "fix" to work with jg-mode
+;; or want to change their internal maps to my liking
 ;; ==========================================================
 
 
+;; company completion
+(define-key company-active-map (kbd "C-n") 'company-select-next)
+(define-key company-active-map (kbd "C-p") 'company-select-previous)
+(define-key company-active-map (kbd "C-f") 'company-filter-candidates)
 
 ;; don't break my C-j
 (require 'paredit)
@@ -372,9 +365,7 @@
 
 
 (defun c-k-clear-for-term-mode ()
-  (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") ))
-  (define-key (current-local-map) (kbd "M-w") '(lambda () (interactive) (term-send-raw-string "exit\r") ))
-  )
+  (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") )))
 
 
 (defadvice term-mode (after term-mode-fixes ())

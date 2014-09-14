@@ -62,9 +62,7 @@
 (defun jg-elscreen-get-current-property (name)
   (let* ((properties (elscreen-get-screen-property (elscreen-get-current-screen)))
          (property (get-alist name properties)))
-    property
-    )
-)
+    property))
 
 (defun ido-jg-set-project-root ()
   (interactive)
@@ -74,7 +72,7 @@
     ;;; (message dir-name)
 
     (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-      (set-alist 'screen-properties 'jg-project-root dir-path)
+      (elscreen--set-alist 'screen-properties 'jg-project-root dir-path)
       (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
 
     (setq fuzzy-find-project-root dir-path)
@@ -89,36 +87,43 @@
 
 ;; TODO add the ablitity to pass the path to the real rvm func, that
 ;; way we don't have to use a separate (almost identical) func
-(defun rvm-elscreen-activate-corresponding-ruby (path)
-    "activate the corresponding ruby version for the path passed in.
-This function searches for an .rvmrc file and activates the configured ruby.
-If no .rvmrc file is found, the default ruby is used insted."
-    (interactive)
-    (when (rvm-working-p)
-      (let* ((rvmrc-path (rvm--rvmrc-locate path))
-             (rvmrc-info (if rvmrc-path (rvm--rvmrc-read-version rvmrc-path) nil)))
-        (if rvmrc-info (rvm-use (first rvmrc-info) (second rvmrc-info))
-          (rvm-use-default)))))
+;; (defun rvm-elscreen-activate-corresponding-ruby (path)
+;;     "activate the corresponding ruby version for the path passed in.
+;; This function searches for an .rvmrc file and activates the configured ruby.
+;; If no .rvmrc file is found, the default ruby is used insted."
+;;     (interactive)
+;;     (when (rvm-working-p)
+;;       (let* ((rvmrc-path (rvm--rvmrc-locate path))
+;;              (rvmrc-info (if rvmrc-path (rvm--rvmrc-read-version rvmrc-path) nil)))
+;;         (if rvmrc-info (rvm-use (first rvmrc-info) (second rvmrc-info))
+;;           (rvm-use-default)))))
 
 
 
-(defadvice rvm-use (after rvm-elscreen-save-info activate)
-"Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
-  (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-    (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
-    (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
-    (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
-))
+;; (defadvice rvm-use (after rvm-elscreen-save-info activate)
+;; "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
+;;   (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+;;     (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
+;;     (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
+;;     (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
+;; ))
 
 
-(defun rvm-elscreen-recall ()
-"Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
-  (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
-         (rvm-ruby (get-alist 'rvm-ruby screen-properties))
-         (rvm-gemset (get-alist 'rvm-gemset screen-properties)))
-    (if (and rvm-ruby rvm-gemset)
-        (rvm-use rvm-ruby rvm-gemset)
-      (rvm-use-default))))
+;; (defun rvm-elscreen-recall ()
+;; "Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
+;;   (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
+;;          (rvm-ruby (get-alist 'rvm-ruby screen-properties))
+;;          (rvm-gemset (get-alist 'rvm-gemset screen-properties)))
+;;     (if (and rvm-ruby rvm-gemset)
+;;         (rvm-use rvm-ruby rvm-gemset)
+;;       (rvm-use-default))))
+
+
+;; Upon switching to a new screen, recall the rvm setup
+;; (add-hook 'elscreen-goto-hook 'rvm-elscreen-recall)
+;; (add-hook 'elscreen-kill-hook 'rvm-elscreen-recall)
+
+
 
 ;; different approach: advise the fuzzy-find method to use whatever the current property is
 ;; more lazy/functional approach
@@ -141,9 +146,6 @@ as the fuzzy-find root"
 
 
 
-;; Upon switching to a new screen, recall the rvm setup
-(add-hook 'elscreen-goto-hook 'rvm-elscreen-recall)
-(add-hook 'elscreen-kill-hook 'rvm-elscreen-recall)
 
 
 ;; advise the interactive forms of these functions (cut and copy) to
@@ -191,6 +193,12 @@ as the fuzzy-find root"
   (let ((default-directory (jg-project-root)))
     (shell (generate-new-buffer-name "$shell"))))
 
+(defun jg-new-inf-ruby ()
+  (interactive)
+  (let ((default-directory (jg-project-root)))
+    (inf-ruby)
+    (rename-buffer (generate-new-buffer-name "$ruby"))))
+
 (defun jg-ansi-colorize-buffer ()
   (interactive)
   (ansi-color-apply-on-region (point-min) (point-max))
@@ -201,9 +209,7 @@ as the fuzzy-find root"
 (defun shell-command-insert-output-here ()
   (interactive)
   (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
-    (call-interactively 'shell-command)
-    )
-  )
+    (call-interactively 'shell-command)))
 
 ;; run a shell command on the selected region, and replace it with the output
 (defun shell-command-on-region-replace ()
@@ -214,7 +220,7 @@ as the fuzzy-find root"
 
 (defun fix-stdin-buffer ()
   (cond
-   ;; When opening a stdin temp file from a pipe in the shell, via ~/.bash/ebuffer
+   ;; When opening a stdin temp file from a pipe in the shell, via ~/my-bash/bin/ebuffer
    ((string-match "___STDIN-.+" (buffer-name))
     (comint-mode)
     (ansi-color-for-comint-mode-on)
@@ -502,7 +508,7 @@ there's a region, all lines that region covers will be duplicated."
       (exchange-point-and-mark))
   (let ((beg-pos
          (if (and mark-active (eq (char-after (point)) (string-to-char "\n")) (eq (char-before (mark)) (string-to-char "\n")) )
-             (and (message "here") (- (mark) 1)) ;; extend back another line if we're already at the beginning
+             (- (mark) 1) ;; extend back another line if we're already at the beginning
            (if mark-active
                (mark)
              (point)))))

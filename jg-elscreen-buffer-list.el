@@ -1,6 +1,6 @@
 (provide 'jg-elscreen-buffer-list)
 (require 'elscreen)
-
+(require 'alist)
 
 
 (defun jg-elscreen-add-buffer-to-list (arg)
@@ -19,7 +19,7 @@
       (add-to-list 'jg-buffer-list the-new-buffer))
 
     ;; set the elscreen property to the new changed one.
-    (set-alist 'screen-properties 'jg-buffer-list jg-buffer-list)
+    (elscreen--set-alist 'screen-properties 'jg-buffer-list jg-buffer-list)
     (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
     
     ;; "refresh" the screen/tabs display in the top line
