@@ -11,7 +11,6 @@
     (progn
       ;; Elscreen (tabs/session management)
       ;; my custom elscreen buffer list (separate buffer list per screen). :)
-      ;;(load "elscreen" "ElScreen" t)
       (elscreen-start)
       (setq elscreen-tab-display-kill-screen nil) ;; turn off the [x] button for the mouse
       (setq elscreen-tab-display-control nil) ;; turn off the <-> tab switch button for the mouse
@@ -125,10 +124,6 @@
 ;;(require 'shell-script-mode)
 (add-to-list 'auto-mode-alist '("\\.aliases$" . sh-mode))
 
-
-;;(require 'rvm)
-;;(rvm-use-default)
-;;(rvm-autodetect-ruby) ;; using my project switcher now instead of this.
 
 
 ;; make comments automatically go to multiple lines for long ones

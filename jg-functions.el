@@ -77,52 +77,11 @@
 
     (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
-    ;;(rvm-elscreen-activate-corresponding-ruby dir-path)
     (cd dir-path)
     (if (file-exists-p (concat dir-path "TAGS"))
         (visit-project-tags)
       (build-ctags dir-path))
 ))
-
-
-;; TODO add the ablitity to pass the path to the real rvm func, that
-;; way we don't have to use a separate (almost identical) func
-;; (defun rvm-elscreen-activate-corresponding-ruby (path)
-;;     "activate the corresponding ruby version for the path passed in.
-;; This function searches for an .rvmrc file and activates the configured ruby.
-;; If no .rvmrc file is found, the default ruby is used insted."
-;;     (interactive)
-;;     (when (rvm-working-p)
-;;       (let* ((rvmrc-path (rvm--rvmrc-locate path))
-;;              (rvmrc-info (if rvmrc-path (rvm--rvmrc-read-version rvmrc-path) nil)))
-;;         (if rvmrc-info (rvm-use (first rvmrc-info) (second rvmrc-info))
-;;           (rvm-use-default)))))
-
-
-
-;; (defadvice rvm-use (after rvm-elscreen-save-info activate)
-;; "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
-;;   (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-;;     (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
-;;     (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
-;;     (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
-;; ))
-
-
-;; (defun rvm-elscreen-recall ()
-;; "Recall the saved rvm ruby and gemset from the screen properties and set them as the current."
-;;   (let* ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen)))
-;;          (rvm-ruby (get-alist 'rvm-ruby screen-properties))
-;;          (rvm-gemset (get-alist 'rvm-gemset screen-properties)))
-;;     (if (and rvm-ruby rvm-gemset)
-;;         (rvm-use rvm-ruby rvm-gemset)
-;;       (rvm-use-default))))
-
-
-;; Upon switching to a new screen, recall the rvm setup
-;; (add-hook 'elscreen-goto-hook 'rvm-elscreen-recall)
-;; (add-hook 'elscreen-kill-hook 'rvm-elscreen-recall)
-
 
 
 ;; different approach: advise the fuzzy-find method to use whatever the current property is
@@ -595,11 +554,3 @@ there's a region, all lines that region covers will be duplicated."
 (defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
   "Center the view after moving it"
   (recenter))
-
-;; (defadvice rvm-use (after rvm-elscreen-save-info activate)
-;;   "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
-;;   (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-;;     (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
-;;     (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
-;;     (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
-;;     ))

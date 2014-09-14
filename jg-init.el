@@ -52,7 +52,6 @@
    expand-region
    helm
    view
-   ;;rvm
    php-mode
    js3-mode ;; javascript
    zoom-frm
