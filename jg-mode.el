@@ -5,11 +5,13 @@
 ;;*************************************************
 ;;               JG Navigation Mode
 ;;*************************************************
-
+(setq shift-select-mode nil)
 (define-key jg-navigation-mode-map (kbd "C-;") 'forward-char)
+(define-key jg-navigation-mode-map (kbd "C-S-;") 'forward-char)
 ;;(define-key jg-navigation-mode-map (kbd "M-^") 'forward-char) ;; hack to use key translation in iterm to get this to work right in terminal
 (define-key jg-navigation-mode-map (kbd "C-j") 'backward-char)
 (define-key jg-navigation-mode-map (kbd "C-'") 'forward-word)
+(define-key jg-navigation-mode-map (kbd "C-\"") nil)
 (define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
 ;;(define-key jg-navigation-mode-map (kbd "C-t") 'exchange-point-and-mark)
 
@@ -82,6 +84,10 @@
 (define-key jg-navigation-mode-map (kbd "M-SPC") 'er/expand-region)
 (define-key jg-navigation-mode-map (kbd "M-C-SPC") 'er/contract-region)
 
+;; my custom selection stuff
+(define-key jg-navigation-mode-map (kbd "M-e") 'select-whole-line-or-lines)
+(define-key jg-navigation-mode-map (kbd "M-a") 'select-whole-line-or-lines-backwards)
+
 (define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
 
 
@@ -138,6 +144,8 @@
 
 (define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
 
+(define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
+
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
 (define-key jg-navigation-mode-map (kbd "C-c 0") 'prelude-copy-file-name-to-clipboard)
 
@@ -155,13 +163,15 @@
 ;;***************************
 
 
-(define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-up)
+(define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-or-region-up)
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
+
 ;;(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
 (define-key jg-code-mode-map (kbd "M-RET") 'newline)
 (define-key jg-code-mode-map (kbd "RET") 'open-line-below)
 (define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
 (define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+(define-key jg-code-mode-map (kbd "M-k") 'kill-whole-line-or-lines)
 
 (setq cua-rectangle-mark-key (kbd "C-M-RET"))
 (setq cua-rectangle-mark-key (kbd "<C-M-return>"))
@@ -230,25 +240,9 @@
 
 
 
-;; not useful any more. was a trick to help convert hobo dryml templates
-;;(define-key jg-code-mode-map (kbd "C-M-c") 'layout-content)
-
-;;(define-key jg-code-mode-map (kbd "A-w") '(lambda () (interactive) (switch-to-buffer "*scratch*") (prelude-kill-other-buffers)) )
-
 
 
 (define-key jg-code-mode-map (kbd "C-x r") 'rename-this-buffer-and-file)
-
-
-;;**************
-;; yasnippet
-;;**************
-;; take away tab because I want that to be tab-complete
-;; (define-key yas-minor-mode-map (kbd "C-c ; u") 'yas-expand) ;;keybinding I'll never want
-;; (setq yas-trigger-key nil)
-;; ;; trigger yasnippet with helm interface
-;; (define-key jg-code-mode-map (kbd "C-y") 'helm-c-yas-complete)
-
 
 
 
@@ -278,11 +272,18 @@
 
 
 
+
+
 ;; ==========================================================
 ;; Other modes and hooks I have to "fix" to work with jg-mode
+;; or want to change their internal maps to my liking
 ;; ==========================================================
 
 
+;; company completion
+(define-key company-active-map (kbd "C-n") 'company-select-next)
+(define-key company-active-map (kbd "C-p") 'company-select-previous)
+(define-key company-active-map (kbd "C-f") 'company-filter-candidates)
 
 ;; don't break my C-j
 (require 'paredit)
@@ -291,33 +292,32 @@
 
 
 ;; fix the ruby keymaps
-(require 'ruby-electric)
-(require 'ruby-tools)
-(require 'ruby-end)
+;;(require 'ruby-electric)
+;;(require 'ruby-tools)
+;;(require 'ruby-end)
 
 
 ;; ruby tools mode map ("rt")
-(define-key ruby-tools-mode-map (kbd "C-'") nil)
-(define-key ruby-tools-mode-map (kbd "C-\"") nil)
-(define-key ruby-tools-mode-map (kbd "C-:") nil)
-(define-key ruby-tools-mode-map (kbd "C-;") nil)
-(define-key ruby-tools-mode-map (kbd "M-'") nil)
-(define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
-(define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
-;;(define-key ruby-tools-mode-map (kbd "M-'") 'ruby-tools-to-single-quote-string)
+;; (define-key ruby-tools-mode-map (kbd "C-'") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-\"") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-:") nil)
+;; (define-key ruby-tools-mode-map (kbd "C-;") nil)
+;; (define-key ruby-tools-mode-map (kbd "M-'") nil)
+;; (define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
+;; (define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
 
 
 ;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
-(define-key ruby-mode-map (kbd "TAB") nil)
-(define-key ruby-mode-map (kbd "RET") nil)
-(define-key ruby-mode-map (kbd "C-m") nil)
-(define-key ruby-mode-map (kbd "SPC") nil)
+;; (define-key ruby-mode-map (kbd "TAB") nil)
+;; (define-key ruby-mode-map (kbd "RET") nil)
+;; (define-key ruby-mode-map (kbd "C-m") nil)
+;; (define-key ruby-mode-map (kbd "SPC") nil)
 
 
-(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
+;;(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
 ;; I want to define the below to nil -- but ruby-end-return doesn't work for do blocks. :(
 ;;(define-key ruby-end-mode-map (kbd "SPC") nil)
-(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
+;;(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
 
 
 
@@ -366,9 +366,7 @@
 
 
 (defun c-k-clear-for-term-mode ()
-  (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") ))
-  (define-key (current-local-map) (kbd "M-w") '(lambda () (interactive) (term-send-raw-string "exit\r") ))
-  )
+  (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") )))
 
 
 (defadvice term-mode (after term-mode-fixes ())
