@@ -258,7 +258,8 @@ as the fuzzy-find root"
                              (window-width))))
 (defun my-shell-mode-hook ()
   ;; add this hook as buffer local, so it runs once per window.
-  (add-hook 'window-configuration-change-hook 'comint-fix-window-size nil t))
+  (add-hook 'window-configuration-change-hook 'comint-fix-window-size nil t)
+  (setq comint-input-autoexpand nil))
 (add-hook 'shell-mode-hook 'my-shell-mode-hook)
 ;; ==========================================================================
 
@@ -488,3 +489,16 @@ there's a region, all lines that region covers will be duplicated."
 ;;       (save-buffer)
 ;;     (save-buffer 16)))
 ;; (global-set-key [remap save-buffer] 'le::save-buffer-force-backup)
+
+(defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
+  "Center the view after moving it"
+  (recenter))
+(ad-disable-advice 'back-button-local 'after 'center-after-back-button-local)
+
+(defadvice rvm-use (after rvm-elscreen-save-info activate)
+  "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
+  (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+    (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
+    (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
+    (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
+    ))

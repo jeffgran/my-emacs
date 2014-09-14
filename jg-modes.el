@@ -82,18 +82,28 @@
 
 ;; HTML mode
 ;; nXhtml mode (new and improved)
-(setq
- nxhtml-global-minor-mode nil
- mumamo-chunk-coloring 'submode-colored
- nxhtml-skip-welcome t
- indent-region-mode t
- rng-nxml-auto-validate-flag nil
- ;;mumamo-margin-use (quote (right-margin 13))
- nxml-degraded t)
+;; (setq
+;;  nxhtml-global-minor-mode nil
+;;  mumamo-chunk-coloring 'submode-colored
+;;  nxhtml-skip-welcome t
+;;  indent-region-mode t
+;;  rng-nxml-auto-validate-flag nil
+;;  ;;mumamo-margin-use (quote (right-margin 13))
+;;  nxml-degraded t)
+(add-hook 'nxml-mode-hook '(lambda () (abbrev-mode -1)))
 
-(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 
+;;(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 
+(require 'mmm-mode)
+(setq mmm-global-mode 'maybe)
+(mmm-add-mode-ext-class 'html-erb-mode "\\.html\\.erb\\'" 'erb)
+(mmm-add-mode-ext-class 'html-erb-mode nil 'html-js)
+(mmm-add-mode-ext-class 'html-erb-mode nil 'html-css)
+(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . html-erb-mode))
+
+(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-js))
+(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-erb-mode))
 
 (require 'erc)
 (setq erc-autojoin-channels-alist '(("192.168.10.10" "#eng" "#daveco")))
@@ -102,6 +112,9 @@
 ;; (require 'rails)
 ;; (setq ruby-insert-encoding-magic-comment nil) ;; turn off the # -*- coding: utf-8 -*- comments
 
+(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
+(add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+;;(require 'ruby-mode) ;; for enh-ruby
 
 ;; RNC mode
 (require 'rnc-mode)
@@ -163,7 +176,10 @@
              ;;(make-local-variable 'paragraph-separate)
              ;;(setq paragraph-separate (concat "---+\\|" paragraph-separate))
              ;;(ruby-end-mode t)
-             ;;
+
+             (make-local-variable 'post-command-hook)
+             (add-hook 'post-command-hook 'font-lock-fontify-buffer)
+
              ;; turn electric pair mode off; ruby has its own electricity
              (electric-pair-mode -1)
              (ruby-electric-mode t)))
@@ -183,6 +199,7 @@
 
 
 (add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.builder\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.json_builder\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-mode))
@@ -230,7 +247,7 @@
 (require 'srb-adaptive-wrap-mode)
 ;;; srb-adaptive-wrap hooks
 (add-hook 'ruby-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
-(add-hook 'nxhtml-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
+;;(add-hook 'nxhtml-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
 ;;(add-hook 'nxhtml-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
 ;;(add-hook 'after-change-major-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
 (require 'zoom-frm)
