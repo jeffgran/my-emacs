@@ -72,3 +72,4 @@
 
 
 (server-start)
+(cd emacs-root)
