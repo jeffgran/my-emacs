@@ -45,7 +45,9 @@
 (setq font-lock-global-modes t)
 
 (setq helm-split-window-default-side 'right)
-
+(setq debug-on-error t)
+;; (setq max-specpdl-size 10000)
+;; (setq max-lisp-eval-depth 10000)
 
 (toggle-diredp-find-file-reuse-dir 1)
 

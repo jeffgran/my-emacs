@@ -580,6 +580,9 @@
    `(mumamo-background-chunk-submode3 ((t (:background ,jg-zenburn-bg+3))))
    `(mumamo-background-chunk-submode4 ((t (:background ,jg-zenburn-bg+1))))
 
+   ;; mmm (new and improved mumamo)
+   `(mmm-default-submode-face ((t (:background ,jg-zenburn-red-5))))
+   
    ;; org-mode
    `(org-agenda-date-today
      ((t (:foreground "white" :slant italic :weight bold))) t)
