@@ -58,6 +58,7 @@
    smartparens ; instead of paredit, gives "wrap" commands too
 
    ;; ideas I wanna maybe try
+   ; robe ; smart ruby completion and definitions, etc?
    ; cycbuf ; instead of wcy-swbuff
    ; ggtags ; instead of or also with? ctags
    ; adaptive-wrap ; instead of srb-adaptive-wrap
