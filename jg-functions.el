@@ -595,12 +595,11 @@ there's a region, all lines that region covers will be duplicated."
 (defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
   "Center the view after moving it"
   (recenter))
-(ad-disable-advice 'back-button-local 'after 'center-after-back-button-local)
 
-(defadvice rvm-use (after rvm-elscreen-save-info activate)
-  "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
-  (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-    (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
-    (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
-    (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
-    ))
+;; (defadvice rvm-use (after rvm-elscreen-save-info activate)
+;;   "Save the rvm ruby and gemset we just switched to in the elscreen screen properties list"
+;;   (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
+;;     (set-alist 'screen-properties 'rvm-ruby (ad-get-arg 0))
+;;     (set-alist 'screen-properties 'rvm-gemset (ad-get-arg 1))
+;;     (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties)
+;;     ))
