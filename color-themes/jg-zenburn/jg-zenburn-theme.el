@@ -359,6 +359,8 @@
    `(eshell-ls-special ((t (:foreground ,jg-zenburn-yellow :weight bold))))
    `(eshell-ls-symlink ((t (:foreground ,jg-zenburn-cyan :weight bold))))
 
+   ;; shell reset
+   `(comint-highlight-prompt ((t (:inherit nil))))
    ;; flymake
    `(flymake-errline ((t (:background ,jg-zenburn-red-5 :weight bold :underline t))))
    `(flymake-warnline ((t (:background ,jg-zenburn-orange-4 :weight bold :underline t))))
