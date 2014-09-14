@@ -2,6 +2,14 @@
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
 
+(setq prelude-flyspell nil)
+(setq prelude-whitespace nil)
+(setq prelude-clean-whitespace-on-save nil)
+(setq prelude-guru nil)
+
+(global-set-key [remap move-beginning-of-line]
+                'move-beginning-of-line)
+
 
 (setq
    backup-by-copying t                             ; don't clobber symlinks
