@@ -167,8 +167,8 @@
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
 
 ;;(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
-(define-key jg-code-mode-map (kbd "M-RET") 'newline)
-(define-key jg-code-mode-map (kbd "RET") 'open-line-below)
+(define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
+;(define-key jg-code-mode-map (kbd "RET") 'open-line-below)
 (define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
 (define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
 (define-key jg-code-mode-map (kbd "M-k") 'kill-whole-line-or-lines)
@@ -208,7 +208,7 @@
 (define-key smartparens-mode-map (kbd "C-{") 'sp-backward-barf-sexp)
 (define-key smartparens-mode-map (kbd "C-\\") 'sp-unwrap-sexp)
 (define-key smartparens-mode-map (kbd "C-|") 'sp-backward-unwrap-sexp)
-
+(define-key smartparens-mode-map (kbd "M-r") nil)
 
 
 ;;***********************

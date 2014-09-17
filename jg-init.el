@@ -38,7 +38,7 @@
    ruby-mode
    mmm-mode ; multi major mode
    ;;enh-ruby-mode
-   ruby-electric
+   ;ruby-electric
    rsense
    inf-ruby
    ac-inf-ruby
@@ -56,9 +56,9 @@
    js3-mode ;; javascript
    zoom-frm
    smartparens ; instead of paredit, gives "wrap" commands too
+   robe ; smart ruby completion and definitions, etc?
 
    ;; ideas I wanna maybe try
-   ; robe ; smart ruby completion and definitions, etc?
    ; cycbuf ; instead of wcy-swbuff
    ; ggtags ; instead of or also with? ctags
    ; adaptive-wrap ; instead of srb-adaptive-wrap

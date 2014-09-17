@@ -673,6 +673,9 @@
 
    ;; SLIME
    `(slime-repl-inputed-output-face ((t (:foreground ,jg-zenburn-red))))
+   
+   ;; smartparens
+   `(sp-show-pair-match-face ((t (:underline nil :box (:line-width -1 :color ,jg-zenburn-blue-1)))))
 
    ;; tabbar
    `(tabbar-button ((t (:foreground ,jg-zenburn-fg
@@ -743,6 +746,7 @@
    `(wl-highlight-summary-refiled-face ((t (:foreground ,jg-zenburn-fg))))
    `(wl-highlight-summary-displaying-face ((t (:underline t :weight bold))))
 
+   
    ;; which-func-mode
    `(which-func ((t (:foreground ,jg-zenburn-green+4))))
 
