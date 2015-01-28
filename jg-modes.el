@@ -88,6 +88,11 @@
 (add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-erb-mode))
 
 
+(add-hook 'mmm-html-mode-hook '(lambda () (abbrev-mode -1)))
+(add-hook 'mmm-ruby-mode-hook '(lambda () (abbrev-mode -1)))
+(add-hook 'html-erb-mode-hook '(lambda () (abbrev-mode -1)))
+
+
 (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 ;;(require 'ruby-mode) ;; for enh-ruby
@@ -135,23 +140,28 @@
 (auto-fill-mode t)
 (setq comment-auto-fill-only-comments t)
 
-;;(require 'ruby-end)
-(add-hook 'ruby-mode-hook
-          '(lambda ()
-             ;;(make-local-variable 'paragraph-start)
-             ;;(setq paragraph-start (concat "@[[:alpha:]]+\\|" paragraph-start))
-             ;;
-             ;;(make-local-variable 'paragraph-separate)
-             ;;(setq paragraph-separate (concat "---+\\|" paragraph-separate))
-             ;;(ruby-end-mode t)
+(add-hook 'ruby-mode-hook 'robe-mode)
+;; (add-hook 'ruby-mode-hook
+;;           '(lambda ()
+;;              (setq company-backend '(company-robe company-keywords) )
+;;              ))
 
-             (make-local-variable 'post-command-hook)
-             (add-hook 'post-command-hook 'font-lock-fontify-buffer)
+;; (add-hook 'ruby-mode-hook
+;;           '(lambda ()
+;;              ;;(make-local-variable 'paragraph-start)
+;;              ;;(setq paragraph-start (concat "@[[:alpha:]]+\\|" paragraph-start))
+;;              ;;
+;;              ;;(make-local-variable 'paragraph-separate)
+;;              ;;(setq paragraph-separate (concat "---+\\|" paragraph-separate))
+;;              ;;(ruby-end-mode t)
 
-             ;; turn electric pair mode off; ruby has its own electricity
-             (electric-pair-mode -1)
-             ;;(ruby-electric-mode t)
-             ))
+;;              (make-local-variable 'post-command-hook)
+;;              (add-hook 'post-command-hook 'font-lock-fontify-buffer)
+
+;;              ;; turn electric pair mode off; ruby has its own electricity
+;;              (electric-pair-mode -1)
+;;              ;;(ruby-electric-mode t)
+;;              ))
 
 (defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
   "undo some stuff ruby-electric tries to force on us"

@@ -206,7 +206,7 @@
 (define-key smartparens-mode-map (kbd "C-(") 'sp-backward-slurp-sexp)
 (define-key smartparens-mode-map (kbd "C-}") 'sp-forward-barf-sexp)
 (define-key smartparens-mode-map (kbd "C-{") 'sp-backward-barf-sexp)
-(define-key smartparens-mode-map (kbd "C-\\") 'sp-unwrap-sexp)
+(define-key smartparens-mode-map (kbd "C-\\") 'sp-rewrap-sexp)
 (define-key smartparens-mode-map (kbd "C-|") 'sp-backward-unwrap-sexp)
 (define-key smartparens-mode-map (kbd "M-r") nil)
 

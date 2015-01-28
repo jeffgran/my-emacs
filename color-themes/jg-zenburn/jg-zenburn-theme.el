@@ -675,7 +675,7 @@
    `(slime-repl-inputed-output-face ((t (:foreground ,jg-zenburn-red))))
    
    ;; smartparens
-   `(sp-show-pair-match-face ((t (:underline nil :box (:line-width -1 :color ,jg-zenburn-blue-1)))))
+   `(sp-show-pair-match-face ((t (:background nil :underline nil :box (:line-width -1 :color ,jg-zenburn-blue-1)))))
 
    ;; tabbar
    `(tabbar-button ((t (:foreground ,jg-zenburn-fg

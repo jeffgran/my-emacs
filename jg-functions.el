@@ -78,9 +78,10 @@
     (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
     (cd dir-path)
-    (if (file-exists-p (concat dir-path "TAGS"))
-        (visit-project-tags)
-      (build-ctags dir-path))
+    (call-interactively 'jg-new-shell)
+    ;; (if (file-exists-p (concat dir-path "TAGS"))
+    ;;     (visit-project-tags)
+    ;;   (build-ctags dir-path))
 ))
 
 
@@ -219,6 +220,21 @@ as the fuzzy-find root"
       (setq shell-file-name "/bin/bash")
       )))
 
+
+
+;; copied from tramp-sh.el to change the default login args
+;; (add-to-list 'tramp-methods
+;;              '("ssh-jg"
+;;                (tramp-login-program        "ssh -t")
+;;                (tramp-login-args           (("-l" "%u") ("-e" "none") ("%h")))
+;;                (tramp-async-args           (("-q")))
+;;                (tramp-remote-shell         "/bin/sh")
+;;                (tramp-remote-shell-args    ("-c"))
+;;                (tramp-gw-args              (("-o" "GlobalKnownHostsFile=/dev/null")
+;;                                             ("-o" "UserKnownHostsFile=/dev/null")
+;;                                             ("-o" "StrictHostKeyChecking=no")))
+;;                (tramp-default-port         22)))
+;; (setq tramp-default-method "ssh")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Point-to-char stuff
@@ -491,7 +507,7 @@ there's a region, all lines that region covers will be duplicated."
   (interactive)
   (message "building project tags")
   (let ((root (or passed-root (jg-project-root))))
-    (shell-command (concat "ctags -e -R --extra=+fq --exclude=db --exclude=test --exclude=jars --exclude=vendor --exclude=.git --exclude=public -f " root "TAGS " root))
+    (shell-command (concat "ctags -e -R --extra=+fq --exclude=db --exclude=jars --exclude=vendor --exclude=.git --exclude=public -f " root ".tags " root))
     (visit-project-tags))
   (message "tags built successfully"))
 
@@ -554,3 +570,41 @@ there's a region, all lines that region covers will be duplicated."
 (defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
   "Center the view after moving it"
   (recenter))
+
+
+
+
+;; from http://hbin.me/blog/2013/02/24/the-ultimate-solution-for-emacs-find-tags/
+(require 'thingatpt)
+
+(defun thing-after-point ()
+  "Things after point, including current symbol."
+  (if (thing-at-point 'symbol)
+      (save-excursion
+        (let ((from (beginning-of-thing 'symbol))
+              (to   (end-of-thing 'line)))
+          (and (> to from)
+               (buffer-substring-no-properties from to))))))
+
+(defun ruby-thing-at-point ()
+  "Get ruby thing at point.
+   1. thing at 'current_user'   get current_user;
+   2. thing at '!current_user'  get current_user;
+   3. thing at 'current_user!'  get current_user!;
+   4. thing at 'current_user='  get current_user=;
+   5. thing at 'current_user =' get current_user=;
+   6. thing at 'current_user ==' get current_user;
+   7. thing at 'current_user ||=' get current_user=;
+   Otherwise, get `find-tag-default symbol."
+  (if (member (symbol-name major-mode)
+              '("ruby-mode" "rhtml-mode" "haml-mode" "slim-mode"))
+      (let ((symbol (thing-at-point 'symbol))
+            (remain (thing-after-point)))
+        (if (and symbol remain)
+            (let ((sym (s-chop-prefixes '("!!" "!") symbol))
+                  (rem (s-chop-prefixes '("!!" "!") remain)))
+              (if (s-matches? (concat "^" sym "\\( *\\(||\\)?=[^=]\\)") rem)
+                  (concat sym "=")
+                sym))
+          (find-tag-default)))
+    (find-tag-default)))

@@ -6,6 +6,7 @@
 (setq prelude-whitespace nil)
 (setq prelude-clean-whitespace-on-save nil)
 (setq prelude-guru nil)
+()
 
 (global-set-key [remap move-beginning-of-line]
                 'move-beginning-of-line)
@@ -62,12 +63,14 @@
 (prefer-coding-system 'utf-8) 
 
 
+(defun snippet-insert (foo &rest))
 
 (custom-set-variables
  '(blink-cursor-mode t)
  '(cua-mode t nil (cua-base))
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)
+ '(prelude-auto-save nil)
  '(speedbar-frame-parameters
    (quote ((minibuffer)
            (width . 20)
