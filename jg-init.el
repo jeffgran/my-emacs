@@ -1,4 +1,51 @@
-(require 'cl) ; common-lisp
+(prelude-require-packages
+ '(
+   s
+   maxframe
+   back-button
+   modeline-posn
+   ;; auto-complete
+   ;; auto-complete-pcmp
+   company
+   ;;ac-js2
+   coffee-mode
+   ruby-mode
+   mmm-mode ; multi major mode
+   ;;enh-ruby-mode
+                                        ;ruby-electric
+   ;;rsense
+   inf-ruby
+   ;;ac-inf-ruby
+   paredit
+   rainbow-delimiters
+   elscreen
+   ;;readline-complete
+   dired+
+   ssh
+   smex
+   expand-region
+   helm
+   view
+   php-mode
+   js3-mode ;; javascript
+   zoom-frm
+   smartparens ; instead of paredit, gives "wrap" commands too
+   robe ; smart ruby completion and definitions, etc?
+   rspec-mode ; from peter, I think. looks newly updated.
+   
+                                        ;etags-select ; select from multiple of the same tag
+   ggtags ; instead of or also with? ctags
+   
+   ;; ideas I wanna maybe try
+                                        ; cycbuf ; instead of wcy-swbuff
+                                        ; adaptive-wrap ; instead of srb-adaptive-wrap
+                                        ; redo+ ; instead of redo.el
+                                        ; do i really need mode-compile.el?
+   ))
+
+
+
+(require 'cl)                           ; common-lisp
 (require 's)  ; string manip library
 
 (defvar emacs-root 
@@ -26,48 +73,7 @@
 
 (load "mode-compile-ext.el")
 
-(prelude-require-packages
- '(
-   maxframe
-   back-button
-   ;; auto-complete
-   ;; auto-complete-pcmp
-   company
-   ;;ac-js2
-   coffee-mode
-   ruby-mode
-   mmm-mode ; multi major mode
-   ;;enh-ruby-mode
-   ;ruby-electric
-   ;;rsense
-   inf-ruby
-   ;;ac-inf-ruby
-   paredit
-   rainbow-delimiters
-   elscreen
-   ;;readline-complete
-   dired+
-   ssh
-   smex
-   expand-region
-   helm
-   view
-   php-mode
-   js3-mode ;; javascript
-   zoom-frm
-   smartparens ; instead of paredit, gives "wrap" commands too
-   robe ; smart ruby completion and definitions, etc?
-   rspec-mode ; from peter, I think. looks newly updated.
-   
-   ;etags-select ; select from multiple of the same tag
-   ggtags ; instead of or also with? ctags
-   
-   ;; ideas I wanna maybe try
-   ; cycbuf ; instead of wcy-swbuff
-   ; adaptive-wrap ; instead of srb-adaptive-wrap
-   ; redo+ ; instead of redo.el
-   ; do i really need mode-compile.el?
-   ))
+
 
 (load-library "jg-modes")           ; my various major/minor modes and their setups
 (load-library "jg-functions")       ; custom functions I've written to make me faster :) also useful stuff I found on the internet
