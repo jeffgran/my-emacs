@@ -59,6 +59,7 @@
       jg-default-project-root)
 )
 
+(require 'jg-elscreen-buffer-list)
 (defun jg-elscreen-get-current-property (name)
   (let* ((properties (elscreen-get-screen-property (elscreen-get-current-screen)))
          (property (get-alist name properties)))

@@ -1,6 +1,9 @@
 (provide 'jg-elscreen-buffer-list)
 (require 'elscreen)
-(require 'alist)
+
+
+(defun get-alist (key alist)
+  (cdr (assoc key alist)))
 
 
 (defun jg-elscreen-add-buffer-to-list (arg)
