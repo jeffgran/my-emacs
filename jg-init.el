@@ -32,7 +32,7 @@
    smartparens ; instead of paredit, gives "wrap" commands too
    robe ; smart ruby completion and definitions, etc?
    rspec-mode ; from peter, I think. looks newly updated.
-   
+   eww-lnum
                                         ;etags-select ; select from multiple of the same tag
    ggtags ; instead of or also with? ctags
    
