@@ -360,7 +360,8 @@
    `(eshell-ls-symlink ((t (:foreground ,jg-zenburn-cyan :weight bold))))
 
    ;; shell reset
-   `(comint-highlight-prompt ((t (:inherit nil))))
+   ;;`(comint-highlight-prompt ((t (:inherit nil))))
+   `(comint-highlight-prompt ((nil (:inherit nil))))
    ;; flymake
    `(flymake-errline ((t (:background ,jg-zenburn-red-5 :weight bold :underline t))))
    `(flymake-warnline ((t (:background ,jg-zenburn-orange-4 :weight bold :underline t))))
@@ -514,7 +515,7 @@
    `(jabber-title-large ((t (:height 1.3 :weight bold))))
 
    ;; linum-mode
-   `(linum ((t (:foreground ,jg-zenburn-bg+3 :background ,jg-zenburn-bg))))
+   `(linum ((t (:foreground ,jg-zenburn-blue-2 :background ,jg-zenburn-bg))))
 
    ;; magit
    `(magit-section-title ((t (:foreground ,jg-zenburn-yellow :weight bold))))

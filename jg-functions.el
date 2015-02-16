@@ -609,3 +609,26 @@ there's a region, all lines that region covers will be duplicated."
                 sym))
           (find-tag-default)))
     (find-tag-default)))
+
+
+;; from http://stackoverflow.com/questions/18812938/copy-full-file-path-into-copy-paste-clipboard
+;; edited to give me more options, like full-with-line-number
+(defun copy-buffer-file-name-as-kill (choice)
+  "Copy the buffer-file-name to the kill-ring"
+  (interactive "cCopy Buffer Name (L) Full with Line, (F) Full, (D) Directory, (N) Name")
+  (let ((new-kill-string)
+        (name (if (eq major-mode 'dired-mode)
+                  (dired-get-filename)
+                (or (buffer-file-name) ""))))
+    (cond ((eq choice ?f)
+           (setq new-kill-string name))
+          ((eq choice ?d)
+           (setq new-kill-string (file-name-directory name)))
+          ((eq choice ?n)
+           (setq new-kill-string (file-name-nondirectory name)))
+          ((eq choice ?l)
+           (setq new-kill-string (concat name ":" (number-to-string (line-number-at-pos)))))
+          (t (message "Quit")))
+    (when new-kill-string
+      (message "%s copied" new-kill-string)
+      (kill-new new-kill-string))))

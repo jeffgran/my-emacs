@@ -147,7 +147,7 @@
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
 
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
-(define-key jg-navigation-mode-map (kbd "C-c 0") 'prelude-copy-file-name-to-clipboard)
+(define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
 
 ;;*************************************************
 ;;            End JG Navigation Mode
@@ -203,6 +203,7 @@
 ;; SmartParens
 ;;***********************
 (define-key smartparens-mode-map (kbd "C-)") 'sp-forward-slurp-sexp)
+(define-key smartparens-mode-map (kbd "C-M-)") 'sp-slurp-hybrid-sexp)
 (define-key smartparens-mode-map (kbd "C-(") 'sp-backward-slurp-sexp)
 (define-key smartparens-mode-map (kbd "C-}") 'sp-forward-barf-sexp)
 (define-key smartparens-mode-map (kbd "C-{") 'sp-backward-barf-sexp)
@@ -436,7 +437,6 @@
 (define-key dired-mode-map (kbd "C-TAB") 'wcy-switch-buffer-forward)
 (define-key dired-mode-map (kbd "C-S-TAB") 'wcy-switch-buffer-backward)
 
-(define-key dired-mode-map (kbd "C-f") 'jg-quicknav-dired)
 
 
 (add-hook 'dired-mode-hook 'disable-jg-code-mode)

@@ -37,30 +37,27 @@
    ggtags ; instead of or also with? ctags
    
    ;; ideas I wanna maybe try
-                                        ; cycbuf ; instead of wcy-swbuff
-                                        ; adaptive-wrap ; instead of srb-adaptive-wrap
-                                        ; redo+ ; instead of redo.el
-                                        ; do i really need mode-compile.el?
+   ;; cycbuf ; instead of wcy-swbuff
+   ;; adaptive-wrap ; instead of srb-adaptive-wrap
+   ;; redo+ ; instead of redo.el
+   ;; do i really need mode-compile.el?
    ))
 
 
 
 (require 'cl)                           ; common-lisp
-(require 's)  ; string manip library
+(require 's)                            ; string manip library
 
 (defvar emacs-root 
   (if (eq system-type 'darwin)
       (concat (s-trim (shell-command-to-string "echo $HOME")) "/my-emacs/")
     "C:/emacs/my-emacs/"))
 (cl-labels ((add-path (p) 
-                   (add-to-list 'load-path 
-                                (concat emacs-root p))))
+                      (add-to-list 'load-path 
+                                   (concat emacs-root p))))
   (add-path "") ; root
-  ;;(add-path "nxhtml")
-  (add-path "apel")
-  (add-path "jg-quicknav")
   (add-path "emacs-goodies-el")
-)
+  )
 
 
 ;; color theme stuff. 

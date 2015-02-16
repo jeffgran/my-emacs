@@ -203,6 +203,9 @@
 (add-to-list 'comint-output-filter-functions 'ansi-color-process-output)
 (add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
 
+(set-face-attribute 'comint-highlight-prompt nil
+                    :inherit nil) ; don't override the prompt colors
+
 
 ;; use c++ for torquescript
 (add-to-list 'auto-mode-alist '("\\.cs$" . c++-mode))
@@ -319,7 +322,7 @@
 ;;(add-hook 'ssh-mode-hook 'ac-rlc-setup-sources)
 ;;(add-hook 'ssh-mode-hook 'jg-setup-ac-rlc)
 
-(setq tramp-shell-prompt-pattern ".*[#$%>] *")
+(setq tramp-shell-prompt-pattern ".*[#$%>)] *")
 
 
 ;;(add-to-list 'ac-modes 'shell-mode)
