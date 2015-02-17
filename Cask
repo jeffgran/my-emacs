@@ -69,10 +69,11 @@
 (depends-on "adaptive-wrap") ;; wrap long lines
 (depends-on "redo+")
 (depends-on "pbcopy") ;; osx pasteboard/emacs kill ring integration
-
-
-;; git-timemachine
-;; browse-kill-ring
+(depends-on "centered-cursor-mode")
+(depends-on "scad-mode")
+(depends-on "git-timemachine")
+(depends-on "browse-kill-ring")
+(depends-on "purpose")
 
 ;; ideas I wanna maybe try
 ;; -----------------------

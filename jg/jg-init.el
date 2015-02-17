@@ -1,5 +1,5 @@
 ;; color theme stuff. 
-(add-to-list 'custom-theme-load-path (concat emacs-root "my-emacs/color-themes/jg-zenburn"))
+(add-to-list 'custom-theme-load-path (concat emacs-root "jg/color-themes/jg-zenburn"))
 (load-theme 'jg-zenburn)
 (require 'tramp)
 (load-library "jg-modes")           ; my various major/minor modes and their setups

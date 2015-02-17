@@ -66,12 +66,33 @@ recently used."
 
 
 ;; these two are to add any newly shown buffer to the jg buffer list of the current screen
-(defadvice display-buffer (after jg-elscreen-display-buffer-advice activate)
-  ;;(message (buffer-name (current-buffer)))
-  (jg-elscreen-add-buffer-to-list (current-buffer)))
-(defadvice switch-to-buffer (after jg-elscreen-switch-to-buffer-advice activate)
-  ;;(message (buffer-name (current-buffer)))
-  (jg-elscreen-add-buffer-to-list (current-buffer)))
+(defadvice display-buffer (around jg-elscreen-display-buffer-advice activate)
+  (setq ret-val ad-do-it)
+  (setq the-buffer ret-val)
+  (setq the-buffer (cond
+                    ((bufferp ret-val)
+                     ret-val)
+                    ((windowp ret-val)
+                     (window-buffer ret-val))
+                    (t
+                     (throw "wat did this return?"))))
+  ;;(message (prin1-to-string the-buffer))
+  (jg-elscreen-add-buffer-to-list the-buffer)
+  (setq ad-return-value ret-val))
+
+(defadvice switch-to-buffer (around jg-elscreen-switch-to-buffer-advice activate)
+  (setq ret-val ad-do-it)
+  (setq the-buffer ret-val)
+  (setq the-buffer (cond
+                    ((bufferp ret-val)
+                     ret-val)
+                    ((windowp ret-val)
+                     (window-buffer ret-val))
+                    (t
+                     (throw "wat did this return?"))))
+  ;;(message (prin1-to-string the-buffer))
+  (jg-elscreen-add-buffer-to-list the-buffer)
+  (setq ad-return-value ret-val))
 
 
 
@@ -114,6 +135,10 @@ screen"
 )
 
 
+(defun jg-elscreen-get-current-property (name)
+  (let* ((properties (elscreen-get-screen-property (elscreen-get-current-screen)))
+         (property (get-alist name properties)))
+    property))
 
 
 
@@ -126,8 +151,5 @@ screen"
 
 ;; (defadvice set-window-buffer (after jg-elscreen-set-window-buffer-advice activate)
 ;;   (jg-elscreen-add-buffer-to-list (ad-get-arg 1)))
-
-;; (defadvice pop-to-buffer (after jg-elscreen-pop-to-buffer-advice activate)
-;;   (jg-elscreen-add-buffer-to-list (ad-get-arg 0)))
 
 (provide 'jg-elscreen-buffer-list)

@@ -7,8 +7,10 @@
 
 
 
-;; only turn the tabs stuff on in windowed mode (not the terminal)
-(if window-system
+;;only turn the tabs stuff on in windowed mode (not the terminal)
+
+;;(if window-system
+(if t
     (progn
       ;; Elscreen (tabs/session management)
       ;; my custom elscreen buffer list (separate buffer list per screen). :)
@@ -36,8 +38,9 @@
 
 (setq helm-idle-delay 0
       helm-input-idle-delay 0
-      helm-quick-update nil
+      helm-quick-update t
       helm-buffer-max-length 70
+      helm-recentf-fuzzy-match t
       )
 
 
@@ -96,10 +99,6 @@
 (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 ;;(require 'ruby-mode) ;; for enh-ruby
-
-;; RNC mode
-(require 'rnc-mode)
-(add-to-list 'auto-mode-alist '("\\.rnc$" . rnc-mode))
 
 
 ;; php mode
@@ -213,6 +212,7 @@
 
 
 (require 'centered-cursor-mode)
+(global-centered-cursor-mode)
 (setq ccm-recenter-at-end-of-file t)
 
 (require 'zoom-frm)
@@ -280,27 +280,6 @@
 (require 'dired+)
 
 
-;; sweet auto-complete!
-;; (require 'auto-complete-config)
-;; (add-to-list 'ac-dictionary-directories "~/my-emacs/ac-dict")
-;; (ac-config-default)
-;; (global-auto-complete-mode t)
-
-;; (define-key ac-complete-mode-map "\C-n" 'ac-next)
-;; (define-key ac-complete-mode-map "\C-p" 'ac-previous)
-
-;; (setq ac-auto-start nil)
-;; (setq ac-auto-show-menu t)
-;; (setq ac-use-fuzzy nil)
-;; ;;(setq ac-delay 0.8)
-;; (setq ac-expand-on-auto-complete t)
-;; (setq ac-menu-height 15)
-
-
-;; (global-set-key (kbd "TAB") 'ac-start)
-;; (define-key ac-completing-map (kbd "C-f") 'ac-isearch)
-;; (define-key ac-completing-map (kbd "RET") 'ac-complete)
-;; (define-key ac-completing-map (kbd "TAB") 'auto-complete)
 
 ;; even sweeter auto-complete!?
 (global-company-mode)
@@ -315,32 +294,9 @@
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
 ;;(require 'readline-complete)
 
-;;(add-to-list 'ac-modes 'ssh-mode)
-;;(add-hook 'ssh-mode-hook 'ac-rlc-setup-sources)
-;;(add-hook 'ssh-mode-hook 'jg-setup-ac-rlc)
-
 (setq tramp-shell-prompt-pattern ".*[#$%>)] *")
 
 
-;;(add-to-list 'ac-modes 'shell-mode)
-;;(add-hook 'shell-mode-hook 'ac-rlc-setup-sources)
-;;(add-hook 'shell-mode-hook 'jg-setup-ac-rlc)
-
-;; (defun jg-setup-ac-rlc ()
-;;   ;; for some reason have to override these again here
-;;   (setq ac-auto-start nil)
-;;   (setq ac-auto-show-menu t)
-;;   (setq ac-use-fuzzy nil)
-;; )
-
-;; Rsense + Autocomplete
-;; (setq rsense-home "/usr/local/Cellar/rsense/0.3/libexec/")
-;; (require 'rsense)
-
-;; (add-hook 'ruby-mode-hook
-;;           (lambda ()
-;;             (add-to-list 'ac-sources 'ac-source-rsense-method)
-;;             (add-to-list 'ac-sources 'ac-source-rsense-constant)))
 
 (setq tags-revert-without-query t)
 (global-set-key (kbd "C-c C-t") 'ctags-create-or-update-tags-table)

@@ -26,8 +26,8 @@
 
 
 ;; scrolling and line movement
-(define-key jg-navigation-mode-map (kbd "M-C-n") 'View-scroll-half-page-forward)
-(define-key jg-navigation-mode-map (kbd "M-C-p") 'View-scroll-half-page-backward)
+(define-key jg-navigation-mode-map (kbd "M-C-n") 'scroll-up)
+(define-key jg-navigation-mode-map (kbd "M-C-p") 'scroll-down)
 (define-key jg-navigation-mode-map (kbd "C-M-.") 'end-of-buffer)
 (define-key jg-navigation-mode-map (kbd "C-M-,") 'beginning-of-buffer)
 (define-key jg-navigation-mode-map (kbd "C-l") 'goto-line)
