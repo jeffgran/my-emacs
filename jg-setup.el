@@ -2,12 +2,6 @@
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
 
-(setq prelude-flyspell nil)
-(setq prelude-whitespace nil)
-(setq prelude-clean-whitespace-on-save nil)
-(setq prelude-guru nil)
-()
-
 (global-set-key [remap move-beginning-of-line]
                 'move-beginning-of-line)
 
@@ -70,7 +64,6 @@
  '(cua-mode t nil (cua-base))
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)
- '(prelude-auto-save nil)
  '(speedbar-frame-parameters
    (quote ((minibuffer)
            (width . 20)

@@ -1,6 +1,3 @@
-;; zenburn is default in prelude
-(disable-theme 'zenburn)
-
 (deftheme jg "Jeff Gran's custom color theme.")
 
 

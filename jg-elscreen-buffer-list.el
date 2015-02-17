@@ -1,4 +1,3 @@
-(provide 'jg-elscreen-buffer-list)
 (require 'elscreen)
 
 
@@ -130,3 +129,5 @@ screen"
 
 ;; (defadvice pop-to-buffer (after jg-elscreen-pop-to-buffer-advice activate)
 ;;   (jg-elscreen-add-buffer-to-list (ad-get-arg 0)))
+
+(provide 'jg-elscreen-buffer-list)

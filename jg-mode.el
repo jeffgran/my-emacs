@@ -1,3 +1,7 @@
+(load "eww")                            ; pre-load this so I can set up my customizations
+(load "shell")                          ; same
+
+
 (defvar jg-code-mode-map (make-sparse-keymap) "jg-code-mode-map.")
 (defvar jg-navigation-mode-map (make-sparse-keymap) "jg-navigation-mode-map.")
 
@@ -91,15 +95,17 @@
 (define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
 
 
-(define-key jg-navigation-mode-map (kbd "C-S-o") 'jg-fuzzy-find-in-project)
+(define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
 (define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
 
 
 ;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
-(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") 'swbuff-switch-to-next-buffer)
+(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'swbuff-switch-to-previous-buffer)
 
-(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
+;;(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
+(define-key jg-navigation-mode-map (kbd "M-b") 'psw-switch-buffer)
+
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 (define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
@@ -145,14 +151,13 @@
 (define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
 
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
+(define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
 
 (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
-(define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
 
 ;;*************************************************
 ;;            End JG Navigation Mode
 ;;*************************************************
-
 
 
 
@@ -434,9 +439,6 @@
 (define-key dired-mode-map (kbd "C-o") 'jg-quicknav)
 ;; (define-key dired-mode-map (kbd "C-o") 'dired-display-file)
 
-(define-key dired-mode-map (kbd "C-TAB") 'wcy-switch-buffer-forward)
-(define-key dired-mode-map (kbd "C-S-TAB") 'wcy-switch-buffer-backward)
-
 
 
 (add-hook 'dired-mode-hook 'disable-jg-code-mode)
@@ -457,6 +459,20 @@
 
 ;; scratch buffer
 ;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
+
+
+
+
+(define-key eww-mode-map (kbd "B") 'eww-back-url)
+(define-key eww-mode-map (kbd "<") 'eww-back-url)
+(define-key eww-mode-map (kbd ">") 'eww-forward-url)
+(define-key eww-mode-map (kbd "C-c 0") 'eww-copy-page-url)
+(define-key eww-mode-map (kbd "f") 'eww-lnum-follow)
+(define-key eww-mode-map (kbd "F") 'eww-lnum-universal)
+
+(add-hook 'eww-mode-hook
+          'disable-jg-code-mode)
+
 
 
 (add-hook 'mu4e-main-mode-hook 'disable-jg-code-mode)

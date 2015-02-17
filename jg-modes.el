@@ -1,4 +1,5 @@
 (add-to-list 'auto-mode-alist '("\\.el" . emacs-lisp-mode))
+(add-to-list 'auto-mode-alist '("Cask" . emacs-lisp-mode))
 (add-hook 'emacs-lisp-mode-hook '(lambda ()
                                    (paredit-mode t)
                                    ))
@@ -20,7 +21,6 @@
 
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
-(require 'pbcopy)
 (turn-on-pbcopy)
 
 (require 'jg-paredit)
@@ -215,10 +215,6 @@
 (require 'centered-cursor-mode)
 (setq ccm-recenter-at-end-of-file t)
 
-(require 'srb-adaptive-wrap-mode)
-;;; srb-adaptive-wrap hooks
-(add-hook 'ruby-mode-hook (lambda () (srb-adaptive-wrap-mode 1)))
-
 (require 'zoom-frm)
 
 ;; Uniquify
@@ -229,20 +225,22 @@
 (require 'back-button)
 (back-button-mode 1)
 
-(require 'fuzzy-find-in-project)
 
 
 (setq-default save-interprogram-paste-before-kill t)
 (setq-default indent-tabs-mode nil)
 
-(require 'redo)
 (require 'grep-buffers)
 
 (require 'linum)
 (global-linum-mode 1)
 
 
-(require 'wcy-swbuff)
+;;(require 'wcy-swbuff)
+(require 'flx-ido)
+(setq psw-use-flx t)
+(setq psw-in-window-center t)
+
 
 
 ;; kill the buffer upon completion of the process.
@@ -281,9 +279,6 @@
 
 (require 'dired+)
 
-(eval-after-load "eww"
-  '(progn (define-key eww-mode-map "f" 'eww-lnum-follow)
-          (define-key eww-mode-map "F" 'eww-lnum-universal)))
 
 ;; sweet auto-complete!
 ;; (require 'auto-complete-config)
@@ -365,3 +360,6 @@
 ;;; org mode
 (setq org-todo-keywords
        '((sequence "TODO" "WORKING" "DONE")))
+
+(setq fiplr-ignored-globs '((directories (".git" ".svn" "tmp" "temp"))
+                            (files ("*.jpg" "*.png" "*.zip" "*~" ".keep"))))

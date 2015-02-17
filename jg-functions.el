@@ -76,7 +76,6 @@
       (elscreen--set-alist 'screen-properties 'jg-project-root dir-path)
       (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
 
-    (setq fuzzy-find-project-root dir-path)
     (elscreen-screen-nickname dir-name)
     (cd dir-path)
     (call-interactively 'jg-new-shell)
@@ -85,17 +84,6 @@
     ;;   (build-ctags dir-path))
 ))
 
-
-;; different approach: advise the fuzzy-find method to use whatever the current property is
-;; more lazy/functional approach
-(defun jg-fuzzy-find-in-project ()
-  "Wrapper around `fuzzy-find-project-root' to use the current `jg-project-root'
-as the fuzzy-find root"
-  (interactive)
-  (let ((fuzzy-find-project-root (jg-project-root)))
-    (fuzzy-find-in-project)
-    )
-)
 
 ;; from the internet somewhere. stackoverflow I think
 (defun what-face (pos)
@@ -401,16 +389,20 @@ as the fuzzy-find root"
         )))
    (t
     (let ((original-column (current-column)))
-      (beginning-of-line)
-      
-      (when (or (> arg 0) (not (eobp)))
-        (forward-line)
-        (when (or (< arg 0) (not (bobp)))
-          (transpose-lines arg))
-        (forward-line -1)
-        (forward-char original-column)
-        )))
+      (shut-up 
+        (beginning-of-line)
+        (kill-line)
+        (when (not (eobp))
+          (delete-forward-char 1))
+        (forward-line arg)
+        (yank)
+        (newline)
+        (forward-line (- 1))
+        (beginning-of-line)
+        (forward-char original-column))))
    ))
+
+
 
 (defun move-text-down (arg)
    "Move region (transient-mark-mode active) or current line
@@ -429,6 +421,13 @@ as the fuzzy-find root"
 If there's no region, the current line will be duplicated. However, if
 there's a region, all lines that region covers will be duplicated."
   (interactive "p")
+
+  ;; make sure the mark exists, in case it's a new buffer
+  (unless (mark)
+    (progn
+      (set-mark (point))
+      (deactivate-mark)))
+  
   (let ((beg nil)
         (end nil)
         (original-point (point))
