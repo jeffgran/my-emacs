@@ -5,3 +5,7 @@ this is just my personal setup. the only part  you might want is jg-functions/jg
 
 - `brew install global --with-pygments --with-exuberant-ctags`
 - pip install pygments
+
+
+- brew install cask
+- cask install
