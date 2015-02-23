@@ -7,10 +7,9 @@
 
 
 
-;;only turn the tabs stuff on in windowed mode (not the terminal)
 
-;;(if window-system
-(if t
+;;only turn the tabs stuff on in windowed mode (not the terminal)
+(if window-system
     (progn
       ;; Elscreen (tabs/session management)
       ;; my custom elscreen buffer list (separate buffer list per screen). :)
@@ -18,9 +17,12 @@
       (setq elscreen-tab-display-kill-screen nil) ;; turn off the [x] button for the mouse
       (setq elscreen-tab-display-control nil) ;; turn off the <-> tab switch button for the mouse
       (setq elscreen-display-screen-number nil) ;; turn off the tab number display in the mode-line
-      (require 'jg-elscreen-buffer-list)
+      (require 'elscreen-bg)
       ))
 
+
+
+(require 'redo+)
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
 (turn-on-pbcopy)
@@ -42,6 +44,45 @@
       helm-buffer-max-length 70
       helm-recentf-fuzzy-match t
       )
+
+
+(require 'smart-mode-line)
+(sml/setup)
+(sml/apply-theme 'respectful)
+
+(require 'git-status-modeline)
+
+(require 'modeline-posn)
+(column-number-mode 1)
+(size-indication-mode 1)
+
+(require 'rbenv)
+(global-rbenv-mode)
+
+;; sml weirdly puts the cursor location info in this... undo that.
+(setq-default mode-line-front-space "")
+
+(setq-default mode-line-format
+      `(
+       "%e"
+       mode-line-front-space
+       mode-line-mule-info
+       mode-line-client
+       mode-line-modified
+       mode-line-remote
+       mode-line-frame-identification
+       mode-line-buffer-identification
+       sml/pos-id-separator
+       mode-line-position
+       smartrep-mode-line-string
+       ,git-status-modeline-element
+       rbenv--modestring
+       ;;(vc-mode vc-mode)
+       sml/pre-modes-separator
+       mode-line-modes
+       mode-line-misc-info
+       mode-line-end-spaces
+       ))
 
 
 
@@ -211,10 +252,6 @@
 (setq c-basic-offset 4)
 
 
-(require 'centered-cursor-mode)
-(global-centered-cursor-mode)
-(setq ccm-recenter-at-end-of-file t)
-
 (require 'zoom-frm)
 
 ;; Uniquify
@@ -236,10 +273,8 @@
 (global-linum-mode 1)
 
 
-;;(require 'wcy-swbuff)
 (require 'flx-ido)
-(setq psw-use-flx t)
-(setq psw-in-window-center t)
+(flx-ido-mode)
 
 
 
@@ -257,7 +292,7 @@
 (add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
-(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
+;;(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 
 (add-hook 'inf-ruby-mode-hook 'kill-buffer-on-exit-shell)
 

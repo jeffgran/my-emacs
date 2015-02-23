@@ -1,9 +1,12 @@
 (require 'cask)
 (cask-initialize)
+(require 'pallet)
+(pallet-mode t)
+
+
+
 (require 'cl)                           ; common-lisp
 (require 's)                            ; string manip library
-
-
 
 (defvar emacs-root 
   (if (eq system-type 'darwin)
@@ -22,7 +25,7 @@
  '(cua-mode t nil (cua-base))
  '(custom-safe-themes
    (quote
-    ("68da95b5bfb09845639a397493e32fbffa29520d9b52cab29c1e4bee31755a6e" default)))
+    ("c5a044ba03d43a725bd79700087dea813abcb6beb6be08c7eb3303ed90782482" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "68da95b5bfb09845639a397493e32fbffa29520d9b52cab29c1e4bee31755a6e" default)))
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)
  '(speedbar-frame-parameters

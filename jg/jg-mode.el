@@ -103,8 +103,7 @@
 (define-key jg-navigation-mode-map (kbd "<C-tab>") 'swbuff-switch-to-next-buffer)
 (define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'swbuff-switch-to-previous-buffer)
 
-;;(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
-(define-key jg-navigation-mode-map (kbd "M-b") 'psw-switch-buffer)
+(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 (define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
@@ -236,7 +235,7 @@
 ;;*******************
 ;; Search/Replace/Etc
 ;;*******************
-(define-key jg-code-mode-map (kbd "C-S-f") 'rgrep)
+(define-key jg-code-mode-map (kbd "C-S-f") 'ag)
 (define-key jg-code-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-code-mode-map (kbd "C-S-r") 'query-replace)
 
@@ -263,10 +262,16 @@
 
 
 
+(define-key jg-code-mode-map (kbd "M-C-x") 'eval-expression)
 
 ;; other things i rebind
-(define-key jg-code-mode-map (kbd "M-C-x") 'eval-expression)
 (define-key shell-mode-map (kbd "M-C-x") 'eval-expression)
+
+
+(define-key jg-code-mode-map (kbd "C-x g") 'magit-status)
+(define-key shell-mode-map (kbd "C-x g") 'magit-status)
+(define-key jg-code-mode-map (kbd "C-x c") 'magit-commit)
+(define-key shell-mode-map (kbd "C-x c") 'magit-commit)
 
 
 ;; set up a new help key prefix since I use C-h for movement

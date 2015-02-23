@@ -5,6 +5,7 @@
 (global-set-key [remap move-beginning-of-line]
                 'move-beginning-of-line)
 
+(defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq
    backup-by-copying t                             ; don't clobber symlinks
@@ -45,12 +46,6 @@
 ;; (setq max-lisp-eval-depth 10000)
 
 (toggle-diredp-find-file-reuse-dir 1)
-
-;; (require 'ecb)
-;; (ecb-layout-define "jg" right
-;;   "creates jg layout with just methods"
-;;   (ecb-set-methods-buffer)
-;;   (select-window (next-window)))
 
 
 ;; default encoding for new buffers, among other default settings and fallbacks.
