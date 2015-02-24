@@ -5,8 +5,10 @@
                                    ))
 
 
-
-
+;; save my place in each file
+(require 'saveplace)
+(setq save-place-file (concat emacs-root "saved-places"))
+(setq-default save-place t)
 
 ;;only turn the tabs stuff on in windowed mode (not the terminal)
 (if window-system
@@ -20,7 +22,9 @@
       (require 'elscreen-bg)
       ))
 
-
+(evil-mode 1)
+(setq-default evil-escape-key-sequence "ek")
+(evil-escape-mode)
 
 (require 'redo+)
 
@@ -51,13 +55,14 @@
 (sml/apply-theme 'respectful)
 
 (require 'git-status-modeline)
+(git-status-modeline-global-mode)
 
 (require 'modeline-posn)
 (column-number-mode 1)
 (size-indication-mode 1)
 
-(require 'rbenv)
-(global-rbenv-mode)
+;; (require 'rbenv)
+;; (global-rbenv-mode)
 
 ;; sml weirdly puts the cursor location info in this... undo that.
 (setq-default mode-line-front-space "")

@@ -100,8 +100,9 @@
 
 
 ;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'swbuff-switch-to-next-buffer)
-(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'swbuff-switch-to-previous-buffer)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") 'buffer-stack-down)
+(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'buffer-stack-up)
+(define-key jg-navigation-mode-map (kbd "C-q") 'buffer-stack-bury)
 
 (define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
 
@@ -198,7 +199,7 @@
 ;; new and improved! move line OR region up and down!
 (define-key jg-code-mode-map (kbd "M-p") 'move-text-up)
 (define-key jg-code-mode-map (kbd "M-n") 'move-text-down)
-
+(define-key jg-code-mode-map (kbd "C-M-\\") 'indent-region-or-buffer)
 
 ;;(define-key jg-code-mode-map (kbd "C-\\") 'indent-for-tab-command)
 
@@ -270,8 +271,8 @@
 
 (define-key jg-code-mode-map (kbd "C-x g") 'magit-status)
 (define-key shell-mode-map (kbd "C-x g") 'magit-status)
-(define-key jg-code-mode-map (kbd "C-x c") 'magit-commit)
-(define-key shell-mode-map (kbd "C-x c") 'magit-commit)
+(define-key jg-code-mode-map (kbd "C-x c") 'magit-checkout)
+(define-key shell-mode-map (kbd "C-x c") 'magit-checkout)
 
 
 ;; set up a new help key prefix since I use C-h for movement
