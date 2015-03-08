@@ -79,7 +79,7 @@
 
 (defun ido-jg-set-project-root ()
   (interactive)
-  (let* ((dir-path (ido-read-directory-name "[JG] Select project root: "))
+  (let* ((dir-path (ido-read-directory-name "[JG] Select project root: " (or default-directory emacs-root) default-directory))
          (dir-name (nth 1 (reverse (split-string dir-path "/")))))
     ;;; (message dir-path)
     ;;; (message dir-name)

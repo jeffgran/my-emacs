@@ -2,8 +2,13 @@
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
 
-(global-set-key [remap move-beginning-of-line]
-                'move-beginning-of-line)
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+
+;; the above breaks saving remote tramp files, this fixes it, I have no idea how either mechanism works.
+(setq tramp-backup-directory-alist backup-directory-alist)
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
@@ -51,6 +56,13 @@
 ;; default encoding for new buffers, among other default settings and fallbacks.
 (prefer-coding-system 'utf-8) 
 
+(require 'exec-path-from-shell)
+(exec-path-from-shell-initialize)
+(autoload 'vkill "vkill" nil t)
+
+;; tramp, for sudo access
+(require 'tramp)
+(setq tramp-default-method "ssh")
 
 (defun snippet-insert (foo &rest))
 

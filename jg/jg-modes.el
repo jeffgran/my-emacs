@@ -22,9 +22,9 @@
       (require 'elscreen-bg)
       ))
 
-(evil-mode 1)
-(setq-default evil-escape-key-sequence "ek")
-(evil-escape-mode)
+;;(evil-mode 1)
+;;(setq-default evil-escape-key-sequence "ek")
+;;(evil-escape-mode)
 
 (require 'redo+)
 
@@ -63,6 +63,9 @@
 
 ;; (require 'rbenv)
 ;; (global-rbenv-mode)
+
+;; from rspec-mode docs -- enables C-x C-q to switch to inf-ruby inside rspec-mode compliation buffer.
+(add-hook 'after-init-hook 'inf-ruby-switch-setup)
 
 ;; sml weirdly puts the cursor location info in this... undo that.
 (setq-default mode-line-front-space "")
@@ -152,7 +155,7 @@
 
 
 ;; js mode
-(setq js-indent-level 2)
+(setq js-indent-level 4)
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js-mode))
 
@@ -297,8 +300,7 @@
 (add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
-;;(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
-
+(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 (add-hook 'inf-ruby-mode-hook 'kill-buffer-on-exit-shell)
 
 

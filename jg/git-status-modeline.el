@@ -173,25 +173,28 @@ value of this element to it.")
 
 (defun git-status-modeline-generate ()
   "TODO"
-  (message "git-status generating for %s" (current-buffer))
-  (let* (
-         (repo (git-status-modeline-get-repo))
-         (branch (s-trim (shell-command-to-string
-                          "git rev-parse --abbrev-ref HEAD")))
-         (commits (split-string
-                   (s-trim (shell-command-to-string
-                            "git rev-list --count --left-right HEAD...@{upstream}"))))
-         (status (shell-command-to-string
-                  "git status --porcelain"))
-         (commits-ahead (nth 0 commits))
-         (commits-behind (nth 1 commits)))
+  (if (file-remote-p default-directory)
+      "" ; doesn't work in remote files/shells for now
+    (progn
+      (message "git-status generating for %s" (current-buffer))
+      (let* (
+             (repo (git-status-modeline-get-repo))
+             (branch (s-trim (shell-command-to-string
+                              "git rev-parse --abbrev-ref HEAD")))
+             (commits (split-string
+                       (s-trim (shell-command-to-string
+                                "git rev-list --count --left-right HEAD...@{upstream}"))))
+             (status (shell-command-to-string
+                      "git status --porcelain"))
+             (commits-ahead (nth 0 commits))
+             (commits-behind (nth 1 commits)))
 
-    (let ((result (concat
-        (git-status-modeline-remote-status (file-name-nondirectory repo) branch commits-ahead commits-behind)
-        (git-status-modeline-parse-status status))))
-      (setq git-status-modeline-cache-plist (lax-plist-put git-status-modeline-cache-plist repo result))
-      result
-      )))
+        (let ((result (concat
+                       (git-status-modeline-remote-status (file-name-nondirectory repo) branch commits-ahead commits-behind)
+                       (git-status-modeline-parse-status status))))
+          (setq git-status-modeline-cache-plist (lax-plist-put git-status-modeline-cache-plist repo result))
+          result
+          )))))
 
 (defun git-status-modeline-get ()
   "TODO"
@@ -264,15 +267,17 @@ value of this element to it.")
 (defun git-status-modeline-invalidate-cache ()
   "TODO"
   (interactive) ;; you can manually call this to refresh
-  (setq git-status-modeline-cache-plist
-        (lax-plist-put git-status-modeline-cache-plist (git-status-modeline-get-repo) nil))
-  (git-status-modeline-update))
+  (when (not (file-remote-p default-directory))
+    (setq git-status-modeline-cache-plist
+          (lax-plist-put git-status-modeline-cache-plist (git-status-modeline-get-repo) nil))
+    (git-status-modeline-update)))
 
 (add-hook 'comint-output-filter-functions 'git-status-modeline-comint-output-filter)
 
 (defun git-status-modeline-comint-output-filter (output)
   "TODO"
-  (when (and (string-match comint-prompt-regexp output)
+  (when (and (s-ends-with? "\n" output)
+             (string-match comint-prompt-regexp output)
              (not
               (string-match (concat comint-prompt-regexp ".*\n.*") output)))
                                     (git-status-modeline-invalidate-cache)))

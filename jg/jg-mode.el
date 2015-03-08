@@ -2,6 +2,11 @@
 (load "shell")                          ; same
 
 
+(global-set-key [remap move-beginning-of-line] 'move-beginning-of-line)
+(global-set-key (kbd "M-=") 'text-scale-increase)
+(global-set-key (kbd "M--") 'text-scale-decrease)
+
+
 (defvar jg-code-mode-map (make-sparse-keymap) "jg-code-mode-map.")
 (defvar jg-navigation-mode-map (make-sparse-keymap) "jg-navigation-mode-map.")
 
@@ -81,7 +86,7 @@
 ;;buffers
 (define-key jg-navigation-mode-map (kbd "C-w") 'kill-this-buffer)
 (define-key jg-navigation-mode-map (kbd "C-q") 'keyboard-quit)
-(define-key jg-navigation-mode-map (kbd "M-g") 'repeat)
+(define-key jg-navigation-mode-map (kbd "M-g") nil)
 
 
 ;; select by semantic units. super helpful!
@@ -98,6 +103,10 @@
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
 (define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
 
+(define-key jg-navigation-mode-map (kbd "C-x k") 'rake)
+
+
+(define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
 ;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
 (define-key jg-navigation-mode-map (kbd "<C-tab>") 'buffer-stack-down)
@@ -270,7 +279,10 @@
 
 
 (define-key jg-code-mode-map (kbd "C-x g") 'magit-status)
+(define-key jg-code-mode-map (kbd "M-g") 'magit-status)
 (define-key shell-mode-map (kbd "C-x g") 'magit-status)
+(define-key shell-mode-map (kbd "M-g") 'magit-status)
+
 (define-key jg-code-mode-map (kbd "C-x c") 'magit-checkout)
 (define-key shell-mode-map (kbd "C-x c") 'magit-checkout)
 
@@ -313,35 +325,8 @@
 (define-key paredit-mode-map (kbd "C-j") nil)
 
 
-
-;; fix the ruby keymaps
-;;(require 'ruby-electric)
-;;(require 'ruby-tools)
-;;(require 'ruby-end)
-
-
-;; ruby tools mode map ("rt")
-;; (define-key ruby-tools-mode-map (kbd "C-'") nil)
-;; (define-key ruby-tools-mode-map (kbd "C-\"") nil)
-;; (define-key ruby-tools-mode-map (kbd "C-:") nil)
-;; (define-key ruby-tools-mode-map (kbd "C-;") nil)
-;; (define-key ruby-tools-mode-map (kbd "M-'") nil)
-;; (define-key ruby-tools-mode-map (kbd "M-\"") 'ruby-tools-to-double-quote-string)
-;; (define-key ruby-tools-mode-map (kbd "M-:") 'ruby-tools-to-symbol)
-
-
-;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
-;; (define-key ruby-mode-map (kbd "TAB") nil)
-;; (define-key ruby-mode-map (kbd "RET") nil)
-;; (define-key ruby-mode-map (kbd "C-m") nil)
-;; (define-key ruby-mode-map (kbd "SPC") nil)
-
-
-;;(define-key ruby-end-mode-map (kbd "RET") 'ruby-end-return)
-;; I want to define the below to nil -- but ruby-end-return doesn't work for do blocks. :(
-;;(define-key ruby-end-mode-map (kbd "SPC") nil)
-;;(define-key ruby-end-mode-map (kbd "SPC") 'ruby-end-space)
-
+(require 'magit)
+(define-key magit-mode-map (kbd "C-d") 'magit-diff-staged)
 
 
 ;; some extra keys for ruby mode.
@@ -454,7 +439,7 @@
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
 ;;(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
-(define-key shell-mode-map (kbd "C-S-f") 'rgrep)
+(define-key shell-mode-map (kbd "C-S-f") 'ag)
 (define-key shell-mode-map (kbd "C-S-v") 'cua-paste-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
 (define-key shell-mode-map (kbd "M-.") 'comint-restore-input)

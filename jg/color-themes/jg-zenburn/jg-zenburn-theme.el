@@ -60,7 +60,7 @@
       (jg-zenburn-fg-1 "#e0e0e0")
 
       (jg-zenburn-bg-1 "#103063")
-      (jg-zenburn-bg-05 "#102a33")
+      (jg-zenburn-bg-05 "#102b53")
       (jg-zenburn-bg "#000000")
       (jg-zenburn-bg+1 "#1f1f26")
       (jg-zenburn-bg+2 "#262630")
@@ -84,6 +84,7 @@
       (jg-zenburn-yellow-1 "#dfca67")
       (jg-zenburn-yellow-2 "#cfba47")
 
+      (jg-zenburn-green-2 "#104216")
       (jg-zenburn-green-1 "#446C10")
       (jg-zenburn-green "#94BC2D")
       (jg-zenburn-green+1 "#a4cC3D")
@@ -124,22 +125,14 @@
    `(link-visited ((t (:foreground ,jg-zenburn-purple :underline t :weight normal))))
 
 ;;; basic coloring
-   `(default ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg 
-                              :slant normal
-                              :weight normal
-                              :height 125
-                              :width normal
-                              :foundry
-                              (if (eq system-type 'darwin)
-                                  "Apple"
-                                
-                                "Bitstream"
-                                )
-                              :family
-                              (if (eq system-type 'darwin)
-                                  "Menlo"
-                                "Bitstream Vera Sans Mono"
-                                )))))
+   `(default ((t (
+                  :foreground ,jg-zenburn-fg
+                  :background ,jg-zenburn-bg 
+                  :slant normal
+                  :weight normal
+                  :height 125
+                  :width normal
+                  :family "DejaVu Sans Mono"))))
 
    `(cursor ((t (:foreground ,jg-zenburn-fg :background "white"))))
    `(escape-glyph-face ((t (:foreground ,jg-zenburn-red))))
@@ -147,7 +140,7 @@
    `(header-line ((t (:foreground ,jg-zenburn-yellow
                                   :background ,jg-zenburn-bg-1
                                   :box (:line-width -1 :style released-button)))))
-   `(highlight ((t (:background ,jg-zenburn-blue-3))))
+   `(highlight ((t (:background ,jg-zenburn-green-2))))
 
    `(error ((t (:foreground ,jg-zenburn-red-2 :weight bold :underline t))))
 
@@ -478,10 +471,8 @@
    `(helm-candidate-number ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg-1))))
 
    ;; hl-line-mode
-   `(hl-line-face ((,class (:background ,jg-zenburn-bg-05))
-                   (t :weight bold)))
-   `(hl-line ((,class (:background ,jg-zenburn-bg-05)) ; old emacsen
-              (t :weight bold)))
+   `(hl-line-face ((t (:background ,jg-zenburn-green-2))))
+   `(hl-line ((t (:background ,jg-zenburn-green-2))))
 
    ;; hl-sexp
    `(hl-sexp-face ((,class (:background ,jg-zenburn-bg+1))
