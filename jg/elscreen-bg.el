@@ -32,6 +32,8 @@
 ;; this is set to just 'ibuffer, but you can make it whatever you want. All
 ;; other commands will use the filtered list.
 ;;
+;; TODO: advise window-prev-buffers so "q" in a e.g. dired buffer picks an appropriate buffer.
+;;
 ;; Usage:
 ;;
 ;; You have to be using elscreen, then just require it.

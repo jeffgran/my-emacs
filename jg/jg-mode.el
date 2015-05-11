@@ -109,9 +109,9 @@
 (define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
 ;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'buffer-stack-down)
-(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'buffer-stack-up)
-(define-key jg-navigation-mode-map (kbd "C-q") 'buffer-stack-bury)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
+(define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
+
 
 (define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
 

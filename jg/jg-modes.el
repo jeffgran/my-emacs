@@ -26,6 +26,7 @@
 ;;(setq-default evil-escape-key-sequence "ek")
 ;;(evil-escape-mode)
 
+
 (require 'redo+)
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
@@ -49,6 +50,7 @@
       helm-recentf-fuzzy-match t
       )
 
+(global-subword-mode 1)
 
 (require 'smart-mode-line)
 (sml/setup)
