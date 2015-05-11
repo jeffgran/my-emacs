@@ -7,6 +7,12 @@
 (global-set-key (kbd "M--") 'text-scale-decrease)
 
 
+;;(global-set-key (kbd "<escape>") 'god-mode-all)
+(global-set-key (kbd "C-<return>") 'god-mode-all)
+(define-key god-local-mode-map (kbd "i") 'back-to-indentation)
+(define-key god-local-mode-map (kbd "c") 'kill-ring-save)
+
+
 (defvar jg-code-mode-map (make-sparse-keymap) "jg-code-mode-map.")
 (defvar jg-navigation-mode-map (make-sparse-keymap) "jg-navigation-mode-map.")
 
@@ -183,8 +189,10 @@
 ;;(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
 (define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
 ;(define-key jg-code-mode-map (kbd "RET") 'open-line-below)
-(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
-(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+;;(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
+;;(define-key jg-code-mode-map (kbd "C-RET") nil)
+;;(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
+;;(define-key jg-code-mode-map (kbd "<C-return>") nil)
 (define-key jg-code-mode-map (kbd "M-k") 'kill-whole-line-or-lines)
 
 (setq cua-rectangle-mark-key (kbd "C-M-RET"))

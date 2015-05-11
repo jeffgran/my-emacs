@@ -28,6 +28,7 @@
  '(custom-safe-themes
    (quote
     ("2a953a5d70fdfb1aeb07b81b3c3d703d5ed0359f932896a49b45784ef3b37dfa" "7921ca5cec91d5a60ad5534f7d08bf9765c1ea11cc779768d5593734e310b98e" "321df602b729681183f5d6d087c8f1d03d03046b7f6dded4c90fcbc4fc483e14" "ef6e4ac99715cdd005dfd8e71bd720285d0989eddd4d4290ad8b33ceee503d8b" "c5a044ba03d43a725bd79700087dea813abcb6beb6be08c7eb3303ed90782482" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "68da95b5bfb09845639a397493e32fbffa29520d9b52cab29c1e4bee31755a6e" default)))
+
  '(fci-rule-color "#102a33")
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)

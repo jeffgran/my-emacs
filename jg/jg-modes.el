@@ -157,9 +157,12 @@
 
 
 ;; js mode
-(setq js-indent-level 4)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
-(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js-mode))
+(setq js-indent-level 2)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
+
+
+(add-to-list 'auto-mode-alist '("\\.es6\\'" . js2-mode))
 
 
 ;; coffeescript mode
@@ -174,7 +177,7 @@
 (add-hook 'coffee-mode-hook
           '(lambda() (coffee-custom)))
 
-
+(custom-set-variables '(coffee-tab-width 2))
 
 ;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 ;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
