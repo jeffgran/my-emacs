@@ -1,27 +1,6 @@
-* new mappings made possible by kinesis
-** we got C-M-n and C-M-p back, there was something I wanted to map them to...
-** swap rectangle-mode and open-line-above (C-RET and C-M-RET)
-** A-tab and A-backtab (with kinesis macro) for switching elscreen
-** figure out a replacement for M-0 to switch window in emacs
-** C-\ for indent instead of M-i?
-* auto-complete-mode
-** don't turn off when readline fails.
-** ruby-mode use words-in-same-mode-buffer or whatever
-** in fact, always use that as a backup? definitely shell-mode and ssh-mode too
-* org-mode
-** M-i for M-right and M-I for M-left
-** wtf is with skipping lines?
-** C-M-p and C-M-n for jumping same-level?
-** start using TODOs?
-* ebuffer buffer
-** q to exit
-** don't ask to save
-* git commit buffer
-** don't ask to close
-** use C-c C-c to commit it?
-* fish shell?
-** have to fix ansi-color to do cursor movement
-** rbenv for rvm
-* mu4e
-** maybe replace offlineimap with something less flaky?
-* copy-line and move-line commands should leave cursor in the same column
+* write new buffer switcher because they all suck
+* fix elscreen-bg :(
+* switch copy/paste/undo to use command (meta) instead of control
+* C-a should cycle between 0 character and indentation column
+* consider changing page up/down, center screen, maybe others for easier compat with god-mode
+* god-mode visual indicator
