@@ -41,6 +41,15 @@
 
 (require 'jg-quicknav)
 
+;; god-mode cursor switch:
+(defun my-update-cursor ()
+  (setq cursor-type (if (or god-local-mode buffer-read-only)
+                        'box
+                      'bar)))
+
+(add-hook 'god-mode-enabled-hook 'my-update-cursor)
+(add-hook 'god-mode-disabled-hook 'my-update-cursor)
+
 (require 'view)
 
 (setq helm-idle-delay 0

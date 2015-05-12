@@ -3,4 +3,3 @@
 * switch copy/paste/undo to use command (meta) instead of control
 * C-a should cycle between 0 character and indentation column
 * consider changing page up/down, center screen, maybe others for easier compat with god-mode
-* god-mode visual indicator
