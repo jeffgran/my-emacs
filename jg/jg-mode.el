@@ -6,11 +6,11 @@
 (global-set-key (kbd "M-=") 'text-scale-increase)
 (global-set-key (kbd "M--") 'text-scale-decrease)
 
-
+(require 'god-mode)
 ;;(global-set-key (kbd "<escape>") 'god-mode-all)
 (global-set-key (kbd "C-<return>") 'god-mode-all)
-(define-key god-local-mode-map (kbd "i") 'back-to-indentation)
-(define-key god-local-mode-map (kbd "c") 'kill-ring-save)
+(define-key god-local-mode-map (kbd "i") 'god-local-mode)
+;;(define-key god-local-mode-map (kbd "c") 'kill-ring-save)
 
 
 (defvar jg-code-mode-map (make-sparse-keymap) "jg-code-mode-map.")
@@ -102,8 +102,9 @@
 ;; my custom selection stuff
 (define-key jg-navigation-mode-map (kbd "M-e") 'select-whole-line-or-lines)
 (define-key jg-navigation-mode-map (kbd "M-a") 'select-whole-line-or-lines-backwards)
+(define-key jg-navigation-mode-map (kbd "C-a") 'back-to-indentation-or-beginning)
 
-(define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
+;;(define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
 
 
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
@@ -186,36 +187,17 @@
 (define-key jg-code-mode-map (kbd "M-P") 'duplicate-current-line-or-region-up)
 (define-key jg-code-mode-map (kbd "M-N") 'duplicate-current-line-or-region)
 
-;;(define-key jg-code-mode-map (kbd "RET") 'comment-indent-new-line)
 (define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
-;(define-key jg-code-mode-map (kbd "RET") 'open-line-below)
-;;(define-key jg-code-mode-map (kbd "C-RET") 'open-line-above)
-;;(define-key jg-code-mode-map (kbd "C-RET") nil)
-;;(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
-;;(define-key jg-code-mode-map (kbd "<C-return>") nil)
-(define-key jg-code-mode-map (kbd "M-k") 'kill-whole-line-or-lines)
 
-(setq cua-rectangle-mark-key (kbd "C-M-RET"))
-(setq cua-rectangle-mark-key (kbd "<C-M-return>"))
-(define-key cua-global-keymap (kbd "C-M-RET") 'cua-set-rectangle-mark)
-(define-key cua-global-keymap (kbd "<C-M-return>") 'cua-set-rectangle-mark)
-
-(define-key cua-global-keymap (kbd "C-RET") nil)
-(define-key cua-global-keymap (kbd "<C-return>") nil)
-;(define-key jg-code-mode-map (kbd "<C-return>") 'open-line-above)
-;(define-key global-map (kbd "<C-return>") 'open-line-above)
-;(global-set-key (kbd "<C-return>") 'open-line-above)
-;(define-key jg-code-mode-map (kbd "M-C-RET") 'cua-set-rectangle-mark)
-
-(define-key jg-code-mode-map (kbd "C-S-C") 'kill-ring-save)
-(define-key jg-code-mode-map (kbd "C-S-K") 'kill-whole-line)
+(define-key jg-code-mode-map (kbd "M-k") 'kill-region)
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
 
 
 
 ;; new and improved! move line OR region up and down!
-(define-key jg-code-mode-map (kbd "M-p") 'move-text-up)
-(define-key jg-code-mode-map (kbd "M-n") 'move-text-down)
+(require 'drag-stuff)
+(define-key jg-code-mode-map (kbd "M-p") 'drag-stuff-up)
+(define-key jg-code-mode-map (kbd "M-n") 'drag-stuff-down)
 (define-key jg-code-mode-map (kbd "C-M-\\") 'indent-region-or-buffer)
 
 ;;(define-key jg-code-mode-map (kbd "C-\\") 'indent-for-tab-command)
@@ -237,13 +219,15 @@
 ;;***********************
 ;; Cut/Copy/Open/Save/Etc
 ;;***********************
-(define-key jg-code-mode-map (kbd "C-v") 'clipboard-yank)
-(define-key jg-code-mode-map (kbd "C-S-v") 'cua-paste-pop)
-(define-key jg-code-mode-map (kbd "C-M-v") 'paste-unshift)
+
+(define-key jg-navigation-mode-map (kbd "M-c") 'kill-ring-save)
+(define-key jg-navigation-mode-map (kbd "M-v") 'clipboard-yank)
+(define-key jg-navigation-mode-map (kbd "M-V") 'yank-pop)
+(define-key jg-navigation-mode-map (kbd "C-M-v") 'paste-unshift)
 
 
-(define-key jg-code-mode-map (kbd "C-z") 'undo)
-(define-key jg-code-mode-map (kbd "C-S-Z") 'redo)
+(define-key jg-code-mode-map (kbd "M-z") 'undo)
+(define-key jg-code-mode-map (kbd "M-Z") 'redo)
 
 (define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "C-x o") 'helm-occur)
@@ -323,6 +307,17 @@
 ;; ==========================================================
 
 
+
+(require 'phi-rectangle)
+(define-key phi-rectangle-mode-map (kbd "C-<return>") nil)
+(define-key phi-rectangle-mode-map (kbd "C-M-<return>") 'phi-rectangle-set-mark-command)
+
+
+
+
+
+
+
 ;; company completion
 (define-key company-active-map (kbd "C-n") 'company-select-next)
 (define-key company-active-map (kbd "C-p") 'company-select-previous)
@@ -395,32 +390,32 @@
 
 
 ;; enable cua and transient mark modes in term-line-mode
-(defadvice term-line-mode (after term-line-mode-fixes ())
-  (set (make-local-variable 'cua-mode) t)
-  (set (make-local-variable 'transient-mark-mode) t)
-  (define-key (current-local-map) (kbd "M-RET") 'term-char-mode)
-  ;;(define-key (current-local-map) (kbd "M-SPC") 'er/expand-region)
-  (define-key (current-local-map) (kbd "M-C-SPC") 'er/contract-region)
-  (c-k-clear-for-term-mode)
-  ;;
-  (define-key term-mode-map (kbd "C-j") nil)
-  (define-key term-mode-map (kbd "C-;") nil)
-  )
-(ad-activate 'term-line-mode)
+;; (defadvice term-line-mode (after term-line-mode-fixes ())
+;;   (set (make-local-variable 'cua-mode) t)
+;;   (set (make-local-variable 'transient-mark-mode) t)
+;;   (define-key (current-local-map) (kbd "M-RET") 'term-char-mode)
+;;   ;;(define-key (current-local-map) (kbd "M-SPC") 'er/expand-region)
+;;   (define-key (current-local-map) (kbd "M-C-SPC") 'er/contract-region)
+;;   (c-k-clear-for-term-mode)
+;;   ;;
+;;   (define-key term-mode-map (kbd "C-j") nil)
+;;   (define-key term-mode-map (kbd "C-;") nil)
+;;   )
+;; (ad-activate 'term-line-mode)
 
 ;; disable cua and transient mark modes in term-char-mode
-(defadvice term-char-mode (after term-char-mode-fixes ())
-  (set (make-local-variable 'cua-mode) nil)
-  (set (make-local-variable 'transient-mark-mode) nil)
-  (define-key (current-local-map) (kbd "M-RET") 'term-line-mode)
-  (define-key (current-local-map) (kbd "M-r") 'term-send-C-r)
-  (c-k-clear-for-term-mode)
-  ;; (define-key (current-local-map) (kbd "C-h") '(lambda () (interactive) (term-send-raw-string "\M-b")))
-  ;; (define-key (current-local-map) (kbd "C-d") '(lambda () (interactive) (term-send-raw-string "\C-d")))
-  (define-key (current-local-map) (kbd "M-&") '(lambda () (interactive) (term-send-raw-string "\C-b")))
-  (define-key (current-local-map) (kbd "M-^") '(lambda () (interactive) (term-send-raw-string "\C-f")))
-  )
-(ad-activate 'term-char-mode)
+;; (defadvice term-char-mode (after term-char-mode-fixes ())
+;;   (set (make-local-variable 'cua-mode) nil)
+;;   (set (make-local-variable 'transient-mark-mode) nil)
+;;   (define-key (current-local-map) (kbd "M-RET") 'term-line-mode)
+;;   (define-key (current-local-map) (kbd "M-r") 'term-send-C-r)
+;;   (c-k-clear-for-term-mode)
+;;   ;; (define-key (current-local-map) (kbd "C-h") '(lambda () (interactive) (term-send-raw-string "\M-b")))
+;;   ;; (define-key (current-local-map) (kbd "C-d") '(lambda () (interactive) (term-send-raw-string "\C-d")))
+;;   (define-key (current-local-map) (kbd "M-&") '(lambda () (interactive) (term-send-raw-string "\C-b")))
+;;   (define-key (current-local-map) (kbd "M-^") '(lambda () (interactive) (term-send-raw-string "\C-f")))
+;;   )
+;; (ad-activate 'term-char-mode)
 
 ;; dired stuff
 (defun jg-dired-updir ()
@@ -448,7 +443,7 @@
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
 ;;(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
 (define-key shell-mode-map (kbd "C-S-f") 'ag)
-(define-key shell-mode-map (kbd "C-S-v") 'cua-paste-pop)
+(define-key shell-mode-map (kbd "M-S-v") 'yank-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
 (define-key shell-mode-map (kbd "M-.") 'comint-restore-input)
 (define-key shell-mode-map (kbd "TAB") nil)
