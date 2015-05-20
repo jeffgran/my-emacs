@@ -351,82 +351,82 @@
 
 
 ;; dunno where I found this but then I modified it.
-(defun move-text-internal (arg)
-  (cond
-   ((and mark-active transient-mark-mode)
-    (let* ((point-was-backwards (progn
-                                  (if (> (point) (mark))
-                                      (progn (exchange-point-and-mark) t)
-                                    nil)
-                                  ))
-           (original-point-column (current-column))
-           (original-mark-column (prog2
-                                     (exchange-point-and-mark)
-                                     (current-column)
-                                   (exchange-point-and-mark))))
-      (let* ((beg (line-beginning-position))
-             (end (progn
-                    (exchange-point-and-mark)
-                    (if (and (eq (line-beginning-position) (point))
-                             (not (eq beg (point))))
-                        (line-beginning-position)
-                      (+ 1 (line-end-position)))))
-             (text   (delete-and-extract-region beg end)))
-        (forward-line arg)
-        (beginning-of-line)
-        (insert text)
-        (if point-was-backwards
-            (progn
-              (backward-char (length text))
-              (move-to-column original-point-column)
-              (set-mark (point))
-              (beginning-of-line)
-              (forward-char (length text))
-              (unless (eq 0 original-mark-column)
-                (progn (backward-char)
-                       (move-to-column original-mark-column)))
-              )
-          (progn
-            (unless (eq 0 original-mark-column)
-              (backward-char))
-            (move-to-column original-mark-column)
-            (set-mark (point))
-            (unless (eq 0 original-mark-column)
-              (end-of-line))
-            (backward-char (- (length text) 1))
-            (move-to-column original-point-column)
-            ))
+;; (defun move-text-internal (arg)
+;;   (cond
+;;    ((and mark-active transient-mark-mode)
+;;     (let* ((point-was-backwards (progn
+;;                                   (if (> (point) (mark))
+;;                                       (progn (exchange-point-and-mark) t)
+;;                                     nil)
+;;                                   ))
+;;            (original-point-column (current-column))
+;;            (original-mark-column (prog2
+;;                                      (exchange-point-and-mark)
+;;                                      (current-column)
+;;                                    (exchange-point-and-mark))))
+;;       (let* ((beg (line-beginning-position))
+;;              (end (progn
+;;                     (exchange-point-and-mark)
+;;                     (if (and (eq (line-beginning-position) (point))
+;;                              (not (eq beg (point))))
+;;                         (line-beginning-position)
+;;                       (+ 1 (line-end-position)))))
+;;              (text   (delete-and-extract-region beg end)))
+;;         (forward-line arg)
+;;         (beginning-of-line)
+;;         (insert text)
+;;         (if point-was-backwards
+;;             (progn
+;;               (backward-char (length text))
+;;               (move-to-column original-point-column)
+;;               (set-mark (point))
+;;               (beginning-of-line)
+;;               (forward-char (length text))
+;;               (unless (eq 0 original-mark-column)
+;;                 (progn (backward-char)
+;;                        (move-to-column original-mark-column)))
+;;               )
+;;           (progn
+;;             (unless (eq 0 original-mark-column)
+;;               (backward-char))
+;;             (move-to-column original-mark-column)
+;;             (set-mark (point))
+;;             (unless (eq 0 original-mark-column)
+;;               (end-of-line))
+;;             (backward-char (- (length text) 1))
+;;             (move-to-column original-point-column)
+;;             ))
         
-        (setq deactivate-mark nil)
-        )))
-   (t
-    (let ((original-column (current-column)))
-      (shut-up 
-        (beginning-of-line)
-        (kill-line)
-        (when (not (eobp))
-          (delete-forward-char 1))
-        (forward-line arg)
-        (yank)
-        (newline)
-        (forward-line (- 1))
-        (beginning-of-line)
-        (forward-char original-column))))
-   ))
+;;         (setq deactivate-mark nil)
+;;         )))
+;;    (t
+;;     (let ((original-column (current-column)))
+;;       (shut-up 
+;;         (beginning-of-line)
+;;         (kill-line)
+;;         (when (not (eobp))
+;;           (delete-forward-char 1))
+;;         (forward-line arg)
+;;         (yank)
+;;         (newline)
+;;         (forward-line (- 1))
+;;         (beginning-of-line)
+;;         (forward-char original-column))))
+;;    ))
 
 
 
-(defun move-text-down (arg)
-   "Move region (transient-mark-mode active) or current line
-  arg lines down."
-   (interactive "*p")
-   (move-text-internal arg))
+;; (defun move-text-down (arg)
+;;    "Move region (transient-mark-mode active) or current line
+;;   arg lines down."
+;;    (interactive "*p")
+;;    (move-text-internal arg))
 
-(defun move-text-up (arg)
-   "Move region (transient-mark-mode active) or current line
-  arg lines up."
-   (interactive "*p")
-   (move-text-internal (- arg)))
+;; (defun move-text-up (arg)
+;;    "Move region (transient-mark-mode active) or current line
+;;   arg lines up."
+;;    (interactive "*p")
+;;    (move-text-internal (- arg)))
 
 (defun duplicate-current-line-or-region (arg)
   "Duplicates the current line or region ARG times.
@@ -508,10 +508,17 @@ there's a region, all lines that region covers will be duplicated."
     (beginning-of-line)
     ))
 
+
+;; not currently in use... using default kill-region (and phi-kill-region-dwim)
 (defun kill-whole-line-or-lines ()
   (interactive)
   (call-interactively 'select-whole-line-or-lines)
   (kill-region (point) (mark)))
+
+;; from emacswiki
+(defun back-to-indentation-or-beginning ()
+  (interactive) 
+  (if (bolp) (back-to-indentation) (beginning-of-line)))
 
 ;; ------------------------------------------------------------------------
 ;; from http://mattbriggs.net/blog/2012/03/18/awesome-emacs-plugins-ctags/

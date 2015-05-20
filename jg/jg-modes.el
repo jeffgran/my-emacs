@@ -22,10 +22,8 @@
       (require 'elscreen-bg)
       ))
 
-;;(evil-mode 1)
-;;(setq-default evil-escape-key-sequence "ek")
-;;(evil-escape-mode)
 
+(require 'phi-rectangle)
 
 
 (require 'redo+)

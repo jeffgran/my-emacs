@@ -21,7 +21,7 @@
    version-control t                               ; use versioned backups
    x-select-enable-clipboard t
    ;;shift-select-mode nil
-   cua-highlight-region-shift-only nil
+   ;;cua-highlight-region-shift-only nil
 
    ;explicit-shell-file-name "/bin/bash"           ; for remote ssh sessions, for which shell to run remotely?
    comint-scroll-to-bottom-on-output nil           ; always add output at the bottom
@@ -68,7 +68,7 @@
 
 (custom-set-variables
  '(blink-cursor-mode t)
- '(cua-mode t nil (cua-base))
+ ;;'(cua-mode t nil (cua-base))
  '(markdown-command "maruku")
  '(server-kill-new-buffers t)
  '(speedbar-frame-parameters
@@ -89,6 +89,8 @@
 ;(cua-mode t)
 (global-hl-line-mode 1)
 (icomplete-mode 1)
+
+(setq help-window-select t)
 
 ;;osx keys
 (setq mac-option-key-is-meta nil)
