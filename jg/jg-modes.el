@@ -27,6 +27,7 @@
 ;;(evil-escape-mode)
 
 
+
 (require 'redo+)
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
@@ -341,6 +342,12 @@
 (global-company-mode)
 (global-set-key (kbd "TAB") 'company-complete)
 (setq company-idle-delay nil)
+
+(require 'yasnippet)
+(yas-global-mode 1)
+(define-key yas-minor-mode-map (kbd "<tab>") nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+(define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
 
 
 (setq shell-file-name "/usr/local/bin/bash")
