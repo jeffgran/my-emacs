@@ -10,9 +10,9 @@
 (defvar jg-switch-buffer-index 0)
 (defvar jg-switch-buffer-current nil)
 (defvar jg-switch-buffer-buffer-list nil)
-
-;; TODO fix name
 (defvar jg-switch-buffer-switcher-buffer nil)
+(defvar jg-switch-buffer-initialized nil
+  "Whether the hooks and advice for `jg-switch-buffer' have been initialized.")
 
 (defface jg-switch-buffer-selected-buffer-face
   '((t (:foreground "#FFEA77" :background "#004083")))
@@ -23,7 +23,7 @@
 
 (defun jg-switch-buffer ()
   (interactive)
-  
+  (jg-switch-buffer-initialize)
   (setq jg-switch-buffer-switcher-buffer (get-buffer-create "*jg-switch-buffer*"))
   (setq jg-switch-buffer-buffer-list (buffer-list))
 
@@ -65,7 +65,8 @@
        '(face jg-switch-buffer-selected-buffer-face)))))
 
 (defun jg-switch-buffer-reset-index ()
-  (setq jg-switch-buffer-index (position (current-buffer) jg-switch-buffer-buffer-list)))
+  (let ((new-index (position (current-buffer) jg-switch-buffer-buffer-list)))
+    (setq jg-switch-buffer-index new-index)))
 
 (defun jg-switch-buffer-increase-index ()
   (setq jg-switch-buffer-index (+ 1 jg-switch-buffer-index))
@@ -94,8 +95,6 @@
 (define-key jg-switch-buffer-mode-map (kbd "C-k") 'jg-switch-buffer-kill)
 
 
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'jg-switch-buffer)
-(define-key jg-navigation-mode-map (kbd "C-v") 'jg-switch-buffer)
 
 (define-minor-mode jg-switch-buffer-mode
   "foo"
@@ -103,15 +102,19 @@
   :keymap jg-switch-buffer-mode-map
   :group 'jg-switch-buffer)
 
+(defun jg-switch-buffer-initialize ()
+  "Initialize the hooks and advice for `jg-quicknav' mode"
+  (or jg-switch-buffer-initialized
+      (progn
+        (add-hook 'minibuffer-setup-hook 'jg-switch-buffer-minibuffer-setup)
+        (setq jg-switch-buffer-initialized t))))
 
 (add-hook 'minibuffer-setup-hook 'jg-switch-buffer-minibuffer-setup)
 
 (defun jg-switch-buffer-minibuffer-setup ()
   (when (eq this-command 'jg-switch-buffer)
     (jg-switch-buffer-mode t)
-
-    (setq overriding-local-map jg-switch-buffer-mode-map)
-    ))
+    (setq overriding-local-map jg-switch-buffer-mode-map)))
 
 
 
@@ -158,16 +161,11 @@
          '(lambda (buf) (eq buf a-buffer))
          jg-switch-buffer-buffer-list)))
 
-(defun jg-switch-buffer-minibuffer-setup ()
-  "For assigning to the `minibuffer-setup-hook' to set up for a `jg-quicknav' session"
-  (when (eq this-command 'jg-switch-buffers)
-    (jg-switch-buffer-mode t)
-    (setq overriding-local-map jg-switch-buffer-mode-map)))
-
-
 
 ;; from https://www.gnu.org/software/emacs/manual/html_node/elisp/Buffer-List.html
 (defun jg-switch-buffer-reorder-buffer-list (new-list)
   (while new-list
     (bury-buffer (car new-list))
     (setq new-list (cdr new-list))))
+
+(provide 'jg-switch-buffer)

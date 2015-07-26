@@ -218,8 +218,12 @@
       ;; (make-local-variable 'explicit-shell-file-name)
       ;; (setq explicit-shell-file-name nil)
       (make-local-variable 'shell-file-name)
-      (setq shell-file-name "/bin/bash")
-      )))
+      (setq shell-file-name "/bin/bash")))
+  ;;(call-interactively (ssh-directory-tracking-mode))
+  )
+
+;; send C-a q to exit screen in lxc:
+;; (process-send-string nil (kbd "C-a q"))
 
 
 

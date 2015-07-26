@@ -4,7 +4,7 @@
                                    (paredit-mode t)
                                    ))
 
-
+(cua-mode -1)
 ;; save my place in each file
 (require 'saveplace)
 (setq save-place-file (concat emacs-root "saved-places"))
@@ -24,7 +24,9 @@
 
 
 (require 'phi-rectangle)
-
+(phi-rectangle-mode)
+(multiple-cursors-mode)
+(delete-selection-mode)
 
 (require 'redo+)
 
@@ -39,6 +41,8 @@
 (setq sp-highlight-pair-overlay nil)
 
 (require 'jg-quicknav)
+
+(require 'jg-switch-buffer)
 
 ;; god-mode cursor switch:
 (defun my-update-cursor ()
@@ -122,7 +126,7 @@
 (add-to-list 'auto-mode-alist '("\\.txt$" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
-(add-hook 'markdown-mode-hook 'flyspell-mode)
+
 
 ;; HTML mode
 ;; nXhtml mode (new and improved)
@@ -298,6 +302,8 @@
 (flx-ido-mode)
 
 
+(require 'ws-butler)
+(ws-butler-global-mode)
 
 ;; kill the buffer upon completion of the process.
 (defun kill-buffer-on-exit-shell ()

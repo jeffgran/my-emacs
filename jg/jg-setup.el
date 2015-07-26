@@ -30,8 +30,6 @@
    comint-scroll-show-maximum-output nil           ; don't scroll to bottom maybe?
    comint-prompt-read-only t                       ; what it says
 
-   ssh-directory-tracking-mode t
-
    enable-recursive-minibuffers t                  ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
 
    ;; dired
@@ -39,8 +37,6 @@
    
    tags-add-tables t                               ; when loading up a second tags table, "add" it to the tags,
                                                    ; instead of replacing (or asking which)
-
-   
 )
 
 (setq font-lock-global-modes t)
@@ -62,7 +58,7 @@
 
 ;; tramp, for sudo access
 (require 'tramp)
-(setq tramp-default-method "ssh")
+;;(setq tramp-default-method "ssh") ; default is "scp"
 
 (defun snippet-insert (foo &rest))
 
