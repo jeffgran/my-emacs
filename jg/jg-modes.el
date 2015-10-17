@@ -71,6 +71,10 @@
 (require 'git-status-modeline)
 (git-status-modeline-global-mode)
 
+(require 'magit)
+(custom-set-variables '(magit-completing-read-function 'magit-ido-completing-read))
+;;(setq magit-completing-read-function 'magit-ido-completing-read)
+
 (require 'modeline-posn)
 (column-number-mode 1)
 (size-indication-mode 1)
@@ -118,6 +122,7 @@
   "Regexp to match the beginning of blocks.")
 (require 'expand-region)
 (require 'ruby-mode)
+(setq ruby-insert-encoding-magic-comment nil)
 
                                         ; Markdown support
 (autoload 'markdown-mode "markdown-mode.el"

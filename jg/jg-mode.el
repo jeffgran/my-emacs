@@ -270,14 +270,30 @@
 ;; other things i rebind
 (define-key shell-mode-map (kbd "M-C-x") 'eval-expression)
 
+(require 'magit)
+(define-key jg-code-mode-map (kbd "M-g") 'magit-dispatch-popup)
+(define-key shell-mode-map (kbd "M-g") 'magit-dispatch-popup)
 
-(define-key jg-code-mode-map (kbd "C-x g") 'magit-status)
-(define-key jg-code-mode-map (kbd "M-g") 'magit-status)
-(define-key shell-mode-map (kbd "C-x g") 'magit-status)
-(define-key shell-mode-map (kbd "M-g") 'magit-status)
+(define-key magit-popup-mode-map (kbd "s") '(lambda ()
+                                              (interactive)
+                                              (magit-popup-quit)
+                                              (magit-status)))
+(define-key magit-popup-mode-map (kbd "g") '(lambda ()
+                                              (interactive)
+                                              (magit-popup-quit)
+                                              (magit-refresh)))
 
-(define-key jg-code-mode-map (kbd "C-x c") 'magit-checkout)
-(define-key shell-mode-map (kbd "C-x c") 'magit-checkout)
+;(define-key magit-popup-mode-map (kbd "h") 'magit refresh)
+
+;(define-key jg-code-mode-map (kbd "M-g s") nil)
+;(define-key jg-code-mode-map (kbd "M-g r") 'magit-refresh)
+;;(define-key shell-mode-map (kbd "M-g s") 'magit-status)
+;(define-key shell-mode-map (kbd "M-g p") 'magit-dispatch-popup)
+;(define-key shell-mode-map (kbd "M-g r") 'magit-refresh)
+
+
+;;(define-key jg-code-mode-map (kbd "M-g c") 'magit-checkout)
+;;(define-key shell-mode-map (kbd "M-g c") 'magit-checkout)
 
 
 ;; set up a new help key prefix since I use C-h for movement
@@ -329,8 +345,6 @@
 (define-key paredit-mode-map (kbd "C-j") nil)
 
 
-(require 'magit)
-(define-key magit-mode-map (kbd "C-d") 'magit-diff-staged)
 
 
 ;; some extra keys for ruby mode.
@@ -364,8 +378,7 @@
 
 ;; turn jg-code-mode off for buffers where I'm not editing the text ... it messes stuff up.
 (defun disable-jg-code-mode ()
-  (jg-code-mode 0)
-  )
+  (jg-code-mode 0))
 
 (add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
@@ -376,6 +389,9 @@
 (add-hook 'shell-mode-hook 'disable-jg-code-mode)
 (add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
+(add-hook 'magit-mode-hook '(lambda ()
+                              (jg-code-mode 0)
+                              (jg-navigation-mode 0)))
 
 (defun c-k-clear-for-term-mode ()
   (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") )))
@@ -388,6 +404,8 @@
 (defun term-send-C-r ()
   (interactive)
   (term-send-raw-string "\C-r"))
+
+
 
 
 ;; enable cua and transient mark modes in term-line-mode
@@ -446,6 +464,7 @@
 (define-key shell-mode-map (kbd "C-S-f") 'ag)
 (define-key shell-mode-map (kbd "M-S-v") 'yank-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
+(define-key shell-mode-map (kbd "M-z")  'undo)
 (define-key shell-mode-map (kbd "M-.") 'comint-restore-input)
 (define-key shell-mode-map (kbd "TAB") nil)
 ;; ssh-mode

@@ -74,7 +74,7 @@
       (jg-zenburn-red-4 "#6d0028")
       (jg-zenburn-red-5 "#3d0008")
 
-      (jg-zenburn-orange "#FF7b39")
+      (jg-zenburn-orange "#FF8b49")
       (jg-zenburn-orange-1 "#e55517")
       (jg-zenburn-orange-2 "#b94300")
       (jg-zenburn-orange-3 "#972100")
@@ -84,26 +84,28 @@
       (jg-zenburn-yellow-1 "#dfca67")
       (jg-zenburn-yellow-2 "#cfba47")
 
-      (jg-zenburn-green-2 "#104216")
-      (jg-zenburn-green-1 "#446C10")
+      (jg-zenburn-green-2 "#648c00")
+      (jg-zenburn-green-1 "#84ac1d")
       (jg-zenburn-green "#94BC2D")
       (jg-zenburn-green+1 "#a4cC3D")
       (jg-zenburn-green+2 "#b4dC4D")
       (jg-zenburn-green+3 "#c4eC5D")
       (jg-zenburn-green+4 "#d4fC6D")
 
-      (jg-zenburn-cyan+3 "#ccffef")
-      (jg-zenburn-cyan+2 "#aaffee")
-      (jg-zenburn-cyan+1 "#8AeCfD")
-      (jg-zenburn-cyan "#5ccCdf")
-      (jg-zenburn-cyan-1 "#4AbCcf")
-      (jg-zenburn-cyan-2 "#3AaCbf")
-      (jg-zenburn-cyan-3 "#188a9a")
-      (jg-zenburn-cyan-4 "#065869")
+      (jg-zenburn-cyan+3 "#7af1d8")
+      (jg-zenburn-cyan+2 "#6ae1c8")
+      (jg-zenburn-cyan+1 "#5ad1b8")
+      (jg-zenburn-cyan "#4ac1a8")
+      (jg-zenburn-cyan-1 "#3ab1a8")
+      (jg-zenburn-cyan-2 "#2aa198")
+      (jg-zenburn-cyan-3 "#1a9188")
+      (jg-zenburn-cyan-4 "#0a7158")
 
-      (jg-zenburn-blue+1 "#6cb0f3")
-      (jg-zenburn-blue "#4c90d3")
-      (jg-zenburn-blue-1 "#3c80c3")
+      (jg-zenburn-blue+3 "#56bbff")
+      (jg-zenburn-blue+2 "#46abf2")
+      (jg-zenburn-blue+1 "#369be2")
+      (jg-zenburn-blue "#268bd2")
+      (jg-zenburn-blue-1 "#267bc2")
       (jg-zenburn-blue-2 "#2c70b3")
       (jg-zenburn-blue-3 "#1c60a3")
       (jg-zenburn-blue-4 "#0c5093")
@@ -140,7 +142,7 @@
    `(header-line ((t (:foreground ,jg-zenburn-yellow
                                   :background ,jg-zenburn-bg-1
                                   :box (:line-width -1 :style released-button)))))
-   `(highlight ((t (:background ,jg-zenburn-green-2))))
+   `(highlight ((t (:background ,jg-zenburn-blue-5))))
 
    `(error ((t (:foreground ,jg-zenburn-red-2 :weight bold :underline t))))
 
@@ -181,21 +183,21 @@
      ((t (:foreground ,jg-zenburn-green-1
                       :background ,jg-zenburn-bg-05
                       :box (:line-width -1 :style released-button)))))
-   `(region ((,class (:background ,jg-zenburn-bg-1))
+   `(region ((,class (:background ,jg-zenburn-purple-1 :foreground ,jg-zenburn-fg))
              (t :inverse-video t)))
    `(secondary-selection ((t (:background ,jg-zenburn-bg-05))))
    `(trailing-whitespace ((t (:background ,jg-zenburn-bg+1))))
    `(vertical-border ((t (:foreground ,jg-zenburn-fg))))
 
 ;;; font lock
-   `(font-lock-builtin-face ((t (:foreground ,jg-zenburn-cyan))))
-   `(font-lock-comment-face ((t (:foreground ,jg-zenburn-green-1))))
-   `(font-lock-comment-delimiter-face ((t (:foreground ,jg-zenburn-green-1))))
-   `(font-lock-constant-face ((t (:foreground ,jg-zenburn-red))))
-   `(font-lock-doc-face ((t (:foreground ,jg-zenburn-green+1))))
-   `(font-lock-doc-string-face ((t (:foreground ,jg-zenburn-blue-2))))
-   `(font-lock-function-name-face ((t (:foreground ,jg-zenburn-blue))))
-   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-cyan-3 :weight bold))))
+   `(font-lock-builtin-face ((t (:foreground ,jg-zenburn-cyan+2))))
+   `(font-lock-comment-face ((t (:foreground ,jg-zenburn-green-2))))
+   `(font-lock-comment-delimiter-face ((t (:foreground ,jg-zenburn-green-2))))
+   `(font-lock-constant-face ((t (:foreground ,jg-zenburn-red+1))))
+   `(font-lock-doc-face ((t (:foreground ,jg-zenburn-cyan+1))))
+   `(font-lock-doc-string-face ((t (:foreground ,jg-zenburn-cyan))))
+   `(font-lock-function-name-face ((t (:foreground ,jg-zenburn-blue+3))))
+   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue+1 :weight bold))))
    `(font-lock-negation-char-face ((t (:foreground ,jg-zenburn-fg))))
    `(font-lock-preprocessor-face ((t (:foreground ,jg-zenburn-blue+1))))
    `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange-1))))
@@ -471,8 +473,8 @@
    `(helm-candidate-number ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg-1))))
 
    ;; hl-line-mode
-   `(hl-line-face ((t (:background ,jg-zenburn-green-2))))
-   `(hl-line ((t (:background ,jg-zenburn-green-2))))
+   `(hl-line-face ((t (:background ,jg-zenburn-blue-5))))
+   `(hl-line ((t (:background ,jg-zenburn-blue-5))))
 
    ;; hl-sexp
    `(hl-sexp-face ((,class (:background ,jg-zenburn-bg+1))
