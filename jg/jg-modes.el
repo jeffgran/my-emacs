@@ -23,6 +23,7 @@
       ))
 
 
+
 (require 'phi-rectangle)
 (phi-rectangle-mode)
 (multiple-cursors-mode)
@@ -391,3 +392,8 @@
 
 (setq fiplr-ignored-globs '((directories (".git" ".svn" "tmp" "temp"))
                             (files ("*.jpg" "*.png" "*.zip" "*~" ".keep"))))
+
+
+(require 'keyfreq)
+(keyfreq-mode 1)
+(keyfreq-autosave-mode 1)

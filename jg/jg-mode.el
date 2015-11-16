@@ -158,19 +158,25 @@
 (define-key jg-navigation-mode-map (kbd "M-x") 'smex)
 
 ;; let's put the shell commands under the M-s prefix
-(define-key jg-navigation-mode-map (kbd "M-S") 'jg-new-shell) ;; new shell in the current project root
-(define-key jg-navigation-mode-map (kbd "M-s a") 'shell-command)
-(define-key jg-navigation-mode-map (kbd "M-s o") 'async-shell-command) ;; Shell command, insert output Other buffer.
-(define-key jg-navigation-mode-map (kbd "M-s R") 'shell-command-on-region-replace) ;; Shell command on Region, Replace region with output.
-(define-key jg-navigation-mode-map (kbd "M-s r") 'shell-command-on-region) ;; Shell command on Region.
-(define-key jg-navigation-mode-map (kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+(define-key jg-navigation-mode-map (kbd "C-A-s") 'jg-new-shell) ;; new shell in the current project root
+;; (define-key jg-navigation-mode-map (kbd "M-s a") 'shell-command)
+;; (define-key jg-navigation-mode-map (kbd "M-s a") nil)
+;; (define-key jg-navigation-mode-map (kbd "M-s o") 'async-shell-command) ;; Shell command, insert output Other buffer.
+;; (define-key jg-navigation-mode-map (kbd "M-s o") nil) ;; Shell command, insert output Other buffer.
+;; (define-key jg-navigation-mode-map (kbd "M-s R") 'shell-command-on-region-replace) ;; Shell command on Region, Replace region with output.
+;; (define-key jg-navigation-mode-map (kbd "M-s R") nil) ;; Shell command on Region, Replace region with output.
+;; (define-key jg-navigation-mode-map (kbd "M-s r") 'shell-command-on-region) ;; Shell command on Region.
+;; (define-key jg-navigation-mode-map (kbd "M-s r") nil) ;; Shell command on Region.
+;; (define-key jg-navigation-mode-map (kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+;; (define-key jg-navigation-mode-map (kbd "M-s h") nil) ;; Shell command, insert output Here.
 
-(define-key jg-navigation-mode-map (kbd "M-s s") 'jg-open-ssh) ;; Shell command, insert output Here.
+(define-key jg-navigation-mode-map (kbd "C-s s") 'jg-open-ssh)
 
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
 (define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
 
-(define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+;; (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
+;; (define-key isearch-mode-map(kbd "M-s h") nil) ;; Shell command, insert output Here.
 
 ;;*************************************************
 ;;            End JG Navigation Mode
@@ -230,7 +236,9 @@
 (define-key jg-code-mode-map (kbd "M-z") 'undo)
 (define-key jg-code-mode-map (kbd "M-Z") 'redo)
 
-(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
+;;(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
+(define-key jg-code-mode-map (kbd "M-s") nil)
+(define-key jg-code-mode-map (kbd "M-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "C-x o") 'helm-occur)
 (define-key jg-code-mode-map (kbd "C-x n") 'elscreen-screen-nickname)
 
