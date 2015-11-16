@@ -348,10 +348,18 @@
 
 
 
+(require 'smooth-scroll)
+(smooth-scroll-mode t)
+(setq scroll-preserve-screen-position "yes")
+(setq smooth-scroll/vscroll-step-size 4)
+
+
 ;; even sweeter auto-complete!?
 (global-company-mode)
 (global-set-key (kbd "TAB") 'company-complete)
 (setq company-idle-delay nil)
+
+
 
 (require 'yasnippet)
 (yas-global-mode 1)

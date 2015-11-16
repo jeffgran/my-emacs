@@ -58,7 +58,7 @@
     (progn
       (keyboard-translate ?\C-m ?\H-m)
       (define-key jg-navigation-mode-map (kbd "C-m") nil)
-      (define-key jg-navigation-mode-map (kbd "H-m") 'move-to-window-line-top-bottom)
+      (define-key jg-navigation-mode-map (kbd "H-m") 'set-mark-command)
       ))
 
 
@@ -103,9 +103,13 @@
 (define-key jg-navigation-mode-map (kbd "M-e") 'select-whole-line-or-lines)
 (define-key jg-navigation-mode-map (kbd "M-a") 'select-whole-line-or-lines-backwards)
 (define-key jg-navigation-mode-map (kbd "C-a") 'back-to-indentation-or-beginning)
+(define-key jg-navigation-mode-map (kbd "<home>") 'back-to-indentation-or-beginning)
+(define-key jg-navigation-mode-map (kbd "<end>") 'move-end-of-line)
 
 ;;(define-key jg-navigation-mode-map (kbd "C-=") 'cua-set-mark)
 
+(define-key jg-navigation-mode-map (kbd "<help>") 'set-mark-command)
+(define-key jg-navigation-mode-map (kbd "<escape>") 'keyboard-quit)
 
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
 (define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)

@@ -91,6 +91,7 @@
 (depends-on "smartparens")
 (depends-on "smartrep")
 (depends-on "smex")
+(depends-on "smooth-scroll")
 (depends-on "ssh")
 (depends-on "swbuff")
 (depends-on "ucs-utils")
