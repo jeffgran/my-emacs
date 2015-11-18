@@ -8,7 +8,7 @@
 
 (require 'god-mode)
 ;;(global-set-key (kbd "<escape>") 'god-mode-all)
-(global-set-key (kbd "C-<return>") 'god-mode-all)
+;;(global-set-key (kbd "C-<return>") 'god-mode-all)
 (define-key god-local-mode-map (kbd "i") 'god-local-mode)
 ;;(define-key god-local-mode-map (kbd "c") 'kill-ring-save)
 
@@ -21,13 +21,18 @@
 ;;               JG Navigation Mode
 ;;*************************************************
 (setq shift-select-mode nil)
-(define-key jg-navigation-mode-map (kbd "C-;") 'forward-char)
-(define-key jg-navigation-mode-map (kbd "C-S-;") 'forward-char)
-;;(define-key jg-navigation-mode-map (kbd "M-^") 'forward-char) ;; hack to use key translation in iterm to get this to work right in terminal
+(define-key jg-navigation-mode-map (kbd "C-l") 'forward-char)
 (define-key jg-navigation-mode-map (kbd "C-j") 'backward-char)
-(define-key jg-navigation-mode-map (kbd "C-'") 'forward-word)
+(define-key jg-navigation-mode-map (kbd "C-;") 'forward-word)
 (define-key jg-navigation-mode-map (kbd "C-\"") nil)
 (define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
+
+;; real toggle mark command. how does this not exist? but it doesn't
+(define-key jg-navigation-mode-map (kbd "C-f") '(lambda ()
+                                                  (interactive)
+                                                  (if (region-active-p)
+                                                      (deactivate-mark)
+                                                    (call-interactively 'set-mark-command))))
 ;;(define-key jg-navigation-mode-map (kbd "C-t") 'exchange-point-and-mark)
 
 
@@ -41,7 +46,7 @@
 (define-key jg-navigation-mode-map (kbd "M-C-p") 'scroll-down)
 (define-key jg-navigation-mode-map (kbd "C-M-.") 'end-of-buffer)
 (define-key jg-navigation-mode-map (kbd "C-M-,") 'beginning-of-buffer)
-(define-key jg-navigation-mode-map (kbd "C-l") 'goto-line)
+(define-key jg-navigation-mode-map (kbd "M-l") 'goto-line)
 
 (if window-system
     (progn
@@ -145,13 +150,13 @@
 (define-key jg-navigation-mode-map (kbd "C-,") 'back-button-local-backward)
 (define-key jg-navigation-mode-map (kbd "C-.") 'back-button-local-forward)
 
-(define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
+;; (define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
 
 ;; isearch
-(define-key jg-navigation-mode-map (kbd "C-f") 'isearch-forward)
-(define-key jg-navigation-mode-map (kbd "C-r") 'isearch-backward)
-(define-key jg-navigation-mode-map (kbd "A-f") 'flex-isearch-forward)
-(define-key jg-navigation-mode-map (kbd "A-r") 'flex-isearch-backward)
+(define-key jg-navigation-mode-map (kbd "M-f") 'isearch-forward)
+(define-key jg-navigation-mode-map (kbd "M-r") 'isearch-backward)
+;; (define-key jg-navigation-mode-map (kbd "A-f") 'flex-isearch-forward)
+;; (define-key jg-navigation-mode-map (kbd "A-r") 'flex-isearch-backward)
 
 
 
@@ -380,7 +385,8 @@
 
 
 
-(define-key isearch-mode-map (kbd "C-f") 'isearch-repeat-forward)
+(define-key isearch-mode-map (kbd "M-f") 'isearch-repeat-forward)
+(define-key isearch-mode-map (kbd "M-r") 'isearch-repeat-backward)
 (define-key isearch-mode-map (kbd "C-q") 'isearch-abort)
 (define-key isearch-mode-map (kbd "TAB") 'isearch-complete)
 (define-key isearch-mode-map (kbd "C-w") 'isearch-yank-symbol-string)
