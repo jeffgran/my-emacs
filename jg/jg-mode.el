@@ -42,8 +42,8 @@
 
 
 ;; scrolling and line movement
-(define-key jg-navigation-mode-map (kbd "M-C-n") 'scroll-up)
-(define-key jg-navigation-mode-map (kbd "M-C-p") 'scroll-down)
+(define-key jg-navigation-mode-map (kbd "M-C-n") 'View-scroll-half-page-forward)
+(define-key jg-navigation-mode-map (kbd "M-C-p") 'View-scroll-half-page-backward)
 (define-key jg-navigation-mode-map (kbd "C-M-.") 'end-of-buffer)
 (define-key jg-navigation-mode-map (kbd "C-M-,") 'beginning-of-buffer)
 (define-key jg-navigation-mode-map (kbd "M-l") 'goto-line)
@@ -164,7 +164,8 @@
 (define-key jg-navigation-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 
 ;; smex is M-x but like ido-mode. sweet!
-(define-key jg-navigation-mode-map (kbd "M-x") 'smex)
+(define-key jg-navigation-mode-map (kbd "A-x") 'smex)
+
 
 ;; let's put the shell commands under the M-s prefix
 (define-key jg-navigation-mode-map (kbd "C-A-s") 'jg-new-shell) ;; new shell in the current project root
@@ -206,7 +207,10 @@
 (define-key jg-code-mode-map (kbd "M-RET") 'open-line-below)
 
 (define-key jg-code-mode-map (kbd "M-k") 'kill-region)
+(define-key jg-code-mode-map (kbd "M-x") 'kill-region)
+(define-key jg-navigation-mode-map (kbd "M-x") 'kill-region)
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
+
 
 
 
@@ -244,6 +248,9 @@
 
 (define-key jg-code-mode-map (kbd "M-z") 'undo)
 (define-key jg-code-mode-map (kbd "M-Z") 'redo)
+(define-key jg-code-mode-map (kbd "C-M-z") 'redo)
+
+
 
 ;;(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "M-s") nil)
@@ -463,7 +470,7 @@
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
 (define-key dired-mode-map "q" 'kill-this-buffer)
 (define-key dired-mode-map (kbd "C-g") 'kill-this-buffer)
-(define-key dired-mode-map (kbd "M-x") 'smex)
+(define-key dired-mode-map (kbd "A-x") 'smex)
 (define-key dired-mode-map (kbd "M-0") 'other-window)
 (define-key dired-mode-map (kbd "M-1") 'delete-other-windows)
 
@@ -485,6 +492,9 @@
 (define-key shell-mode-map (kbd "M-z")  'undo)
 (define-key shell-mode-map (kbd "M-.") 'comint-restore-input)
 (define-key shell-mode-map (kbd "TAB") nil)
+
+(define-key comint-mode-map (kbd "C-r") 'comint-history-isearch-backward)
+
 ;; ssh-mode
 (require 'ssh)
 (define-key ssh-mode-map (kbd "TAB") nil)
