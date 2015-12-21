@@ -255,9 +255,9 @@
 ;;(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "M-s") nil)
 (define-key jg-code-mode-map (kbd "M-s") 'save-buffer)
-(define-key jg-code-mode-map (kbd "C-x o") 'helm-occur)
+;;(define-key jg-code-mode-map (kbd "C-x o") 'helm-occur)
 (define-key jg-code-mode-map (kbd "C-x n") 'elscreen-screen-nickname)
-
+(define-key jg-code-mode-map (kbd "C-M-j") 'join-line)
 
 ;;*******************
 ;; Search/Replace/Etc
@@ -397,6 +397,7 @@
 (define-key isearch-mode-map (kbd "C-q") 'isearch-abort)
 (define-key isearch-mode-map (kbd "TAB") 'isearch-complete)
 (define-key isearch-mode-map (kbd "C-w") 'isearch-yank-symbol-string)
+(define-key isearch-mode-map (kbd "M-i") 'isearch-yank-word-or-char)
 (define-key isearch-mode-map (kbd "A-z") 'isearch-toggle-regexp)
 (define-key minibuffer-local-isearch-map (kbd "TAB") 'isearch-complete-edit)
 
