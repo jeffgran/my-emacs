@@ -43,6 +43,7 @@
 (depends-on "inf-ruby")
 (depends-on "jg-quicknav")
 (depends-on "js2-mode")
+(depends-on "jsx-mode")
 (depends-on "keyfreq")
 (depends-on "less-css-mode")
 (depends-on "let-alist")
