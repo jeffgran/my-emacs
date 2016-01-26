@@ -36,6 +36,7 @@
 (depends-on "git-timemachine")
 (depends-on "god-mode")
 (depends-on "grizzl")
+(depends-on "haml-mode")
 (depends-on "helm")
 (depends-on "htmlize")
 (depends-on "idle-highlight-mode")

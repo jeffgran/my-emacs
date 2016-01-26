@@ -142,9 +142,9 @@
 ;; -----------------
 (defun clear-shell ()
   (interactive)
-  (let ((comint-buffer-maximum-size 0))
+  (let ((comint-buffer-maximum-size 1))
     (comint-truncate-buffer)
-    (move-end-of-line 1)))
+    (move-end-of-line 2)))
 
 
 ;; open a new shell with a better name,
