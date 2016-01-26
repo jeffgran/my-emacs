@@ -44,7 +44,9 @@
      (tool-bar-lines . 0)
      (unsplittable . t)
      (set-background-color "black"))))
- '(tab-width 2))
+ '(tab-width 2)
+ '(web-mode-code-indent-offset 2)
+ '(web-mode-markup-indent-offset 2))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

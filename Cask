@@ -18,6 +18,7 @@
 (depends-on "drag-stuff")
 (depends-on "elixir-mode")
 (depends-on "elscreen")
+(depends-on "elscreen-buffer-group")
 (depends-on "epl")
 (depends-on "eww-lnum")
 (depends-on "exec-path-from-shell")

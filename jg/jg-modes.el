@@ -178,6 +178,9 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
 
+(add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js2-jsx-mode))
+(add-to-list 'interpreter-mode-alist '("node" . js2-jsx-mode))
+
 
 (add-to-list 'auto-mode-alist '("\\.es6\\'" . js2-mode))
 
@@ -287,6 +290,14 @@
 ;; Uniquify
 (require 'uniquify)
 (setq uniquify-buffer-name-style 'post-forward)
+
+
+
+;; set exterior coding system so copy/paste of utf-8 stuff will work.
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(setenv "LANG" "en_US.UTF-8")
 
 
 (require 'back-button)

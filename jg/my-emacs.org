@@ -1,8 +1,5 @@
 * write new buffer switcher because they all suck
 ** started...
-* fix elscreen-bg :(
-* switch copy/paste/undo to use command (meta) instead of control
-** but not "cut" because M-x is special, and I use C-k/M-k instead anyway
 * consider changing page up/down, center screen, maybe others for easier compat with god-mode
 * M-p is all wonky... (sometimes?)...
 ** trying drag-stuff to fix
