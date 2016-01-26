@@ -3,7 +3,7 @@ this is just my personal setup. the only part  you might want is jg-functions/jg
 
 #Notes:
 
-- `brew install global --with-pygments --with-exuberant-ctags`
+- `brew install global --with-pygments --with-ctags`
 - pip install pygments
 
 

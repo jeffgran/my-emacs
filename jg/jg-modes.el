@@ -14,12 +14,11 @@
 (if window-system
     (progn
       ;; Elscreen (tabs/session management)
-      ;; my custom elscreen buffer list (separate buffer list per screen). :)
       (elscreen-start)
       (setq elscreen-tab-display-kill-screen nil) ;; turn off the [x] button for the mouse
       (setq elscreen-tab-display-control nil) ;; turn off the <-> tab switch button for the mouse
       (setq elscreen-display-screen-number nil) ;; turn off the tab number display in the mode-line
-      (require 'elscreen-bg)
+      (require 'elscreen-buffer-group)
       ))
 
 
@@ -179,6 +178,9 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
 
+(add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js2-jsx-mode))
+(add-to-list 'interpreter-mode-alist '("node" . js2-jsx-mode))
+
 
 (add-to-list 'auto-mode-alist '("\\.es6\\'" . js2-mode))
 
@@ -290,6 +292,14 @@
 (setq uniquify-buffer-name-style 'post-forward)
 
 
+
+;; set exterior coding system so copy/paste of utf-8 stuff will work.
+(set-terminal-coding-system 'utf-8)
+(set-keyboard-coding-system 'utf-8)
+(prefer-coding-system 'utf-8)
+(setenv "LANG" "en_US.UTF-8")
+
+
 (require 'back-button)
 (back-button-mode 1)
 
@@ -348,10 +358,10 @@
 
 
 
-(require 'smooth-scroll)
-(smooth-scroll-mode t)
+;;(require 'smooth-scroll)
+;;(smooth-scroll-mode nil)
+;;(setq smooth-scroll/vscroll-step-size 4)
 (setq scroll-preserve-screen-position "yes")
-(setq smooth-scroll/vscroll-step-size 4)
 
 
 ;; even sweeter auto-complete!?
