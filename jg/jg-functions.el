@@ -7,29 +7,13 @@
                 (buffer-list)))
 
 
-;; (defun view-percent ()
-;;   (interactive)
-;;   (snippet-insert "<% $. %>")
-;; )
+(defun demi-brolin ()
+  (interactive)
+  (save-excursion
+    (progn
+      (end-of-line)
+      (insert-char ?\;))))
 
-;; (defun view-percent-equal ()
-;;   (interactive)
-;;   (snippet-insert "<%= $. %>")
-;; )
-
-;; (defun layout-content ()
-;;   (interactive)
-;;   (snippet-insert "<%= content_for(:$${title}) { $. } %>")
-;; )
-
-;; (defun css-curlies ()
-;;   (interactive)
-;;   (snippet-insert " {\n$.\n}")
-;;   (forward-line 1)
-;;   (indent-for-tab-command)
-;;   (forward-line -1)
-;;   (indent-for-tab-command)
-;; )
 
 (defun open-line-above ()
   (interactive)

@@ -12,6 +12,9 @@
 
 (defalias 'yes-or-no-p 'y-or-n-p)
 
+(setq split-height-threshold 9999
+      split-width-threshold 160)
+
 (setq
    backup-by-copying t                             ; don't clobber symlinks
    backup-directory-alist '(("." . "~/.saves"))    ; don't litter my fs tree

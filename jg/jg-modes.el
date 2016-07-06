@@ -65,8 +65,10 @@
 (global-subword-mode 1)
 
 (require 'smart-mode-line)
-(sml/setup)
-(sml/apply-theme 'respectful)
+(add-hook 'after-init-hook '(lambda ()
+                              (sml/setup)
+                              (setq sml/no-confirm-load-theme t)
+                              (sml/apply-theme 'respectful)))
 
 (require 'git-status-modeline)
 (git-status-modeline-global-mode)
@@ -123,8 +125,21 @@
 (require 'expand-region)
 (require 'ruby-mode)
 (setq ruby-insert-encoding-magic-comment nil)
+(setq ruby-use-smie nil)
+(setq ruby-deep-indent-paren nil)
+(setq ruby-deep-indent-paren-style nil)
 
-                                        ; Markdown support
+
+
+(require 'ensime)
+(add-hook 'scala-mode-hook 'ensime-scala-mode-hook)
+
+
+
+
+
+
+;; Markdown support
 (autoload 'markdown-mode "markdown-mode.el"
   "Major mode for editing Markdown files" t)
 (add-to-list 'auto-mode-alist '("\\.text$" . markdown-mode))
@@ -175,14 +190,23 @@
 
 ;; js mode
 (setq js-indent-level 2)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
+(setq js2-basic-offset 2)
+(setq sgml-basic-offset 2)
 
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-jsx-mode))
+(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js2-jsx-mode))
 (add-to-list 'interpreter-mode-alist '("node" . js2-jsx-mode))
-
-
 (add-to-list 'auto-mode-alist '("\\.es6\\'" . js2-mode))
+
+;; adjust indents for web-mode to 2 spaces
+(setq web-mode-markup-indent-offset 2)
+(setq web-mode-css-indent-offset 2)
+(setq web-mode-code-indent-offset 2)
+
+(eval-after-load 'js2-mode '(lambda ()
+                               (define-key js2-mode-map (kbd "M-;") 'demi-brolin)))
+
 
 
 ;; coffeescript mode
@@ -376,6 +400,12 @@
 (define-key yas-minor-mode-map (kbd "<tab>") nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
 (define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
+(define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
+(eval-after-load 'yasnippet '(lambda ()
+                               (yas-load-directory (concat emacs-root "jg/yas"))))
+
+
+
 
 
 (setq shell-file-name "/usr/local/bin/bash")

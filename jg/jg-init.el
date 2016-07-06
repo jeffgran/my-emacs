@@ -1,6 +1,6 @@
 ;; color theme stuff. 
 (add-to-list 'custom-theme-load-path (concat emacs-root "jg/color-themes/jg-zenburn"))
-(load-theme 'jg-zenburn)
+(load-theme 'jg-zenburn t)
 (require 'unicode-fonts)
 (unicode-fonts-setup)
 

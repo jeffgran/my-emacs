@@ -8,3 +8,6 @@ savefile
 tramp
 eshell
 rake.cache
+/saved-places
+/smex-items
+/url/*
