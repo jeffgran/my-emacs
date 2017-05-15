@@ -131,10 +131,10 @@
                   :foreground ,jg-zenburn-fg
                   :background ,jg-zenburn-bg 
                   :slant normal
-                  :weight normal
-                  :height 125
+                  :weight thin
+                  :height 150
                   :width normal
-                  :family "DejaVu Sans Mono"))))
+                  :family "Iosevka"))))
 
    `(cursor ((t (:foreground ,jg-zenburn-fg :background "white"))))
    `(escape-glyph-face ((t (:foreground ,jg-zenburn-red))))
@@ -197,7 +197,7 @@
    `(font-lock-doc-face ((t (:foreground ,jg-zenburn-cyan+1))))
    `(font-lock-doc-string-face ((t (:foreground ,jg-zenburn-cyan))))
    `(font-lock-function-name-face ((t (:foreground ,jg-zenburn-blue+3))))
-   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue+1 :weight bold))))
+   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue+1 :weight normal))))
    `(font-lock-negation-char-face ((t (:foreground ,jg-zenburn-fg))))
    `(font-lock-preprocessor-face ((t (:foreground ,jg-zenburn-blue+1))))
    `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange-1))))

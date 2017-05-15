@@ -174,7 +174,6 @@
 (add-hook 'server-visit-hook 'fix-stdin-buffer)
 
 
-
 ;; from http://stackoverflow.com/questions/7987494/emacs-shell-mode-display-is-too-wide-after-splitting-window
 (defun comint-fix-window-size ()
   "Change process window size."

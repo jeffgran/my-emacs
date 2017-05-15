@@ -22,6 +22,9 @@
       ))
 
 
+(require 'ag)
+(setq ag-group-matches nil)
+
 
 (require 'phi-rectangle)
 (phi-rectangle-mode)
@@ -193,21 +196,62 @@
 (setq js2-basic-offset 2)
 (setq sgml-basic-offset 2)
 
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-jsx-mode))
-(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . js2-mode))
-(add-to-list 'auto-mode-alist '("\\.jsx?\\'" . js2-jsx-mode))
-(add-to-list 'interpreter-mode-alist '("node" . js2-jsx-mode))
-(add-to-list 'auto-mode-alist '("\\.es6\\'" . js2-mode))
+(add-to-list 'auto-mode-alist '("\\.conkerorrc$" . web-mode))
+(add-to-list 'interpreter-mode-alist '("node" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
+
+
+;; set to jsx mode by default in web-mode
+(add-hook 'web-mode-hook
+  (lambda ()
+    (if (equal web-mode-content-type "javascript")
+        (web-mode-set-content-type "jsx")
+      (message "now set to: %s" web-mode-content-type))))
+
+;; another thing to try...
+;; (setq web-mode-content-types-alist
+;;   '(("jsx" . "\\.js[x]?\\'")))
+
+;; (web-mode-set-content-type "jsx") ; to force jsx mode
+
+(add-hook 'web-mode-hook
+          '(lambda() (flycheck-mode)))
+
+(require 'flow-mode)
+;;(add-hook 'js2-mode-hook 'flow-enable-automatically)
+(add-hook 'web-mode-hook 'flow-enable-automatically)
+
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-flow))
+(add-hook 'web-mode-hook (lambda ()
+                          (set (make-local-variable 'company-backends) '(company-flow company-dabbrev-code company-files))))
+
 
 ;; adjust indents for web-mode to 2 spaces
 (setq web-mode-markup-indent-offset 2)
 (setq web-mode-css-indent-offset 2)
 (setq web-mode-code-indent-offset 2)
+(setq web-mode-attr-indent-offset 2)
 
-(eval-after-load 'js2-mode '(lambda ()
-                               (define-key js2-mode-map (kbd "M-;") 'demi-brolin)))
+(eval-after-load 'web-mode '(lambda ()
+                              (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
 
 
+(require 'flycheck)
+(require 'flycheck-flow)
+
+(setq-default flycheck-temp-prefix ".flycheck")
+
+;; add web-mode to the list of valid modes that these flycheck checkers can run in
+(flycheck-add-mode 'javascript-eslint 'web-mode)
+(flycheck-add-mode 'javascript-flow 'web-mode)
+(flycheck-add-mode 'javascript-flow-coverage 'web-mode)
+
+
+;; flycheck for flow-types
+
+(flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
+(flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
 
 ;; coffeescript mode
 (add-to-list 'load-path "~/.emacs.d/coffee-mode")
@@ -226,6 +270,8 @@
 ;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 ;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
+(custom-set-variables '(css-indent-offset 2))
+
 
 
 ;;(require 'shell-script-mode)
@@ -392,17 +438,19 @@
 (global-company-mode)
 (global-set-key (kbd "TAB") 'company-complete)
 (setq company-idle-delay nil)
+(setq company-dabbrev-downcase nil)
 
 
 
 (require 'yasnippet)
+;; (setq yas-snippet-dirs '("~/.emacs.d/snippets" yas-installed-snippets-dir)) ;; default in case i need to reset it
+(setq yas-snippet-dirs (append yas-snippet-dirs `(,(concat emacs-root "jg/yas"))))
+
 (yas-global-mode 1)
 (define-key yas-minor-mode-map (kbd "<tab>") nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
 (define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
 (define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
-(eval-after-load 'yasnippet '(lambda ()
-                               (yas-load-directory (concat emacs-root "jg/yas"))))
 
 
 
