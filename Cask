@@ -27,7 +27,7 @@
 (depends-on "expand-region")
 (depends-on "f")
 (depends-on "fiplr")
-(depends-on "flow-mode")
+(depends-on "flow-minor-mode")
 (depends-on "flx")
 (depends-on "flx-ido")
 (depends-on "flycheck")

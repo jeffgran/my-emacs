@@ -181,6 +181,7 @@
 ;; (define-key jg-navigation-mode-map (kbd "M-s h") nil) ;; Shell command, insert output Here.
 
 (define-key jg-navigation-mode-map (kbd "C-s s") 'jg-open-ssh)
+(define-key jg-navigation-mode-map (kbd "C-s b") 'ensime-sbt)
 
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
 (define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
@@ -411,8 +412,7 @@
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)
 (add-hook 'erc-mode-hook 'disable-jg-code-mode)
-(add-hook 'eshell-mode-hook 'disable-jg-code-mode)
-(add-hook 'shell-mode-hook 'disable-jg-code-mode)
+(add-hook 'comint-mode-hook 'disable-jg-code-mode)
 (add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
 (add-hook 'magit-mode-hook '(lambda ()

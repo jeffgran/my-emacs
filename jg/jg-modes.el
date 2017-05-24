@@ -135,6 +135,7 @@
 
 
 (require 'ensime)
+(setq ensime-sbt-command "sbt")
 (add-hook 'scala-mode-hook 'ensime-scala-mode-hook)
 
 
@@ -217,9 +218,9 @@
 (add-hook 'web-mode-hook
           '(lambda() (flycheck-mode)))
 
-(require 'flow-mode)
-;;(add-hook 'js2-mode-hook 'flow-enable-automatically)
-(add-hook 'web-mode-hook 'flow-enable-automatically)
+(require 'flow-minor-mode)
+;;(add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
+(add-hook 'web-mode-hook 'flow-minor-enable-automatically)
 
 (eval-after-load 'company
   '(add-to-list 'company-backends 'company-flow))
