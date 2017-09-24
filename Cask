@@ -16,6 +16,7 @@
 (depends-on "deferred")
 (depends-on "diminish")
 (depends-on "dired+")
+(depends-on "dired-subtree")
 (depends-on "drag-stuff")
 (depends-on "elixir-mode")
 (depends-on "elscreen")

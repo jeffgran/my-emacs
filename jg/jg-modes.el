@@ -426,7 +426,7 @@
 
 
 (require 'dired+)
-
+(require 'dired-subtree)
 
 
 ;;(require 'smooth-scroll)
