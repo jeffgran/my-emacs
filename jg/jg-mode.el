@@ -475,6 +475,18 @@
 (define-key dired-mode-map (kbd "M-0") 'other-window)
 (define-key dired-mode-map (kbd "M-1") 'delete-other-windows)
 
+(define-key dired-mode-map (kbd "SPC") 'dired-subtree-toggle)
+(define-key dired-mode-map (kbd "TAB") 'dired-subtree-toggle)
+
+
+(define-prefix-command 'dired-jump-map)
+(define-key dired-mode-map (kbd "j") 'dired-jump-map)
+
+(define-key dired-jump-map (kbd "n") 'dired-subtree-next-sibling)
+(define-key dired-jump-map (kbd "p") 'dired-subtree-previous-sibling)
+(define-key dired-jump-map (kbd "e") 'dired-subtree-end)
+(define-key dired-jump-map (kbd "s") 'dired-subtree-beginning)
+
 (define-key dired-mode-map (kbd "C-o") 'jg-quicknav)
 ;; (define-key dired-mode-map (kbd "C-o") 'dired-display-file)
 

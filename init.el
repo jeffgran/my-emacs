@@ -48,7 +48,7 @@
  '(markdown-command "maruku")
  '(package-selected-packages
    (quote
-    (company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler web-mode vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smex smartparens smart-mode-line slim-mode scss-mode scad-mode rust-mode ruby-additional rspec-mode robe redo+ readline-complete rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn mmm-mode maxframe markdown-mode magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav ido-completing-read+ idle-highlight-mode htmlize helm haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask flx-ido fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group elixir-mode drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap)))
+    (dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler web-mode vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smex smartparens smart-mode-line slim-mode scss-mode scad-mode rust-mode ruby-additional rspec-mode robe redo+ readline-complete rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn mmm-mode maxframe markdown-mode magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav ido-completing-read+ idle-highlight-mode htmlize helm haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask flx-ido fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group elixir-mode drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap)))
  '(server-kill-new-buffers t)
  '(speedbar-frame-parameters
    (quote
@@ -60,8 +60,8 @@
      (unsplittable . t)
      (set-background-color "black"))))
  '(tab-width 2)
- '(web-mode-code-indent-offset 2)
- '(web-mode-markup-indent-offset 2))
+ '(web-mode-code-indent-offset 2 t)
+ '(web-mode-markup-indent-offset 2 t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

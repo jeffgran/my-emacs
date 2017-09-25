@@ -202,6 +202,7 @@
 (add-to-list 'interpreter-mode-alist '("node" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.erb$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\.eex$" . web-mode))
 
 
 ;; set to jsx mode by default in web-mode
@@ -428,7 +429,8 @@
 
 
 (require 'dired+)
-
+(require 'dired-subtree)
+(setq diredp-hide-details-initially-flag nil)
 
 
 ;;(require 'smooth-scroll)
