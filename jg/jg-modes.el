@@ -162,29 +162,30 @@
 ;;  rng-nxml-auto-validate-flag nil
 ;;  ;;mumamo-margin-use (quote (right-margin 13))
 ;;  nxml-degraded t)
-(add-hook 'nxml-mode-hook '(lambda () (abbrev-mode -1)))
+;; (add-hook 'nxml-mode-hook '(lambda () (abbrev-mode -1)))
 
 
 ;;(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
 
-(require 'mmm-mode)
-(setq mmm-global-mode 'maybe)
-(mmm-add-mode-ext-class 'html-erb-mode "\\.html\\.erb\\'" 'erb)
-(mmm-add-mode-ext-class 'html-erb-mode nil 'html-js)
-(mmm-add-mode-ext-class 'html-erb-mode nil 'html-css)
-(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . html-erb-mode))
+;; (require 'mmm-mode)
+;; (setq mmm-global-mode 'maybe)
+;; (mmm-add-mode-ext-class 'html-erb-mode "\\.html\\.erb\\'" 'erb)
+;; (mmm-add-mode-ext-class 'html-erb-mode nil 'html-js)
+;; (mmm-add-mode-ext-class 'html-erb-mode nil 'html-css)
+;; (add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . html-erb-mode))
 
-(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-js))
-(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-erb-mode))
+;; (add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-js))
+;; (add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-erb-mode))
 
 
-(add-hook 'mmm-html-mode-hook '(lambda () (abbrev-mode -1)))
-(add-hook 'mmm-ruby-mode-hook '(lambda () (abbrev-mode -1)))
-(add-hook 'html-erb-mode-hook '(lambda () (abbrev-mode -1)))
+;; (add-hook 'mmm-html-mode-hook '(lambda () (abbrev-mode -1)))
+;; (add-hook 'mmm-ruby-mode-hook '(lambda () (abbrev-mode -1)))
+;; (add-hook 'html-erb-mode-hook '(lambda () (abbrev-mode -1)))
 
 
 (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder$" . ruby-mode))
 ;;(require 'ruby-mode) ;; for enh-ruby
 
 
@@ -200,6 +201,7 @@
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . web-mode))
 (add-to-list 'interpreter-mode-alist '("node" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . web-mode))
 
 
 ;; set to jsx mode by default in web-mode
@@ -245,14 +247,14 @@
 
 ;; add web-mode to the list of valid modes that these flycheck checkers can run in
 (flycheck-add-mode 'javascript-eslint 'web-mode)
-(flycheck-add-mode 'javascript-flow 'web-mode)
-(flycheck-add-mode 'javascript-flow-coverage 'web-mode)
+;; (flycheck-add-mode 'javascript-flow 'web-mode)
+;; (flycheck-add-mode 'javascript-flow-coverage 'web-mode)
 
 
 ;; flycheck for flow-types
 
-(flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
-(flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
+;; (flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
+;; (flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
 
 ;; coffeescript mode
 (add-to-list 'load-path "~/.emacs.d/coffee-mode")
