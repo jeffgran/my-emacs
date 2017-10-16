@@ -30,7 +30,7 @@
  ;; If there is more than one, they won't work right.
  '(ag-arguments
    (quote
-    ("--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "react_bundle.js.map" "--ignore" "react_bundle.js" "--")))
+    ("--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--")))
  '(ansi-color-names-vector
    ["#000000" "#cd3278" "#94BC2D" "#FFEA77" "#0c5093" "#FA4785" "#3AaCbf" "#f0f0f0"])
  '(blink-cursor-mode t)
@@ -60,8 +60,8 @@
      (unsplittable . t)
      (set-background-color "black"))))
  '(tab-width 2)
- '(web-mode-code-indent-offset 2 t)
- '(web-mode-markup-indent-offset 2 t))
+ '(web-mode-code-indent-offset 2)
+ '(web-mode-markup-indent-offset 2))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

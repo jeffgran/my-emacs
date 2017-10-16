@@ -84,6 +84,9 @@
       (jg-zenburn-yellow-1 "#dfca67")
       (jg-zenburn-yellow-2 "#cfba47")
 
+      (jg-zenburn-green-5 "#082008")
+      (jg-zenburn-green-4 "#284011")
+      (jg-zenburn-green-3 "#426a00")
       (jg-zenburn-green-2 "#648c00")
       (jg-zenburn-green-1 "#84ac1d")
       (jg-zenburn-green "#94BC2D")
@@ -506,6 +509,12 @@
    `(jabber-title-small ((t (:height 1.1 :weight bold))))
    `(jabber-title-medium ((t (:height 1.2 :weight bold))))
    `(jabber-title-large ((t (:height 1.3 :weight bold))))
+
+   ;; smerge
+   `(smerge-other ((t ( :background ,jg-zenburn-green-5))))
+   `(smerge-refined-added ((t ( :background ,jg-zenburn-green-4))))
+   `(smerge-mine ((t ( :background ,jg-zenburn-red-5))))
+   `(smerge-refined-removed ((t ( :background ,jg-zenburn-red-4))))
 
    ;; linum-mode
    `(linum ((t (:foreground ,jg-zenburn-blue-2 :background ,jg-zenburn-bg))))
