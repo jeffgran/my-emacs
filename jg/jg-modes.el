@@ -23,7 +23,13 @@
 
 
 (require 'ag)
-(setq ag-group-matches nil)
+(eval-after-load 'ag
+  '(lambda ()
+     (setq ag-group-matches nil)
+     (setq ag-highlight-search t)
+     (setq ag-arguments (list "-W" "200" "--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--"))
+     ))
+
 
 
 (require 'phi-rectangle)
@@ -130,7 +136,8 @@
 (setq ruby-insert-encoding-magic-comment nil)
 (setq ruby-use-smie nil)
 (setq ruby-deep-indent-paren nil)
-(setq ruby-deep-indent-paren-style nil)
+(setq ruby-deep-indent-paren-style 'space)
+(setq ruby-align-to-stmt-keywords nil)
 
 
 
@@ -225,10 +232,8 @@
 ;;(add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
 (add-hook 'web-mode-hook 'flow-minor-enable-automatically)
 
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-flow))
-(add-hook 'web-mode-hook (lambda ()
-                          (set (make-local-variable 'company-backends) '(company-flow company-dabbrev-code company-files))))
+;; (eval-after-load 'company
+;;   '(add-to-list 'company-backends 'company-flow))
 
 
 ;; adjust indents for web-mode to 2 spaces
@@ -236,6 +241,7 @@
 (setq web-mode-css-indent-offset 2)
 (setq web-mode-code-indent-offset 2)
 (setq web-mode-attr-indent-offset 2)
+(setq web-mode-enable-auto-indentation nil)
 
 (eval-after-load 'web-mode '(lambda ()
                               (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
@@ -287,7 +293,7 @@
 (auto-fill-mode t)
 (setq comment-auto-fill-only-comments t)
 
-(add-hook 'ruby-mode-hook 'robe-mode)
+;;(add-hook 'ruby-mode-hook 'robe-mode)
 ;; (add-hook 'ruby-mode-hook
 ;;           '(lambda ()
 ;;              (setq company-backend '(company-robe company-keywords) )
@@ -309,6 +315,9 @@
 ;;              (electric-pair-mode -1)
 ;;              ;;(ruby-electric-mode t)
 ;;              ))
+
+(add-hook 'ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop
+(setq flycheck-rubocoprc ".ruby-style.yml")
 
 (defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
   "undo some stuff ruby-electric tries to force on us"

@@ -88,6 +88,7 @@
 (depends-on "redo+")
 (depends-on "robe")
 (depends-on "rspec-mode")
+(depends-on "rubocop")
 (depends-on "ruby-additional")
 (depends-on "rust-mode")
 (depends-on "s")
