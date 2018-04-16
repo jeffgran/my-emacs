@@ -247,9 +247,9 @@
 (define-key jg-navigation-mode-map (kbd "C-M-v") 'paste-unshift)
 
 
-(define-key jg-code-mode-map (kbd "M-z") 'undo)
-(define-key jg-code-mode-map (kbd "M-Z") 'redo)
-(define-key jg-code-mode-map (kbd "C-M-z") 'redo)
+(define-key jg-code-mode-map (kbd "M-z") 'undo-tree-undo)
+(define-key jg-code-mode-map (kbd "M-Z") 'undo-tree-redo)
+(define-key jg-code-mode-map (kbd "C-M-z") 'undo-tree-visualize)
 
 
 
@@ -502,7 +502,9 @@
 (define-key shell-mode-map (kbd "C-S-f") 'ag)
 (define-key shell-mode-map (kbd "M-S-v") 'yank-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
-(define-key shell-mode-map (kbd "M-z")  'undo)
+(define-key shell-mode-map (kbd "M-z") 'undo-tree-undo)
+(define-key shell-mode-map (kbd "M-Z") 'undo-tree-redo)
+(define-key shell-mode-map (kbd "C-M-z") 'undo-tree-visualize)
 (define-key shell-mode-map (kbd "M-.") 'comint-restore-input)
 (define-key shell-mode-map (kbd "TAB") nil)
 
@@ -533,3 +535,6 @@
 (add-hook 'mu4e-main-mode-hook 'disable-jg-code-mode)
 (add-hook 'mu4e-headers-mode-hook 'disable-jg-code-mode)
 (add-hook 'mu4e-view-mode-hook 'disable-jg-code-mode)
+
+
+(define-key c++-mode-map (kbd "TAB") nil)

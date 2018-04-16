@@ -21,6 +21,8 @@
       (require 'elscreen-buffer-group)
       ))
 
+(require 'undo-tree)
+
 
 (require 'ag)
 (setq ag-group-matches nil)
@@ -30,8 +32,6 @@
 (phi-rectangle-mode)
 (multiple-cursors-mode)
 (delete-selection-mode)
-
-(require 'redo+)
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
 (turn-on-pbcopy)
@@ -80,7 +80,6 @@
 (custom-set-variables '(magit-completing-read-function 'magit-ido-completing-read))
 ;;(setq magit-completing-read-function 'magit-ido-completing-read)
 
-(require 'modeline-posn)
 (column-number-mode 1)
 (size-indication-mode 1)
 
@@ -356,8 +355,11 @@
 (add-to-list 'auto-mode-alist '("\\.cs$" . c++-mode))
 (setq c-basic-offset 4)
 
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (when (derived-mode-p 'c-mode 'c++-mode 'java-mode)
+              (ggtags-mode 1))))
 
-(require 'zoom-frm)
 
 ;; Uniquify
 (require 'uniquify)
@@ -426,7 +428,6 @@
 
 
 
-(require 'dired+)
 (require 'dired-subtree)
 (setq diredp-hide-details-initially-flag nil)
 

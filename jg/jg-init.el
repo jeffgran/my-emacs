@@ -10,7 +10,6 @@
 (require 'pbcopy)
 
 (add-to-list 'load-path (concat emacs-root "jg"))
-(require 'wcy-swbuff)
 
 
 (load-library "jg-modes")           ; my various major/minor modes and their setups

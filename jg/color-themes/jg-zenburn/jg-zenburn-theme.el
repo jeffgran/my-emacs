@@ -221,7 +221,7 @@
 
    `(cua-rectangle ((t (:background ,jg-zenburn-red-3))))
 
-   ;; dired and dired+
+   ;; dired
 
    ;; `(dired-header ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow-2))))
    ;; `(dired-mark ((t (:background ,jg-zenburn-bg))))
@@ -233,39 +233,41 @@
    ;; `(dired-symlink ((t (:background ,jg-zenburn-bg))))
    ;; `(dired-ignored ((t (:background ,jg-zenburn-bg))))
 
-   `(diredp-compressed-file-suffix ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-bg+3))))
-   `(diredp-date-time ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue-3))))
-   `(diredp-dir-heading ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
-   `(diredp-display-msg ((t (:background ,jg-zenburn-bg))))
+   ;; diredp- prefix means dired+, dired+ is dead to me because author won't publish as MELPA package
 
-   `(diredp-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-cyan+1))))
-   `(diredp-file-suffix ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue))))
+   ;; `(diredp-compressed-file-suffix ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-bg+3))))
+   ;; `(diredp-date-time ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue-3))))
+   ;; `(diredp-dir-heading ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
+   ;; `(diredp-display-msg ((t (:background ,jg-zenburn-bg))))
 
-   `(diredp-get-file-or-dir-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
-   `(diredp-ignored-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-bg+2))))
-   `(diredp-symlink ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-purple))))
+   ;; `(diredp-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-cyan+1))))
+   ;; `(diredp-file-suffix ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue))))
 
-   `(diredp-number ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-get-file-or-dir-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
+   ;; `(diredp-ignored-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-bg+2))))
+   ;; `(diredp-symlink ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-purple))))
+
+   ;; `(diredp-number ((t (:background ,jg-zenburn-bg))))
    
-   `(diredp-executable-tag ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red-1))))
+   ;; `(diredp-executable-tag ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red-1))))
 
-   `(diredp-deletion ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red))))
-   `(diredp-deletion-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red))))
-   `(diredp-flag-mark ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue+1))))
-   `(diredp-flag-mark-line ((t (:background ,jg-zenburn-blue-5 :foreground ,jg-zenburn-cyan+1))))
-   `(diredp-mode-line-flagged ((t (:background ,jg-zenburn-bg))))
-   `(diredp-mode-line-marked ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-deletion ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red))))
+   ;; `(diredp-deletion-file-name ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red))))
+   ;; `(diredp-flag-mark ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue+1))))
+   ;; `(diredp-flag-mark-line ((t (:background ,jg-zenburn-blue-5 :foreground ,jg-zenburn-cyan+1))))
+   ;; `(diredp-mode-line-flagged ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-mode-line-marked ((t (:background ,jg-zenburn-bg))))
    
-   `(diredp-dir-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
-   `(diredp-link-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-purple))))
+   ;; `(diredp-dir-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-yellow))))
+   ;; `(diredp-link-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-purple))))
 
-   `(diredp-no-priv ((t (:background ,jg-zenburn-bg))))
-   `(diredp-other-priv ((t (:background ,jg-zenburn-bg))))
-   `(diredp-rare-priv ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-no-priv ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-other-priv ((t (:background ,jg-zenburn-bg))))
+   ;; `(diredp-rare-priv ((t (:background ,jg-zenburn-bg))))
 
-   `(diredp-read-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue))))
-   `(diredp-write-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-orange))))
-   `(diredp-exec-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red+1))))
+   ;; `(diredp-read-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-blue))))
+   ;; `(diredp-write-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-orange))))
+   ;; `(diredp-exec-priv ((t (:background ,jg-zenburn-bg :foreground ,jg-zenburn-red+1))))
    
 
 

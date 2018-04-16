@@ -49,9 +49,6 @@
 ;; (setq max-specpdl-size 10000)
 ;; (setq max-lisp-eval-depth 10000)
 
-(toggle-diredp-find-file-reuse-dir 1)
-
-
 ;; default encoding for new buffers, among other default settings and fallbacks.
 (prefer-coding-system 'utf-8) 
 
