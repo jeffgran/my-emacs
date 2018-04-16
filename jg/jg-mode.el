@@ -47,6 +47,9 @@
 (define-key jg-navigation-mode-map (kbd "C-M-.") 'end-of-buffer)
 (define-key jg-navigation-mode-map (kbd "C-M-,") 'beginning-of-buffer)
 (define-key jg-navigation-mode-map (kbd "M-l") 'goto-line)
+;; skipping to matching brackets
+(define-key jg-navigation-mode-map (kbd "M-C-h") 'backward-list)
+(define-key jg-navigation-mode-map (kbd "M-C-;") 'forward-list)
 
 (if window-system
     (progn

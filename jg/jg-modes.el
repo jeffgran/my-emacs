@@ -25,7 +25,13 @@
 
 
 (require 'ag)
-(setq ag-group-matches nil)
+(eval-after-load 'ag
+  '(lambda ()
+     (setq ag-group-matches nil)
+     (setq ag-highlight-search t)
+     (setq ag-arguments (list "-W" "200" "--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--"))
+     ))
+
 
 
 (require 'phi-rectangle)
@@ -129,7 +135,8 @@
 (setq ruby-insert-encoding-magic-comment nil)
 (setq ruby-use-smie nil)
 (setq ruby-deep-indent-paren nil)
-(setq ruby-deep-indent-paren-style nil)
+(setq ruby-deep-indent-paren-style 'space)
+(setq ruby-align-to-stmt-keywords nil)
 
 
 
@@ -151,39 +158,9 @@
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
 
 
-;; HTML mode
-;; nXhtml mode (new and improved)
-;; (setq
-;;  nxhtml-global-minor-mode nil
-;;  mumamo-chunk-coloring 'submode-colored
-;;  nxhtml-skip-welcome t
-;;  indent-region-mode t
-;;  rng-nxml-auto-validate-flag nil
-;;  ;;mumamo-margin-use (quote (right-margin 13))
-;;  nxml-degraded t)
-(add-hook 'nxml-mode-hook '(lambda () (abbrev-mode -1)))
-
-
-;;(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . eruby-nxhtml-mumamo-mode))
-
-(require 'mmm-mode)
-(setq mmm-global-mode 'maybe)
-(mmm-add-mode-ext-class 'html-erb-mode "\\.html\\.erb\\'" 'erb)
-(mmm-add-mode-ext-class 'html-erb-mode nil 'html-js)
-(mmm-add-mode-ext-class 'html-erb-mode nil 'html-css)
-(add-to-list 'auto-mode-alist '("\\.html\\.erb\\'" . html-erb-mode))
-
-(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-js))
-(add-to-list 'mmm-mode-ext-classes-alist '(nxml-mode nil html-erb-mode))
-
-
-(add-hook 'mmm-html-mode-hook '(lambda () (abbrev-mode -1)))
-(add-hook 'mmm-ruby-mode-hook '(lambda () (abbrev-mode -1)))
-(add-hook 'html-erb-mode-hook '(lambda () (abbrev-mode -1)))
-
-
 (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder$" . ruby-mode))
 ;;(require 'ruby-mode) ;; for enh-ruby
 
 
@@ -199,6 +176,7 @@
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . web-mode))
 (add-to-list 'interpreter-mode-alist '("node" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\.erb$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.eex$" . web-mode))
 
 
@@ -222,10 +200,8 @@
 ;;(add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
 (add-hook 'web-mode-hook 'flow-minor-enable-automatically)
 
-(eval-after-load 'company
-  '(add-to-list 'company-backends 'company-flow))
-(add-hook 'web-mode-hook (lambda ()
-                          (set (make-local-variable 'company-backends) '(company-flow company-dabbrev-code company-files))))
+;; (eval-after-load 'company
+;;   '(add-to-list 'company-backends 'company-flow))
 
 
 ;; adjust indents for web-mode to 2 spaces
@@ -233,6 +209,7 @@
 (setq web-mode-css-indent-offset 2)
 (setq web-mode-code-indent-offset 2)
 (setq web-mode-attr-indent-offset 2)
+(setq web-mode-enable-auto-indentation nil)
 
 (eval-after-load 'web-mode '(lambda ()
                               (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
@@ -245,14 +222,14 @@
 
 ;; add web-mode to the list of valid modes that these flycheck checkers can run in
 (flycheck-add-mode 'javascript-eslint 'web-mode)
-(flycheck-add-mode 'javascript-flow 'web-mode)
-(flycheck-add-mode 'javascript-flow-coverage 'web-mode)
+;; (flycheck-add-mode 'javascript-flow 'web-mode)
+;; (flycheck-add-mode 'javascript-flow-coverage 'web-mode)
 
 
 ;; flycheck for flow-types
 
-(flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
-(flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
+;; (flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
+;; (flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
 
 ;; coffeescript mode
 (add-to-list 'load-path "~/.emacs.d/coffee-mode")
@@ -284,28 +261,9 @@
 (auto-fill-mode t)
 (setq comment-auto-fill-only-comments t)
 
-(add-hook 'ruby-mode-hook 'robe-mode)
-;; (add-hook 'ruby-mode-hook
-;;           '(lambda ()
-;;              (setq company-backend '(company-robe company-keywords) )
-;;              ))
 
-;; (add-hook 'ruby-mode-hook
-;;           '(lambda ()
-;;              ;;(make-local-variable 'paragraph-start)
-;;              ;;(setq paragraph-start (concat "@[[:alpha:]]+\\|" paragraph-start))
-;;              ;;
-;;              ;;(make-local-variable 'paragraph-separate)
-;;              ;;(setq paragraph-separate (concat "---+\\|" paragraph-separate))
-;;              ;;(ruby-end-mode t)
-
-;;              (make-local-variable 'post-command-hook)
-;;              (add-hook 'post-command-hook 'font-lock-fontify-buffer)
-
-;;              ;; turn electric pair mode off; ruby has its own electricity
-;;              (electric-pair-mode -1)
-;;              ;;(ruby-electric-mode t)
-;;              ))
+(add-hook 'ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop
+(setq flycheck-rubocoprc ".ruby-style.yml")
 
 (defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
   "undo some stuff ruby-electric tries to force on us"
