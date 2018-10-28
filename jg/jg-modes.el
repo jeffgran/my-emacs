@@ -25,12 +25,9 @@
 
 
 (require 'ag)
-(eval-after-load 'ag
-  '(lambda ()
-     (setq ag-group-matches nil)
-     (setq ag-highlight-search t)
-     (setq ag-arguments (list "-W" "200" "--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--"))
-     ))
+(setq ag-group-matches nil)
+(setq ag-highlight-search t)
+(setq ag-arguments (list "-W" "200" "--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--"))
 
 
 
@@ -91,9 +88,6 @@
 
 ;; (require 'rbenv)
 ;; (global-rbenv-mode)
-
-;; from rspec-mode docs -- enables C-x C-q to switch to inf-ruby inside rspec-mode compliation buffer.
-(add-hook 'after-init-hook 'inf-ruby-switch-setup)
 
 ;; sml weirdly puts the cursor location info in this... undo that.
 (setq-default mode-line-front-space "")
@@ -161,7 +155,6 @@
 (autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
 (add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.json_builder$" . ruby-mode))
-;;(require 'ruby-mode) ;; for enh-ruby
 
 
 ;; php mode
@@ -196,13 +189,6 @@
 (add-hook 'web-mode-hook
           '(lambda() (flycheck-mode)))
 
-(require 'flow-minor-mode)
-;;(add-hook 'js2-mode-hook 'flow-minor-enable-automatically)
-(add-hook 'web-mode-hook 'flow-minor-enable-automatically)
-
-;; (eval-after-load 'company
-;;   '(add-to-list 'company-backends 'company-flow))
-
 
 ;; adjust indents for web-mode to 2 spaces
 (setq web-mode-markup-indent-offset 2)
@@ -216,20 +202,13 @@
 
 
 (require 'flycheck)
-(require 'flycheck-flow)
 
 (setq-default flycheck-temp-prefix ".flycheck")
 
 ;; add web-mode to the list of valid modes that these flycheck checkers can run in
 (flycheck-add-mode 'javascript-eslint 'web-mode)
-;; (flycheck-add-mode 'javascript-flow 'web-mode)
-;; (flycheck-add-mode 'javascript-flow-coverage 'web-mode)
 
 
-;; flycheck for flow-types
-
-;; (flycheck-add-next-checker 'javascript-flow 'javascript-eslint)
-;; (flycheck-add-next-checker 'javascript-flow 'javascript-flow-coverage) ;; don't really like having coverage inline warnings
 
 ;; coffeescript mode
 (add-to-list 'load-path "~/.emacs.d/coffee-mode")
@@ -368,7 +347,6 @@
 
 ;; shell mode
 (add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
-(add-hook 'inf-ruby-mode-hook 'kill-buffer-on-exit-shell)
 
 
 
