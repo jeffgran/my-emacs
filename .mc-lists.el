@@ -5,6 +5,7 @@
       '(
         backward-to-char
         clipboard-yank
+        keyboard-quit
         ))
 
 (setq mc/cmds-to-run-once

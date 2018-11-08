@@ -61,12 +61,15 @@
 
 (require 'view)
 
-(setq helm-idle-delay 0
-      helm-input-idle-delay 0
-      helm-quick-update t
+(setq helm-idle-delay 1
+      helm-input-idle-delay 1
+      helm-quick-update nil
       helm-buffer-max-length 70
       helm-recentf-fuzzy-match t
       )
+
+(require 'helm-find)
+(require 'helm-fuzzy-find)
 
 (global-subword-mode 1)
 
@@ -125,13 +128,19 @@
   (regexp-opt ruby-block-beg-keywords)
   "Regexp to match the beginning of blocks.")
 (require 'expand-region)
-(require 'ruby-mode)
-(setq ruby-insert-encoding-magic-comment nil)
-(setq ruby-use-smie nil)
-(setq ruby-deep-indent-paren nil)
-(setq ruby-deep-indent-paren-style 'space)
-(setq ruby-align-to-stmt-keywords nil)
+;; (require 'ruby-mode)
+;; (setq ruby-insert-encoding-magic-comment nil)
+;; (setq ruby-use-smie nil)
+;; (setq ruby-deep-indent-paren nil)
+;; (setq ruby-deep-indent-paren-style 'space)
+;; (setq ruby-align-to-stmt-keywords nil)
+;; (setq ruby-indent-level 2)
 
+(require 'enh-ruby-mode)
+(add-hook 'enh-ruby-mode-hook 'erm-define-faces)
+(setq enh-ruby-program "~/.rbenv/shims/ruby") ; so that still works if ruby points to ruby1.8 or jruby
+(setq ruby-insert-encoding-magic-comment nil) ; for ruby-mode
+(setq enh-ruby-add-encoding-comment-on-save nil) ; for enh-ruby-mode
 
 
 (require 'ensime)
@@ -150,11 +159,6 @@
 (add-to-list 'auto-mode-alist '("\\.txt$" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
-
-
-(autoload 'ruby-mode "ruby-mode" "Major mode for ruby files" t)
-(add-to-list 'interpreter-mode-alist '("ruby" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.json_builder$" . ruby-mode))
 
 
 ;; php mode
@@ -226,8 +230,9 @@
 
 ;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 ;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
+(require 'scss-mode)
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
-(custom-set-variables '(css-indent-offset 2))
+;;(custom-set-variables '(css-indent-offset 2))
 
 
 
@@ -241,7 +246,8 @@
 (setq comment-auto-fill-only-comments t)
 
 
-(add-hook 'ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop
+(add-hook 'ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop/ruby-mode
+(add-hook 'enh-ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop/enh-ruby-mode
 (setq flycheck-rubocoprc ".ruby-style.yml")
 
 (defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
@@ -256,26 +262,21 @@
   (define-key ruby-mode-map (kbd "C-M-p") nil))
 
 
-
-
-(add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.builder\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.json_builder\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Gemfile\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Guardfile\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Capfile\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-mode))
-(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-mode))
-
-(setq enh-ruby-program "/Users/jeffgran/.rbenv/shims/ruby") ; so that still works if ruby points to ruby1.8 or jruby
-;;(require 'ruby-mode) ;; currently using enhanced ruby...
-;;(setq ruby-deep-indent-paren     nil
-;;      ruby-hanging-indent-level  2
-;;      ruby-extra-keywords        '("raise"))
-;;(ruby-local-enable-extra-keywords)
+(add-to-list 'interpreter-mode-alist '("ruby" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder$" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rb$" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rake\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.builder\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.jbuilder\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Rakefile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.ru\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Gemfile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Guardfile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Capfile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Thorfile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . enh-ruby-mode))
 
 
 (require 'ansi-color)
@@ -347,7 +348,7 @@
 
 ;; shell mode
 (add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
-
+(add-hook 'comint-output-filter-functions 'comint-truncate-buffer)
 
 
 (defadvice display-message-or-buffer (before ansi-color activate)

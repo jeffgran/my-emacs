@@ -9,3 +9,7 @@ this is just my personal setup. the only part  you might want is jg-functions/jg
 
 - brew install cask
 - cask install
+
+- brew install fuzzy-find
+
+$ defaults write org.gnu.Emacs AppleFontSmoothing -int 0

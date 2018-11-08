@@ -32,6 +32,8 @@
    ;;shell-command-switch "-ic"                    ; for local bash, use -ic instead of -c so i can use my bash_aliases
    comint-scroll-show-maximum-output nil           ; don't scroll to bottom maybe?
    comint-prompt-read-only t                       ; what it says
+   comint-buffer-maximum-size 10000                ; max scrollback size in comint/shell/etc
+
 
    enable-recursive-minibuffers t                  ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
 

@@ -376,10 +376,10 @@
 
 
 ;; some extra keys for ruby mode.
-(define-key ruby-mode-map (kbd "M-h") 'ruby-backward-sexp)
-(define-key ruby-mode-map (kbd "M-'") 'ruby-forward-sexp)
-(define-key ruby-mode-map (kbd "C-M-h") 'ruby-beginning-of-block)
-(define-key ruby-mode-map (kbd "C-M-'") 'ruby-end-of-block)
+(define-key enh-ruby-mode-map (kbd "M-h") 'enh-ruby-backward-sexp)
+(define-key enh-ruby-mode-map (kbd "M-'") 'enh-ruby-forward-sexp)
+(define-key enh-ruby-mode-map (kbd "C-M-h") 'enh-ruby-beginning-of-block)
+(define-key enh-ruby-mode-map (kbd "C-M-'") 'enh-ruby-end-of-block)
 
 
 
