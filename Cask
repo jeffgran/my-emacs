@@ -101,7 +101,6 @@
 (depends-on "unicode-fonts")
 (depends-on "use-package")
 (depends-on "vimrc-mode")
-(depends-on "vkill")
 (depends-on "web-mode")
 (depends-on "ws-butler")
 (depends-on "yaml-mode")

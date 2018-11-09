@@ -130,6 +130,8 @@
 
 
 (defun jg-switch-buffer-set-current ()
+  (when (> (+ 1 jg-switch-buffer-index) (length jg-switch-buffer-buffer-list))
+    (jg-switch-buffer-decrease-index))
   (setq jg-switch-buffer-current (nth-value jg-switch-buffer-index jg-switch-buffer-buffer-list))
   (set-window-buffer jg-switch-buffer-window jg-switch-buffer-current)
   (jg-switch-buffer-update-display))
