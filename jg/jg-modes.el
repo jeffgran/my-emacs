@@ -277,6 +277,7 @@
 (add-to-list 'auto-mode-alist '("Capfile\\'" . enh-ruby-mode))
 (add-to-list 'auto-mode-alist '("Thorfile\\'" . enh-ruby-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile\\'" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("Fastfile" . enh-ruby-mode))
 
 
 (require 'ansi-color)
