@@ -27,7 +27,20 @@
 (require 'ag)
 (setq ag-group-matches nil)
 (setq ag-highlight-search t)
-(setq ag-arguments (list "-W" "200" "--line-number" "--smart-case" "--nogroup" "--column" "--stats" "--ignore" "proxima_nova.scss" "--ignore" "react_bundle.js" "--ignore" "node_modules" "--"))
+(setq ag-arguments (list
+                    "-W" "200"
+                    "--line-number"
+                    "--smart-case"
+                    "--nogroup"
+                    "--column"
+                    "--stats"
+                    "--ignore" "proxima_nova.scss"
+                    "--ignore" "react_bundle.js"
+                    "--ignore" "node_modules"
+                    "--ignore" "*.js.map"
+                    "--ignore" "*.min.js"
+                    "--"
+                    ))
 
 
 
@@ -150,6 +163,13 @@
 
 
 
+(require 'lsp-sourcekit)
+;;(setenv "SOURCEKIT_TOOLCHAIN_PATH" "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2018-11-01-a.xctoolchain")
+(setq lsp-sourcekit-executable (expand-file-name "/Users/jgran/dev/sourcekit-lsp/.build/debug/sourcekit-lsp"))
+
+(use-package swift-mode
+  :hook (swift-mode . (lambda () (lsp))))
+
 
 
 ;; Markdown support
@@ -204,6 +224,23 @@
 (eval-after-load 'web-mode '(lambda ()
                               (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
 
+;;(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
+(defun setup-tide-mode ()
+  (interactive)
+  (tide-setup)
+  (flycheck-mode +1)
+  (setq flycheck-check-syntax-automatically '(save mode-enabled))
+  (eldoc-mode +1)
+  (tide-hl-identifier-mode +1)
+  (company-mode +1))
+(add-hook 'typescript-mode-hook #'setup-tide-mode)
+
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+(add-hook 'web-mode-hook
+          (lambda ()
+            (when (string-equal "tsx" (file-name-extension buffer-file-name))
+              (setup-tide-mode))))
 
 (require 'flycheck)
 
@@ -211,7 +248,7 @@
 
 ;; add web-mode to the list of valid modes that these flycheck checkers can run in
 (flycheck-add-mode 'javascript-eslint 'web-mode)
-
+(flycheck-add-mode 'javascript-eslint 'typescript-mode)
 
 
 ;; coffeescript mode
@@ -381,6 +418,7 @@
 (global-set-key (kbd "TAB") 'company-complete)
 (setq company-idle-delay nil)
 (setq company-dabbrev-downcase nil)
+(setq company-tooltip-align-annotations t)
 
 
 

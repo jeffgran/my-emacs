@@ -60,7 +60,7 @@
 
 ;; tramp, for sudo access
 (require 'tramp)
-;;(setq tramp-default-method "ssh") ; default is "scp"
+(setq tramp-default-method "ssh") ; default is "scp"
 
 (defun snippet-insert (foo &rest))
 
