@@ -21,7 +21,8 @@
       (require 'elscreen-buffer-group)
       ))
 
-(require 'undo-tree)
+(if (boundp 'undo-tree)
+    (require 'undo-tree))
 
 
 (require 'ag)
@@ -162,13 +163,13 @@
 
 
 
+(if (boundp 'lsp-sourcekit)
+    (require 'lsp-sourcekit)
+  ;;(setenv "SOURCEKIT_TOOLCHAIN_PATH" "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2018-11-01-a.xctoolchain")
+  (setq lsp-sourcekit-executable (expand-file-name "/Users/jgran/dev/sourcekit-lsp/.build/debug/sourcekit-lsp"))
 
-(require 'lsp-sourcekit)
-;;(setenv "SOURCEKIT_TOOLCHAIN_PATH" "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2018-11-01-a.xctoolchain")
-(setq lsp-sourcekit-executable (expand-file-name "/Users/jgran/dev/sourcekit-lsp/.build/debug/sourcekit-lsp"))
-
-(use-package swift-mode
-  :hook (swift-mode . (lambda () (lsp))))
+  (use-package swift-mode
+    :hook (swift-mode . (lambda () (lsp)))))
 
 
 
@@ -436,8 +437,8 @@
 
 
 
-(setq shell-file-name "/usr/local/bin/bash")
-(setq explicit-shell-file-name "/usr/local/bin/bash")
+;(setq shell-file-name "/usr/local/bin/bash")
+;(setq explicit-shell-file-name "/usr/local/bin/bash")
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.

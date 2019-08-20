@@ -168,6 +168,7 @@
 
 ;; smex is M-x but like ido-mode. sweet!
 (define-key jg-navigation-mode-map (kbd "A-x") 'smex)
+(define-key jg-navigation-mode-map (kbd "s-x") 'smex)
 
 
 ;; let's put the shell commands under the M-s prefix

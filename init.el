@@ -5,7 +5,7 @@
 ;; You may delete these explanatory comments.
 (package-initialize)
 
-(require 'cask "/usr/local/share/emacs/site-lisp/cask/cask.el")
+(require 'cask "~/.cask/cask.el")
 (cask-initialize)
 (require 'pallet)
 (pallet-mode t)
@@ -16,7 +16,7 @@
 (require 's)                            ; string manip library
 
 (defvar emacs-root 
-  (if (eq system-type 'darwin)
+  (if (or (eq system-type 'darwin) (eq system-type 'gnu/linux))
       (concat (s-trim (shell-command-to-string "echo $HOME")) "/.emacs.d/")
     "C:/emacs/my-emacs/")) ; will need to be fixed if I ever go back to windoze
 
