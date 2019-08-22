@@ -437,8 +437,6 @@
 
 
 
-;(setq shell-file-name "/usr/local/bin/bash")
-;(setq explicit-shell-file-name "/usr/local/bin/bash")
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.

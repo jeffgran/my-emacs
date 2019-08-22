@@ -95,6 +95,9 @@
 (setq mac-command-key-is-meta t)
 (setq mac-command-modifier 'meta)
 (setq mac-option-modifier 'alt)
+;; linux (x11) keys
+(setq x-meta-keysym 'alt)
+(setq x-super-keysym 'meta)
 
 
 ;; windows specific stuff

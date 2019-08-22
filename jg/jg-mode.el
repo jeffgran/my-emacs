@@ -251,9 +251,9 @@
 (define-key jg-navigation-mode-map (kbd "C-M-v") 'paste-unshift)
 
 
-(define-key jg-code-mode-map (kbd "M-z") 'undo-tree-undo)
-(define-key jg-code-mode-map (kbd "M-Z") 'undo-tree-redo)
-(define-key jg-code-mode-map (kbd "C-M-z") 'undo-tree-visualize)
+(define-key jg-code-mode-map (kbd "M-z") 'undo)
+;(define-key jg-code-mode-map (kbd "M-Z") 'redo);; no such thing as redo
+
 
 
 
