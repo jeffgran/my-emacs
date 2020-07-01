@@ -143,14 +143,6 @@
 (setq enh-ruby-add-encoding-comment-on-save nil) ; for enh-ruby-mode
 
 
-(require 'ensime)
-(setq ensime-sbt-command "sbt")
-(add-hook 'scala-mode-hook 'ensime-scala-mode-hook)
-
-
-
-
-
 
 ;; Markdown support
 (autoload 'markdown-mode "markdown-mode.el"

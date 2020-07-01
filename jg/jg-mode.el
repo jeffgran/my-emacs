@@ -191,7 +191,6 @@
 ;; (define-key jg-navigation-mode-map (kbd "M-s h") nil) ;; Shell command, insert output Here.
 
 (define-key jg-navigation-mode-map (kbd "C-s s") 'jg-open-ssh)
-(define-key jg-navigation-mode-map (kbd "C-s b") 'ensime-sbt)
 
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
 (define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
@@ -306,29 +305,10 @@
 (define-key shell-mode-map (kbd "M-C-x") 'eval-expression)
 
 (require 'magit)
-(define-key jg-code-mode-map (kbd "M-g") 'magit-dispatch-popup)
-(define-key shell-mode-map (kbd "M-g") 'magit-dispatch-popup)
+(define-key jg-code-mode-map (kbd "M-g") 'magit-dispatch)
+(define-key shell-mode-map (kbd "M-g") 'magit-dispatch)
 
-(define-key magit-popup-mode-map (kbd "s") '(lambda ()
-                                              (interactive)
-                                              (magit-popup-quit)
-                                              (magit-status)))
-(define-key magit-popup-mode-map (kbd "g") '(lambda ()
-                                              (interactive)
-                                              (magit-popup-quit)
-                                              (magit-refresh)))
-
-;(define-key magit-popup-mode-map (kbd "h") 'magit refresh)
-
-;(define-key jg-code-mode-map (kbd "M-g s") nil)
-;(define-key jg-code-mode-map (kbd "M-g r") 'magit-refresh)
-;;(define-key shell-mode-map (kbd "M-g s") 'magit-status)
-;(define-key shell-mode-map (kbd "M-g p") 'magit-dispatch-popup)
-;(define-key shell-mode-map (kbd "M-g r") 'magit-refresh)
-
-
-;;(define-key jg-code-mode-map (kbd "M-g c") 'magit-checkout)
-;;(define-key shell-mode-map (kbd "M-g c") 'magit-checkout)
+(transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
 
 
 ;; set up a new help key prefix since I use C-h for movement
