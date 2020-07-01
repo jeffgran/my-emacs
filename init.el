@@ -48,7 +48,7 @@
  '(markdown-command "maruku")
  '(package-selected-packages
    (quote
-    (eglot helm-fuzzy-find enh-ruby-mode rubocop undo-tree dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smex smartparens smart-mode-line slim-mode scad-mode rust-mode ruby-additional rspec-mode redo+ readline-complete rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn maxframe markdown-mode magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav ido-completing-read+ idle-highlight-mode htmlize haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask flx-ido fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap)))
+    (tide elixir-mode graphql-mode lsp-typescript company-lsp lsp-mode lsp-sourcekit company-terraform terraform-mode swift-mode web-mode fish-completion fish-mode helm-fuzzy-find enh-ruby-mode rubocop undo-tree dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smex smartparens smart-mode-line slim-mode scad-mode rust-mode ruby-additional rspec-mode redo+ readline-complete rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn maxframe markdown-mode magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav ido-completing-read+ idle-highlight-mode htmlize haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask flx-ido fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap)))
  '(server-kill-new-buffers t)
  '(speedbar-frame-parameters
    (quote
@@ -59,7 +59,11 @@
      (tool-bar-lines . 0)
      (unsplittable . t)
      (set-background-color "black"))))
+ '(swift-mode:basic-offset 4)
+ '(swift-mode:multiline-statement-offset 4)
+ '(swift-mode:parenthesized-expression-offset 4)
  '(tab-width 2)
+ '(typescript-indent-level 2)
  '(web-mode-code-indent-offset 2)
  '(web-mode-markup-indent-offset 2))
 (custom-set-faces

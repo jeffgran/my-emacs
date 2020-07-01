@@ -201,8 +201,11 @@
       ;; (make-local-variable 'explicit-shell-file-name)
       ;; (setq explicit-shell-file-name nil)
       (make-local-variable 'shell-file-name)
-      (setq shell-file-name "/bin/bash")))
-  ;;(call-interactively (ssh-directory-tracking-mode))
+      (setq shell-file-name "/bin/bash")
+      ;; hack to at least set the default-directory to the home dir of the remote box
+      (setq default-directory (concat "/ssh:" (buffer-name (current-buffer)) ":~"))
+    ))
+  ;; (call-interactively (ssh-directory-tracking-mode)) ;; used to work at OL but causes a weird hang on LT EC2 boxes :(
   )
 
 ;; send C-a q to exit screen in lxc:
