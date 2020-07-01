@@ -6,6 +6,13 @@
 (global-set-key (kbd "M-=") 'text-scale-increase)
 (global-set-key (kbd "M--") 'text-scale-decrease)
 
+(global-set-key (kbd "A-a") '(lambda () (interactive) (insert-char ?á)))
+(global-set-key (kbd "A-e") '(lambda () (interactive) (insert-char ?é)))
+(global-set-key (kbd "A-i") '(lambda () (interactive) (insert-char ?í)))
+(global-set-key (kbd "A-o") '(lambda () (interactive) (insert-char ?ó)))
+(global-set-key (kbd "A-u") '(lambda () (interactive) (insert-char ?ú)))
+(global-set-key (kbd "A-n") '(lambda () (interactive) (insert-char ?ñ)))
+
 (require 'god-mode)
 ;;(global-set-key (kbd "<escape>") 'god-mode-all)
 ;;(global-set-key (kbd "C-<return>") 'god-mode-all)
