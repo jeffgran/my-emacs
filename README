@@ -7,7 +7,7 @@ this is just my personal setup. the only part  you might want is jg-functions/jg
 - pip install pygments
 
 
-- brew install cask
+- install cask via ssh | bash (homebrew install doesn't work as of now): https://cask.readthedocs.io/en/latest/guide/installation.html
 - cask install
 
 - brew install fuzzy-find
