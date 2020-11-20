@@ -1,10 +1,10 @@
 ;; JG functions
 
 (defun kill-all-buffers ()
-    "Kill all other buffers."
-    (interactive)
-    (mapc 'kill-buffer
-                (buffer-list)))
+  "Kill all other buffers."
+  (interactive)
+  (mapc 'kill-buffer
+        (buffer-list)))
 
 
 (defun demi-brolin ()
@@ -21,7 +21,7 @@
   (newline)
   (forward-line -1)
   (indent-for-tab-command)
-)
+  )
 
 (defun open-line-below ()
   (interactive)
@@ -29,7 +29,7 @@
   (open-line 1)
   (forward-line 1)
   (indent-for-tab-command)
-)
+  )
 
 (defun indent-buffer ()
   "Indent the currently visited buffer."
@@ -78,7 +78,7 @@
     ;; (if (file-exists-p (concat dir-path "TAGS"))
     ;;     (visit-project-tags)
     ;;   (build-ctags dir-path))
-))
+    ))
 
 
 ;; from the internet somewhere. stackoverflow I think
@@ -118,7 +118,7 @@
 (defun paste-unshift ()
   (interactive)
   (yank-pop -1)
-)
+  )
 
 
 ;; ==========================================================================
@@ -147,7 +147,7 @@
 (defun jg-ansi-colorize-buffer ()
   (interactive)
   (ansi-color-apply-on-region (point-min) (point-max))
-)
+  )
 
 
 ;; run a shell command and print the output at point
@@ -174,18 +174,27 @@
 (add-hook 'server-visit-hook 'fix-stdin-buffer)
 
 
+;;(defvar jg-shell-output-buffer "")
+;; (defun jg-shell-filter-long-lines (string)
+;;   (let* ((max-len (* 2 (window-width)))
+;;          (lines (split-string string "\n")))
+;;     (mapconcat '(lambda (s) (substring s 0 (min (length s) max-len))) lines "\n")
+;;     ))
+
+;; (add-hook 'comint-preoutput-filter-functions #'jg-shell-filter-long-lines)
+
 ;; from http://stackoverflow.com/questions/7987494/emacs-shell-mode-display-is-too-wide-after-splitting-window
-(defun comint-fix-window-size ()
-  "Change process window size."
-  (when (derived-mode-p 'comint-mode)
-    (set-process-window-size (get-buffer-process (current-buffer))
-                             (window-height)
-                             (window-width))))
-(defun my-shell-mode-hook ()
-  ;; add this hook as buffer local, so it runs once per window.
-  (add-hook 'window-configuration-change-hook 'comint-fix-window-size nil t)
-  (setq comint-input-autoexpand nil))
-(add-hook 'shell-mode-hook 'my-shell-mode-hook)
+;; (defun comint-fix-window-size ()
+;;   "Change process window size."
+;;   (when (derived-mode-p 'comint-mode)
+;;     (set-process-window-size (get-buffer-process (current-buffer))
+;;                              (window-height)
+;;                              (window-width))))
+;; (defun my-shell-mode-hook ()
+;;   ;; add this hook as buffer local, so it runs once per window.
+;;   (add-hook 'window-configuration-change-hook 'comint-fix-window-size nil t)
+;;   (setq comint-input-autoexpand nil))
+;; (add-hook 'shell-mode-hook 'my-shell-mode-hook)
 ;; ==========================================================================
 
 
@@ -204,7 +213,7 @@
       (setq shell-file-name "/bin/bash")
       ;; hack to at least set the default-directory to the home dir of the remote box
       (setq default-directory (concat "/ssh:" (buffer-name (current-buffer)) ":~"))
-    ))
+      ))
   ;; (call-interactively (ssh-directory-tracking-mode)) ;; used to work at OL but causes a weird hang on LT EC2 boxes :(
   )
 
@@ -386,7 +395,7 @@
 ;;             (backward-char (- (length text) 1))
 ;;             (move-to-column original-point-column)
 ;;             ))
-        
+
 ;;         (setq deactivate-mark nil)
 ;;         )))
 ;;    (t
@@ -471,7 +480,7 @@ there's a region, all lines that region covers will be duplicated."
 (defun select-whole-line-or-lines ()
   (interactive)
   (if (and mark-active (> (point) (mark)))
-    (exchange-point-and-mark))
+      (exchange-point-and-mark))
   (let ((end-pos (if mark-active (mark) (point))))
     (set-mark (line-beginning-position))
     (goto-char end-pos)
@@ -538,7 +547,7 @@ there's a region, all lines that region covers will be duplicated."
   (save-excursion
     (search-forward-regexp "[^ ]:" (point-max) t)
     (if (looking-at "[0-9]+")
-         (setq line-num (string-to-number (buffer-substring (match-beginning 0) (match-end 0))))))
+        (setq line-num (string-to-number (buffer-substring (match-beginning 0) (match-end 0))))))
   (if (ffap-file-at-point)
       (progn
         (find-file (ffap-file-at-point))

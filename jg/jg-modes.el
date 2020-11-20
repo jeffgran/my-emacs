@@ -22,6 +22,14 @@
       ))
 
 (require 'undo-tree)
+;; i stole this from the undo-tree code to override it because its "heuristic"
+;; to determine whether to *actually* enable global undo-tree-mode is wrong,
+;; and there is no variable/mechanism to stop this behavior.
+;; (define-globalized-minor-mode global-undo-tree-mode
+;;   undo-tree-mode turn-on-undo-tree-mode)
+(define-globalized-minor-mode jg-global-undo-tree-mode
+  undo-tree-mode undo-tree-mode)
+(jg-global-undo-tree-mode)
 
 
 (require 'ag)

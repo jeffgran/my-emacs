@@ -39,6 +39,7 @@
 (depends-on "ggtags")
 (depends-on "git-commit")
 (depends-on "git-timemachine")
+(depends-on "go-mode")
 (depends-on "god-mode")
 (depends-on "graphql-mode")
 (depends-on "grizzl")
