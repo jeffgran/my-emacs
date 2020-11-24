@@ -47,6 +47,9 @@ defaults write com.apple.symbolichotkeys.plist AppleSymbolicHotKeys -dict-add 64
     </dict>
   </dict>
 "
+# anyway, do this:
+# - system preferences -> Keyboard -> Shortcuts -> Spotlight -> Show Spotlight Search = cmd-/ (default conflicts with emacs)
+# - system preferences -> Keyboard -> Shortcuts -> Input Sources -> turn them off, they conflict with emacs
 
 
 # (restart to apply)

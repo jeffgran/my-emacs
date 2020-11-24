@@ -28,8 +28,6 @@
 (depends-on "expand-region")
 (depends-on "f")
 (depends-on "fiplr")
-(depends-on "fish-completion")
-(depends-on "fish-mode")
 (depends-on "flx")
 (depends-on "flx-ido")
 (depends-on "flycheck")
