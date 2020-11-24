@@ -277,6 +277,7 @@
 ;;(require 'shell-script-mode)
 (add-to-list 'auto-mode-alist '("\\.aliases$" . sh-mode))
 
+(add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
 
 
 ;; make comments automatically go to multiple lines for long ones
