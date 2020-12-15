@@ -50,6 +50,7 @@
 (depends-on "htmlize")
 (depends-on "idle-highlight-mode")
 (depends-on "ido-completing-read+")
+(depends-on "jenkinsfile-mode")
 (depends-on "jg-quicknav")
 (depends-on "js2-mode")
 (depends-on "json-mode")
