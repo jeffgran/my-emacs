@@ -478,7 +478,12 @@
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
-;;(require 'readline-complete)
+
+;; bash autocomplete working perfectly!
+(with-eval-after-load 'shell
+  (native-complete-setup-bash))
+(eval-after-load 'company
+  '(add-to-list 'company-backends 'company-native-complete))
 
 (setq tramp-shell-prompt-pattern ".*[#$%>)] *")
 
