@@ -10,16 +10,18 @@
 (setq save-place-file (concat emacs-root "saved-places"))
 (setq-default save-place t)
 
-;;only turn the tabs stuff on in windowed mode (not the terminal)
-(if window-system
-    (progn
-      ;; Elscreen (tabs/session management)
-      (elscreen-start)
-      (setq elscreen-tab-display-kill-screen nil) ;; turn off the [x] button for the mouse
-      (setq elscreen-tab-display-control nil) ;; turn off the <-> tab switch button for the mouse
-      (setq elscreen-display-screen-number nil) ;; turn off the tab number display in the mode-line
-      (require 'elscreen-buffer-group)
-      ))
+
+(projectile-mode +1)
+(setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
+(define-key projectile-mode-map (kbd "H-p") 'projectile-command-map)
+(require 'perspective)
+(global-set-key (kbd "C-x C-b") 'persp-list-buffers)
+;;(customize-set-variable 'persp-mode-prefix-key (kbd "C-x p"))
+(customize-set-variable 'persp-mode-prefix-key nil)
+(persp-mode)
+(require 'persp-projectile)
+(define-key projectile-command-map (kbd "p") 'projectile-persp-switch-project)
+(setq projectile-switch-project-action 'projectile-run-shell)
 
 (require 'undo-tree)
 ;; i stole this from the undo-tree code to override it because its "heuristic"
@@ -30,7 +32,7 @@
 (define-globalized-minor-mode jg-global-undo-tree-mode
   undo-tree-mode undo-tree-mode)
 (jg-global-undo-tree-mode)
-
+(setq undo-tree-auto-save-history nil)
 
 (require 'ag)
 (setq ag-group-matches nil)
@@ -98,12 +100,11 @@
                               (setq sml/no-confirm-load-theme t)
                               (sml/apply-theme 'respectful)))
 
-(require 'git-status-modeline)
-(git-status-modeline-global-mode)
 
 (require 'magit)
-;;(custom-set-variables '(magit-completing-read-function 'magit-ido-completing-read))
-;;(setq magit-completing-read-function 'magit-ido-completing-read)
+(with-eval-after-load 'magit
+  (require 'forge))
+(setq auth-sources '("~/.authinfo"))
 
 (column-number-mode 1)
 (size-indication-mode 1)
@@ -127,7 +128,6 @@
        sml/pos-id-separator
        mode-line-position
        smartrep-mode-line-string
-       ,git-status-modeline-element
        rbenv--modestring
        ;;(vc-mode vc-mode)
        sml/pre-modes-separator

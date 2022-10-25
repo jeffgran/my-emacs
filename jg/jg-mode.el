@@ -86,6 +86,8 @@
 (define-key jg-navigation-mode-map (kbd "M-2") 'split-window-below)
 (define-key jg-navigation-mode-map (kbd "M-3") 'split-window-right)
 
+;; project
+(define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-switch-project)
 
 ;;screens (tabs)
 (define-key jg-navigation-mode-map (kbd "M-t") 'elscreen-create)
@@ -129,7 +131,7 @@
 (define-key jg-navigation-mode-map (kbd "<escape>") 'keyboard-quit)
 
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
-(define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
+;;(define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
 
 (define-key jg-navigation-mode-map (kbd "C-x k") 'rake)
 
@@ -139,15 +141,18 @@
 ;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
 ;; (define-key jg-navigation-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
 ;; (define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'jg-switch-buffer)
-(define-key jg-navigation-mode-map (kbd "C-v") 'jg-switch-buffer)
+;; (define-key jg-navigation-mode-map (kbd "<C-tab>") 'jg-switch-buffer)
+;; (define-key jg-navigation-mode-map (kbd "C-v") 'jg-switch-buffer)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") 'projectile-switch-to-buffer)
+(define-key jg-navigation-mode-map (kbd "C-v") 'projectile-switch-to-buffer)
 
-(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
+;;(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
-(define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
+;;;(define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
-(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
+;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
+(define-key jg-navigation-mode-map (kbd "C-o") 'projectile-find-file)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
 (define-key jg-navigation-mode-map (kbd "C-/") '(lambda ()
                                                   (interactive)
@@ -292,7 +297,8 @@
 ;;*******************
 ;; Search/Replace/Etc
 ;;*******************
-(define-key jg-code-mode-map (kbd "C-S-f") 'ag)
+;;(define-key jg-code-mode-map (kbd "C-S-f") 'ag)
+(define-key jg-code-mode-map (kbd "C-S-f") 'projectile-ag)
 (define-key jg-code-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-code-mode-map (kbd "C-S-r") 'query-replace)
 
