@@ -73,7 +73,6 @@
 (depends-on "pbcopy")
 (depends-on "pcache")
 (depends-on "persistent-soft")
-(depends-on "phi-rectangle")
 (depends-on "php-mode")
 (depends-on "pkg-info")
 (depends-on "poly-markdown")

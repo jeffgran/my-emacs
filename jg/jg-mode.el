@@ -240,6 +240,8 @@
 (define-key jg-code-mode-map (kbd "H-l") 'downcase-dwim)
 (define-key jg-code-mode-map (kbd "H-u") 'downcase-dwim)
 
+(define-key jg-code-mode-map (kbd "C-H-n") 'mc/mark-next-lines)
+(define-key jg-code-mode-map (kbd "C-H-a") 'mc/mark-all-like-this-dwim)
 
 
 ;; new and improved! move line OR region up and down!
@@ -355,17 +357,6 @@
 ;; Other modes and hooks I have to "fix" to work with jg-mode
 ;; or want to change their internal maps to my liking
 ;; ==========================================================
-
-
-
-(require 'phi-rectangle)
-(define-key phi-rectangle-mode-map (kbd "C-<return>") nil)
-(define-key phi-rectangle-mode-map (kbd "M-H-<return>") 'phi-rectangle-set-mark-command)
-
-
-
-
-
 
 
 ;; company completion

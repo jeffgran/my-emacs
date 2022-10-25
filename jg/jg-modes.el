@@ -52,8 +52,6 @@
 
 
 
-(require 'phi-rectangle)
-(phi-rectangle-mode)
 (multiple-cursors-mode)
 (delete-selection-mode)
 

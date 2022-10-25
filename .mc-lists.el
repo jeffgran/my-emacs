@@ -3,11 +3,16 @@
 
 (setq mc/cmds-to-run-for-all
       '(
+        back-to-indentation-or-beginning
         backward-to-char
         clipboard-yank
+        jg-delete-region-or-paredit-delete
         keyboard-quit
         ))
 
 (setq mc/cmds-to-run-once
       '(
+        amx
+        markdown-outdent-or-delete
+        mc/mark-next-lines
         ))
