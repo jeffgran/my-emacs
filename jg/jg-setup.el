@@ -1,6 +1,10 @@
-; custom setup stuff.
+;; custom setup stuff.
 (require 'maxframe)
 (add-hook 'window-setup-hook 'maximize-frame t)
+
+;; "speed up buffers with long lines" who knows why
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
 
 (setq backup-directory-alist
       `((".*" . ,temporary-file-directory)))
@@ -15,34 +19,37 @@
 (setq split-height-threshold 9999
       split-width-threshold 160)
 
+(require 'epg)
+(setq epg-pinentry-mode 'loopback)
+
 (setq
-   backup-by-copying t                             ; don't clobber symlinks
-   backup-directory-alist '(("." . "~/.saves"))    ; don't litter my fs tree
-   delete-old-versions t
-   kept-new-versions 6
-   kept-old-versions 2
-   version-control t                               ; use versioned backups
-   x-select-enable-clipboard t
-   ;;shift-select-mode nil
-   ;;cua-highlight-region-shift-only nil
+ backup-by-copying t                          ; don't clobber symlinks
+ backup-directory-alist '(("." . "~/.saves")) ; don't litter my fs tree
+ delete-old-versions t
+ kept-new-versions 6
+ kept-old-versions 2
+ version-control t                      ; use versioned backups
+ x-select-enable-clipboard t
+ ;;shift-select-mode nil
+ ;;cua-highlight-region-shift-only nil
 
-   ;explicit-shell-file-name "/bin/bash"           ; for remote ssh sessions, for which shell to run remotely?
-   comint-scroll-to-bottom-on-output nil           ; always add output at the bottom
-   comint-scroll-to-bottom-on-input nil            ; always put input at the bottom 
-   ;;shell-command-switch "-ic"                    ; for local bash, use -ic instead of -c so i can use my bash_aliases
-   comint-scroll-show-maximum-output nil           ; don't scroll to bottom maybe?
-   comint-prompt-read-only t                       ; what it says
-   comint-buffer-maximum-size 10000                ; max scrollback size in comint/shell/etc
+                                        ;explicit-shell-file-name "/bin/bash"           ; for remote ssh sessions, for which shell to run remotely?
+ comint-scroll-to-bottom-on-output nil ; always add output at the bottom
+ comint-scroll-to-bottom-on-input nil ; always put input at the bottom
+ ;;shell-command-switch "-ic"                    ; for local bash, use -ic instead of -c so i can use my bash_aliases
+ comint-scroll-show-maximum-output nil ; don't scroll to bottom maybe?
+ comint-prompt-read-only t             ; what it says
+ comint-buffer-maximum-size 10000 ; max scrollback size in comint/shell/etc
 
 
-   enable-recursive-minibuffers t                  ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
+ enable-recursive-minibuffers t ; run a subcommand in a minibuffer to "pipe" the output from one to the other.
 
-   ;; dired
-   dired-listing-switches "-AlhopF"
+ ;; dired
+ dired-listing-switches "-AlhopF"
    
-   tags-add-tables t                               ; when loading up a second tags table, "add" it to the tags,
-                                                   ; instead of replacing (or asking which)
-)
+ tags-add-tables t ; when loading up a second tags table, "add" it to the tags,
+                                        ; instead of replacing (or asking which)
+ )
 
 (setq font-lock-global-modes t)
 

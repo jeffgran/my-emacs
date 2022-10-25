@@ -157,8 +157,22 @@
 (define-key jg-navigation-mode-map (kbd "C-<") 'back-button-global-backward)
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
 ;; same, but only within the current file
-(define-key jg-navigation-mode-map (kbd "C-,") 'back-button-local-backward)
-(define-key jg-navigation-mode-map (kbd "C-.") 'back-button-local-forward)
+(define-key jg-navigation-mode-map (kbd "C-,") 'jg-back-button)
+(define-key jg-navigation-mode-map (kbd "C-.") 'jg-forward-button)
+
+(defun jg-back-button ()
+  (interactive)
+  (cond ((minibufferp) (selectrum-backward-kill-sexp))
+        (t (back-button-local-backward) )))
+
+(defun jg-forward-button ()
+  (interactive)
+  (cond ((minibufferp) nil)
+        (t (back-button-local-forward) )))
+
+;; lsp mode
+(define-key jg-navigation-mode-map (kbd "A-M-.") 'lsp-find-definition)
+
 
 ;; (define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
 
@@ -173,9 +187,8 @@
 ;; i guess exiting completely is navigation
 (define-key jg-navigation-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 
-;; smex is M-x but like ido-mode. sweet!
-(define-key jg-navigation-mode-map (kbd "A-x") 'smex)
-
+;; amx is m-x but with auto-completion
+(define-key jg-navigation-mode-map (kbd "A-x") 'amx)
 
 ;; let's put the shell commands under the M-s prefix
 (define-key jg-navigation-mode-map (kbd "C-A-s") 'jg-new-shell) ;; new shell in the current project root
@@ -221,6 +234,9 @@
 (define-key jg-navigation-mode-map (kbd "M-x") 'kill-region)
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
 
+
+(define-key jg-code-mode-map (kbd "A-l") 'downcase-dwim)
+(define-key jg-code-mode-map (kbd "A-u") 'downcase-dwim)
 
 
 
@@ -342,7 +358,7 @@
 
 (require 'phi-rectangle)
 (define-key phi-rectangle-mode-map (kbd "C-<return>") nil)
-(define-key phi-rectangle-mode-map (kbd "C-M-<return>") 'phi-rectangle-set-mark-command)
+(define-key phi-rectangle-mode-map (kbd "M-A-<return>") 'phi-rectangle-set-mark-command)
 
 
 
@@ -374,12 +390,12 @@
 
 
 ;; for some reason they don't take effect unless I bind them every time, in this hook.
-(add-hook 'ido-setup-hook 'ido-jg-keys)
-(defun ido-jg-keys ()
-  "Add my keybindings for ido."
-  (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-  (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)
-  )
+;; (add-hook 'ido-setup-hook 'ido-jg-keys)
+;; (defun ido-jg-keys ()
+;;   "Add my keybindings for ido."
+;;   (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
+;;   (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)
+;;   )
 
 
 
@@ -397,7 +413,8 @@
 (defun disable-jg-code-mode ()
   (jg-code-mode 0))
 
-(add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
+;;(add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
+(add-hook 'minibuffer-setup-hook '(lambda () (interactive) (disable-jg-code-mode) (define-key jg-navigation-mode-map (kbd "C-,") nil)))
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)
@@ -461,7 +478,7 @@
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
 (define-key dired-mode-map "q" 'kill-this-buffer)
 (define-key dired-mode-map (kbd "C-g") 'kill-this-buffer)
-(define-key dired-mode-map (kbd "A-x") 'smex)
+(define-key dired-mode-map (kbd "A-x") 'amx)
 (define-key dired-mode-map (kbd "M-0") 'other-window)
 (define-key dired-mode-map (kbd "M-1") 'delete-other-windows)
 
@@ -528,3 +545,6 @@
 
 
 (define-key c++-mode-map (kbd "TAB") nil)
+
+(define-key selectrum-minibuffer-map (kbd "C-,") 'selectrum-backward-kill-sexp)
+(define-key selectrum-minibuffer-map (kbd "C-.") 'selectrum-select-from-history)

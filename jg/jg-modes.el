@@ -104,7 +104,7 @@
 (git-status-modeline-global-mode)
 
 (require 'magit)
-(custom-set-variables '(magit-completing-read-function 'magit-ido-completing-read))
+;;(custom-set-variables '(magit-completing-read-function 'magit-ido-completing-read))
 ;;(setq magit-completing-read-function 'magit-ido-completing-read)
 
 (column-number-mode 1)
@@ -157,8 +157,11 @@
 ;; (setq ruby-align-to-stmt-keywords nil)
 ;; (setq ruby-indent-level 2)
 
+
 (require 'enh-ruby-mode)
 (add-hook 'enh-ruby-mode-hook 'erm-define-faces)
+
+
 (setq enh-ruby-program "~/.rbenv/shims/ruby") ; so that still works if ruby points to ruby1.8 or jruby
 (setq ruby-insert-encoding-magic-comment nil) ; for ruby-mode
 (setq enh-ruby-add-encoding-comment-on-save nil) ; for enh-ruby-mode
@@ -174,12 +177,43 @@
 
 
 ;; Markdown support
-(autoload 'markdown-mode "markdown-mode.el"
-  "Major mode for editing Markdown files" t)
-(add-to-list 'auto-mode-alist '("\\.text$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.txt$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
-(add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+;; (autoload 'markdown-mode "markdown-mode.el"
+;;   "Major mode for editing Markdown files" t)
+;; (add-to-list 'auto-mode-alist '("\\.text$" . markdown-mode))
+;; (add-to-list 'auto-mode-alist '("\\.txt$" . markdown-mode))
+;; (add-to-list 'auto-mode-alist '("\\.md$" . markdown-mode))
+;; (add-to-list 'auto-mode-alist '("\\.markdown$" . markdown-mode))
+(require 'markdown-mode)
+(require 'poly-markdown)
+
+;; use web mode for html snippets inside markdown mode.
+;; example:
+;; ## Markdown header
+;; <>
+;; <div> some html code </div>
+;; </>
+;; (define-innermode poly-markdown-web-mode-innermode poly-markdown-root-innermode
+;;   :mode 'web-mode
+;;   ;; :head-matcher (cons "^<>$" 1)
+;;   ;; :tail-matcher (cons "^</>$" 1)
+;;   :head-matcher "^###"
+;;   :tail-matcher "^---"
+;;   )
+(define-innermode poly-markdown-web-innermode
+  :mode 'web-mode
+  :head-matcher "^<!-- html -->$"
+  :tail-matcher "^<!-- /html -->$"
+  :head-mode 'host
+  :tail-mode 'host)
+
+(define-polymode poly-markdown-mode
+  :hostmode 'poly-markdown-hostmode
+  :innermodes '(poly-markdown-fenced-code-innermode
+                ;; poly-markdown-inline-code-innermode
+                poly-markdown-web-innermode
+                poly-markdown-displayed-math-innermode
+                poly-markdown-inline-math-innermode
+                poly-markdown-yaml-metadata-innermode))
 
 
 ;; php mode
@@ -277,8 +311,9 @@
 ;;(require 'shell-script-mode)
 (add-to-list 'auto-mode-alist '("\\.aliases$" . sh-mode))
 
+;; terraform
 (add-hook 'terraform-mode-hook #'terraform-format-on-save-mode)
-
+(company-terraform-init)
 
 
 
@@ -293,7 +328,6 @@
 
   ;;(flycheck-mode)
 
-  (local-set-key (kbd "A-M-.") 'lsp-goto-type-definition)
   ;; Key bindings specific to go-mode
   ;; (local-set-key (kbd "M-.") 'godef-jump)         ; Go to definition
   ;; (local-set-key (kbd "M-*") 'pop-tag-mark)       ; Return from whence you came
@@ -353,11 +387,19 @@
 (add-to-list 'auto-mode-alist '("Fastfile" . enh-ruby-mode))
 
 
-(require 'ansi-color)
+(require 'xterm-color)
+(setq comint-output-filter-functions
+      (remove 'ansi-color-process-output comint-output-filter-functions))
 
-(autoload 'ansi-color-for-comint-mode-on "ansi-color" nil t)
-(add-to-list 'comint-output-filter-functions 'ansi-color-process-output)
-(add-hook 'shell-mode-hook 'ansi-color-for-comint-mode-on)
+(add-hook 'shell-mode-hook
+          (lambda ()
+            ;; Disable font-locking in this buffer to improve performance
+            (font-lock-mode -1)
+            ;; Prevent font-locking from being re-enabled in this buffer
+            (make-local-variable 'font-lock-function)
+            (setq font-lock-function (lambda (_) nil))
+            (add-hook 'comint-preoutput-filter-functions 'xterm-color-filter nil t)))
+
 
 (set-face-attribute 'comint-highlight-prompt nil
                     :inherit nil) ; don't override the prompt colors
@@ -399,9 +441,16 @@
 (require 'linum)
 (global-linum-mode 1)
 
+;; successor to smex. better M-x
+(amx-mode)
 
-(require 'flx-ido)
-(flx-ido-mode)
+;; minibuffer completions vertical display
+(selectrum-mode)
+(selectrum-prescient-mode) ; not just prefix matching in minibuffer completions
+(hotfuzz-selectrum-mode)   ; fuzzy matching in completion
+
+;;(setq selectrum-display-action '(display-buffer-in-tab)) ;; there are different options
+(setq selectrum-display-action nil) ;; default
 
 
 (require 'ws-butler)
@@ -418,20 +467,20 @@
                                          (kill-buffer buff))))))))
 
 ;; term-mode 
-(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
+;;(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
 (add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)
 
 
-(defadvice display-message-or-buffer (before ansi-color activate)
-  "Process ANSI color codes in shell output."
-  (let ((buf (ad-get-arg 0)))
-    (and (bufferp buf)
-         (string= (buffer-name buf) "*Shell Command Output*")
-         (with-current-buffer buf
-           (ansi-color-apply-on-region (point-min) (point-max))))))
+;; (defadvice display-message-or-buffer (before ansi-color activate)
+;;   "Process ANSI color codes in shell output."
+;;   (let ((buf (ad-get-arg 0)))
+;;     (and (bufferp buf)
+;;          (string= (buffer-name buf) "*Shell Command Output*")
+;;          (with-current-buffer buf
+;;            (ansi-color-apply-on-region (point-min) (point-max))))))
 
 
 (when (memq window-system '(mac ns))
@@ -515,3 +564,6 @@
 (require 'keyfreq)
 (keyfreq-mode 1)
 (keyfreq-autosave-mode 1)
+
+
+(require 'ql-mode-base)

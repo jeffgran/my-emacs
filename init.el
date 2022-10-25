@@ -29,16 +29,18 @@
  '(coffee-tab-width 2)
  '(css-indent-offset 2)
  '(custom-safe-themes
-   '("21d5f90e7565c1edc6db8cd4ae7adb7b81e0fa4f1be2726bfdbbd9ab7dbfbd6d" "e6d2471579829f38c348f5fb922e273eff858c7c7687bfa870f075552d9dbfa7" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "c5a044ba03d43a725bd79700087dea813abcb6beb6be08c7eb3303ed90782482" "c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "2a953a5d70fdfb1aeb07b81b3c3d703d5ed0359f932896a49b45784ef3b37dfa" default))
+   '("ba96b8d2777bf30a3271fd30df875bb160091256e5aafd9f66b957b0226134ba" "256eb7e5f550e24d99e6b6688e456092849741727671898cd00a2ce7ca28f7d7" "5c62e00d7803ff8201ab684a611b6f7e45838628dffe29ca393369126b6fc9e1" "21d5f90e7565c1edc6db8cd4ae7adb7b81e0fa4f1be2726bfdbbd9ab7dbfbd6d" "e6d2471579829f38c348f5fb922e273eff858c7c7687bfa870f075552d9dbfa7" "6a37be365d1d95fad2f4d185e51928c789ef7a4ccf17e7ca13ad63a8bf5b922f" "c5a044ba03d43a725bd79700087dea813abcb6beb6be08c7eb3303ed90782482" "c74e83f8aa4c78a121b52146eadb792c9facc5b1f02c917e3dbb454fca931223" "3c83b3676d796422704082049fc38b6966bcad960f896669dfc21a7a37a748fa" "2a953a5d70fdfb1aeb07b81b3c3d703d5ed0359f932896a49b45784ef3b37dfa" default))
+ '(enh-ruby-bounce-deep-indent nil)
+ '(enh-ruby-hanging-paren-deep-indent-level 2)
+ '(enh-ruby-program "~/.rbenv/shims/ruby")
  '(fci-rule-color "#102b53")
  '(flycheck-javascript-flow-args nil)
  '(js2-basic-offset 2 t)
  '(jsx-indent-level 2)
- '(magit-completing-read-function 'magit-ido-completing-read)
  '(magit-push-arguments nil)
  '(markdown-command "maruku")
  '(package-selected-packages
-   '(company-native-complete company-go flymake-go jenkinsfile-mode go-mode tide elixir-mode graphql-mode lsp-typescript company-lsp lsp-mode lsp-sourcekit company-terraform terraform-mode swift-mode web-mode fish-completion fish-mode helm-fuzzy-find enh-ruby-mode rubocop undo-tree dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smex smartparens smart-mode-line slim-mode scad-mode rust-mode ruby-additional rspec-mode redo+ rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn maxframe markdown-mode magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav ido-completing-read+ idle-highlight-mode htmlize haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask flx-ido fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap))
+   '(xterm-color hotfuzz selectrum-prescient amx selectrum k8s-mode poly-markdown lsp-mode company-native-complete company-go flymake-go jenkinsfile-mode tide elixir-mode graphql-mode lsp-typescript company-terraform swift-mode web-mode fish-completion fish-mode helm-fuzzy-find enh-ruby-mode rubocop undo-tree dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler vkill vimrc-mode use-package unicode-fonts swbuff ssh smooth-scroll smartparens smart-mode-line slim-mode scad-mode rust-mode ruby-additional rspec-mode redo+ rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode phi-rectangle pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn maxframe magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav idle-highlight-mode htmlize haml-mode god-mode git-timemachine ggtags flycheck-package flycheck-cask fiplr expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap))
  '(server-kill-new-buffers t)
  '(speedbar-frame-parameters
    '((minibuffer)

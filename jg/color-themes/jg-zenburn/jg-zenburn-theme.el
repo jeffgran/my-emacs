@@ -74,7 +74,7 @@
       (jg-zenburn-red-4 "#6d0028")
       (jg-zenburn-red-5 "#3d0008")
 
-      (jg-zenburn-orange "#FF8b49")
+      (jg-zenburn-orange "#efb039")
       (jg-zenburn-orange-1 "#e55517")
       (jg-zenburn-orange-2 "#b94300")
       (jg-zenburn-orange-3 "#972100")
@@ -200,10 +200,10 @@
    `(font-lock-doc-face ((t (:foreground ,jg-zenburn-cyan+1))))
    `(font-lock-doc-string-face ((t (:foreground ,jg-zenburn-cyan))))
    `(font-lock-function-name-face ((t (:foreground ,jg-zenburn-blue+3))))
-   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue+1 :weight normal))))
+   `(font-lock-keyword-face ((t (:foreground ,jg-zenburn-blue+2 :weight normal))))
    `(font-lock-negation-char-face ((t (:foreground ,jg-zenburn-fg))))
-   `(font-lock-preprocessor-face ((t (:foreground ,jg-zenburn-blue+1))))
-   `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange-1))))
+   `(font-lock-preprocessor-face ((t (:foreground ,jg-zenburn-blue+2))))
+   `(font-lock-string-face ((t (:foreground ,jg-zenburn-orange))))
    `(font-lock-type-face ((t (:foreground ,jg-zenburn-green))))
    `(font-lock-variable-name-face ((t (:foreground ,jg-zenburn-yellow))))
    `(font-lock-warning-face ((t (:foreground ,jg-zenburn-yellow-1 :weight bold :underline t))))
@@ -218,7 +218,7 @@
 
    ;; ruby stuff
    `(ruby-op-face ((t (:foreground ,jg-zenburn-cyan+1))))
-   `(ruby-string-delimiter-face ((t (:foreground ,jg-zenburn-orange-2))))
+   `(ruby-string-delimiter-face ((t (:foreground ,jg-zenburn-orange-1))))
    ;;`(ruby-heredoc-delimiter-face ((t (:foreground ,jg-zenburn-orange-1))))
    
 
@@ -478,8 +478,8 @@
    `(helm-candidate-number ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg-1))))
 
    ;; hl-line-mode
-   `(hl-line-face ((t (:background ,jg-zenburn-blue-5))))
-   `(hl-line ((t (:background ,jg-zenburn-blue-5))))
+   `(hl-line-face ((t (:background ,jg-zenburn-blue-6))))
+   `(hl-line ((t (:background ,jg-zenburn-blue-6))))
 
    ;; hl-sexp
    `(hl-sexp-face ((,class (:background ,jg-zenburn-bg+1))
