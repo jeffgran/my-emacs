@@ -6,12 +6,14 @@
 (global-set-key (kbd "M-=") 'text-scale-increase)
 (global-set-key (kbd "M--") 'text-scale-decrease)
 
-(global-set-key (kbd "A-a") '(lambda () (interactive) (insert-char ?á)))
-(global-set-key (kbd "A-e") '(lambda () (interactive) (insert-char ?é)))
-(global-set-key (kbd "A-i") '(lambda () (interactive) (insert-char ?í)))
-(global-set-key (kbd "A-o") '(lambda () (interactive) (insert-char ?ó)))
-(global-set-key (kbd "A-u") '(lambda () (interactive) (insert-char ?ú)))
-(global-set-key (kbd "A-n") '(lambda () (interactive) (insert-char ?ñ)))
+(setq ns-alternate-modifier 'hyper)
+
+(global-set-key (kbd "H-a") '(lambda () (interactive) (insert-char ?á)))
+(global-set-key (kbd "H-e") '(lambda () (interactive) (insert-char ?é)))
+(global-set-key (kbd "H-i") '(lambda () (interactive) (insert-char ?í)))
+(global-set-key (kbd "H-o") '(lambda () (interactive) (insert-char ?ó)))
+(global-set-key (kbd "H-u") '(lambda () (interactive) (insert-char ?ú)))
+(global-set-key (kbd "H-n") '(lambda () (interactive) (insert-char ?ñ)))
 
 (require 'god-mode)
 ;;(global-set-key (kbd "<escape>") 'god-mode-all)
@@ -92,16 +94,16 @@
 (define-key jg-navigation-mode-map (kbd "<C-M-left>") 'elscreen-previous)
 (define-key jg-navigation-mode-map (kbd "M-}") 'elscreen-next)
 (define-key jg-navigation-mode-map (kbd "<C-M-right>") 'elscreen-next)
-(define-key jg-navigation-mode-map (kbd "A-0") '(lambda () (interactive) (elscreen-goto 0)))
-(define-key jg-navigation-mode-map (kbd "A-1") '(lambda () (interactive) (elscreen-goto 1)))
-(define-key jg-navigation-mode-map (kbd "A-2") '(lambda () (interactive) (elscreen-goto 2)))
-(define-key jg-navigation-mode-map (kbd "A-3") '(lambda () (interactive) (elscreen-goto 3)))
-(define-key jg-navigation-mode-map (kbd "A-4") '(lambda () (interactive) (elscreen-goto 4)))
-(define-key jg-navigation-mode-map (kbd "A-5") '(lambda () (interactive) (elscreen-goto 5)))
-(define-key jg-navigation-mode-map (kbd "A-6") '(lambda () (interactive) (elscreen-goto 6)))
-(define-key jg-navigation-mode-map (kbd "A-7") '(lambda () (interactive) (elscreen-goto 7)))
-(define-key jg-navigation-mode-map (kbd "A-8") '(lambda () (interactive) (elscreen-goto 8)))
-(define-key jg-navigation-mode-map (kbd "A-9") '(lambda () (interactive) (elscreen-goto 9)))
+(define-key jg-navigation-mode-map (kbd "H-0") '(lambda () (interactive) (elscreen-goto 0)))
+(define-key jg-navigation-mode-map (kbd "H-1") '(lambda () (interactive) (elscreen-goto 1)))
+(define-key jg-navigation-mode-map (kbd "H-2") '(lambda () (interactive) (elscreen-goto 2)))
+(define-key jg-navigation-mode-map (kbd "H-3") '(lambda () (interactive) (elscreen-goto 3)))
+(define-key jg-navigation-mode-map (kbd "H-4") '(lambda () (interactive) (elscreen-goto 4)))
+(define-key jg-navigation-mode-map (kbd "H-5") '(lambda () (interactive) (elscreen-goto 5)))
+(define-key jg-navigation-mode-map (kbd "H-6") '(lambda () (interactive) (elscreen-goto 6)))
+(define-key jg-navigation-mode-map (kbd "H-7") '(lambda () (interactive) (elscreen-goto 7)))
+(define-key jg-navigation-mode-map (kbd "H-8") '(lambda () (interactive) (elscreen-goto 8)))
+(define-key jg-navigation-mode-map (kbd "H-9") '(lambda () (interactive) (elscreen-goto 9)))
 
 
 ;;buffers
@@ -171,7 +173,7 @@
         (t (back-button-local-forward) )))
 
 ;; lsp mode
-(define-key jg-navigation-mode-map (kbd "A-M-.") 'lsp-find-definition)
+(define-key jg-navigation-mode-map (kbd "H-M-.") 'lsp-find-definition)
 
 
 ;; (define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
@@ -179,8 +181,8 @@
 ;; isearch
 (define-key jg-navigation-mode-map (kbd "M-f") 'isearch-forward)
 (define-key jg-navigation-mode-map (kbd "M-r") 'isearch-backward)
-;; (define-key jg-navigation-mode-map (kbd "A-f") 'flex-isearch-forward)
-;; (define-key jg-navigation-mode-map (kbd "A-r") 'flex-isearch-backward)
+;; (define-key jg-navigation-mode-map (kbd "H-f") 'flex-isearch-forward)
+;; (define-key jg-navigation-mode-map (kbd "H-r") 'flex-isearch-backward)
 
 
 
@@ -188,10 +190,10 @@
 (define-key jg-navigation-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 
 ;; amx is m-x but with auto-completion
-(define-key jg-navigation-mode-map (kbd "A-x") 'amx)
+(define-key jg-navigation-mode-map (kbd "H-x") 'amx)
 
 ;; let's put the shell commands under the M-s prefix
-(define-key jg-navigation-mode-map (kbd "C-A-s") 'jg-new-shell) ;; new shell in the current project root
+(define-key jg-navigation-mode-map (kbd "C-H-s") 'jg-new-shell) ;; new shell in the current project root
 ;; (define-key jg-navigation-mode-map (kbd "M-s a") 'shell-command)
 ;; (define-key jg-navigation-mode-map (kbd "M-s a") nil)
 ;; (define-key jg-navigation-mode-map (kbd "M-s o") 'async-shell-command) ;; Shell command, insert output Other buffer.
@@ -235,8 +237,8 @@
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
 
 
-(define-key jg-code-mode-map (kbd "A-l") 'downcase-dwim)
-(define-key jg-code-mode-map (kbd "A-u") 'downcase-dwim)
+(define-key jg-code-mode-map (kbd "H-l") 'downcase-dwim)
+(define-key jg-code-mode-map (kbd "H-u") 'downcase-dwim)
 
 
 
@@ -303,9 +305,9 @@
 (define-key jg-code-mode-map (kbd "C-{") 'css-curlies)
 (define-key jg-code-mode-map (kbd "C-#") 'comment-or-uncomment-region)
 ;;(define-key jg-code-mode-map (kbd "TAB") 'hippie-expand)
-(define-key jg-code-mode-map (kbd "A-q") 'fill-paragraph)
+(define-key jg-code-mode-map (kbd "H-q") 'fill-paragraph)
 
-(define-key jg-navigation-mode-map (kbd "A-SPC") '(lambda () (interactive) (insert-char ?_ 1)))
+(define-key jg-navigation-mode-map (kbd "H-SPC") '(lambda () (interactive) (insert-char ?_ 1)))
 
 
 
@@ -358,7 +360,7 @@
 
 (require 'phi-rectangle)
 (define-key phi-rectangle-mode-map (kbd "C-<return>") nil)
-(define-key phi-rectangle-mode-map (kbd "M-A-<return>") 'phi-rectangle-set-mark-command)
+(define-key phi-rectangle-mode-map (kbd "M-H-<return>") 'phi-rectangle-set-mark-command)
 
 
 
@@ -405,7 +407,7 @@
 (define-key isearch-mode-map (kbd "TAB") 'isearch-complete)
 (define-key isearch-mode-map (kbd "C-w") 'isearch-yank-symbol-string)
 (define-key isearch-mode-map (kbd "M-i") 'isearch-yank-word-or-char)
-(define-key isearch-mode-map (kbd "A-z") 'isearch-toggle-regexp)
+(define-key isearch-mode-map (kbd "H-z") 'isearch-toggle-regexp)
 (define-key minibuffer-local-isearch-map (kbd "TAB") 'isearch-complete-edit)
 
 
@@ -478,7 +480,7 @@
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
 (define-key dired-mode-map "q" 'kill-this-buffer)
 (define-key dired-mode-map (kbd "C-g") 'kill-this-buffer)
-(define-key dired-mode-map (kbd "A-x") 'amx)
+(define-key dired-mode-map (kbd "H-x") 'amx)
 (define-key dired-mode-map (kbd "M-0") 'other-window)
 (define-key dired-mode-map (kbd "M-1") 'delete-other-windows)
 
@@ -522,7 +524,7 @@
 (define-key ssh-mode-map (kbd "TAB") nil)
 
 ;; scratch buffer
-;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
+                                        ;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
 
 
 
