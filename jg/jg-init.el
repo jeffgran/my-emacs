@@ -1,4 +1,7 @@
-;; color theme stuff. 
+(setq custom-file "~/.emacs.d/jg/custom.el")
+(load custom-file)
+
+;; color theme stuff.
 (add-to-list 'custom-theme-load-path (concat emacs-root "jg/color-themes/jg-zenburn"))
 (load-theme 'jg-zenburn t)
 

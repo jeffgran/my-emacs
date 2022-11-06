@@ -23,6 +23,8 @@
 (require 'persp-projectile)
 (setq projectile-switch-project-action 'projectile-run-shell)
 (add-hook 'kill-emacs-hook #'persp-state-save)
+(setq persp-show-modestring 'header)
+(setq persp-modestring-short nil)
 
 (require 'avy)
 
@@ -77,12 +79,12 @@
 
 (global-subword-mode 1)
 
-(require 'smart-mode-line)
-(add-hook 'after-init-hook #'(lambda ()
-                               (sml/setup)
-                               (setq sml/no-confirm-load-theme t)
-                               (sml/apply-theme 'respectful)))
 
+(require 'doom-modeline)
+(setq doom-modeline-height 16)
+;;(setq doom-modeline-persp-name nil)
+(doom-modeline-mode +1)
+(setq global-mode-string (delete '(:eval (persp-mode-line)) global-mode-string))
 
 (require 'magit)
 (with-eval-after-load 'magit
@@ -91,34 +93,6 @@
 
 (column-number-mode 1)
 (size-indication-mode 1)
-
-;; (require 'rbenv)
-;; (global-rbenv-mode)
-
-;; sml weirdly puts the cursor location info in this... undo that.
-(setq-default mode-line-front-space "")
-
-(setq-default mode-line-format
-              `(
-                "%e"
-                mode-line-front-space
-                mode-line-mule-info
-                mode-line-client
-                mode-line-modified
-                mode-line-remote
-                mode-line-frame-identification
-                mode-line-buffer-identification
-                sml/pos-id-separator
-                mode-line-position
-                smartrep-mode-line-string
-                rbenv--modestring
-                ;;(vc-mode vc-mode)
-                sml/pre-modes-separator
-                mode-line-modes
-                mode-line-misc-info
-                mode-line-end-spaces
-                ))
-
 
 
 ;; stolen from ruby-mode to make expand-region work with enhanced ruby mode
@@ -151,6 +125,7 @@
 (require 'lsp-mode)
 (setq lsp-keymap-prefix "H-l")
 (define-key lsp-mode-map (kbd "H-l") lsp-command-map)
+(setq lsp-headerline-breadcrumb-enable nil)
 
 
 ;; (require 'lsp-sourcekit)

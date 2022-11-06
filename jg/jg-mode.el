@@ -99,6 +99,7 @@
 (define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-switch-project)
 
 ;;screens (tabs)
+(define-key jg-navigation-mode-map (kbd "M-w") #'(lambda () (interactive) (persp-kill (persp-current-name))))
 (define-key jg-navigation-mode-map (kbd "M-{") 'persp-prev)
 (define-key jg-navigation-mode-map (kbd "M-}") 'persp-next)
 

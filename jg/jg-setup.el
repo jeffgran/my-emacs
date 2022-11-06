@@ -6,6 +6,8 @@
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
 
+(setq find-file-visit-truename t)
+
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq split-height-threshold 9999
@@ -85,6 +87,3 @@
       (setq find-program "C:/GnuWin32/bin/find.exe")
       (setq grep-program "C:/GnuWin32/bin/grep.exe")
       ))
-
-(setq custom-file "~/.emacs.d/jg/custom.el")
-(load custom-file)
