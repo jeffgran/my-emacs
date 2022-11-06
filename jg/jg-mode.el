@@ -8,19 +8,28 @@
 
 (setq ns-alternate-modifier 'hyper)
 
-(global-set-key (kbd "H-a") '(lambda () (interactive) (insert-char ?á)))
-(global-set-key (kbd "H-e") '(lambda () (interactive) (insert-char ?é)))
-(global-set-key (kbd "H-i") '(lambda () (interactive) (insert-char ?í)))
-(global-set-key (kbd "H-o") '(lambda () (interactive) (insert-char ?ó)))
-(global-set-key (kbd "H-u") '(lambda () (interactive) (insert-char ?ú)))
-(global-set-key (kbd "H-n") '(lambda () (interactive) (insert-char ?ñ)))
+(global-set-key (kbd "H-a") #'(lambda () (interactive) (insert-char ?á)))
+(global-set-key (kbd "H-e") #'(lambda () (interactive) (insert-char ?é)))
+(global-set-key (kbd "H-i") #'(lambda () (interactive) (insert-char ?í)))
+(global-set-key (kbd "H-o") #'(lambda () (interactive) (insert-char ?ó)))
+(global-set-key (kbd "H-u") #'(lambda () (interactive) (insert-char ?ú)))
+(global-set-key (kbd "H-n") #'(lambda () (interactive) (insert-char ?ñ)))
 
-(require 'god-mode)
-;;(global-set-key (kbd "<escape>") 'god-mode-all)
-;;(global-set-key (kbd "C-<return>") 'god-mode-all)
-(define-key god-local-mode-map (kbd "i") 'god-local-mode)
 ;;(define-key god-local-mode-map (kbd "c") 'kill-ring-save)
 
+;; persp/projectile stuff
+(global-set-key (kbd "C-x C-b") 'persp-list-buffers)
+(define-key projectile-mode-map (kbd "H-p") 'projectile-command-map)
+(customize-set-variable 'persp-mode-prefix-key (kbd "H-M-p"))
+(define-key projectile-command-map (kbd "p") 'projectile-persp-switch-project)
+(customize-set-variable 'persp-mode-prefix-key nil)
+
+;; avy
+(global-unset-key (kbd "M-j"))
+(global-set-key (kbd "M-j o") 'avy-goto-char)
+(global-set-key (kbd "M-j t") 'avy-goto-char-2)
+(global-set-key (kbd "M-j s") 'avy-goto-char-timer)
+(global-set-key (kbd "M-j l") 'avy-goto-line)
 
 (defvar jg-code-mode-map (make-sparse-keymap) "jg-code-mode-map.")
 (defvar jg-navigation-mode-map (make-sparse-keymap) "jg-navigation-mode-map.")
@@ -37,7 +46,7 @@
 (define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
 
 ;; real toggle mark command. how does this not exist? but it doesn't
-(define-key jg-navigation-mode-map (kbd "C-f") '(lambda ()
+(define-key jg-navigation-mode-map (kbd "C-f") #'(lambda ()
                                                   (interactive)
                                                   (if (region-active-p)
                                                       (deactivate-mark)
@@ -90,22 +99,9 @@
 (define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-switch-project)
 
 ;;screens (tabs)
-(define-key jg-navigation-mode-map (kbd "M-t") 'elscreen-create)
-(define-key jg-navigation-mode-map (kbd "M-w") 'elscreen-kill)
-(define-key jg-navigation-mode-map (kbd "M-{") 'elscreen-previous)
-(define-key jg-navigation-mode-map (kbd "<C-M-left>") 'elscreen-previous)
-(define-key jg-navigation-mode-map (kbd "M-}") 'elscreen-next)
-(define-key jg-navigation-mode-map (kbd "<C-M-right>") 'elscreen-next)
-(define-key jg-navigation-mode-map (kbd "H-0") '(lambda () (interactive) (elscreen-goto 0)))
-(define-key jg-navigation-mode-map (kbd "H-1") '(lambda () (interactive) (elscreen-goto 1)))
-(define-key jg-navigation-mode-map (kbd "H-2") '(lambda () (interactive) (elscreen-goto 2)))
-(define-key jg-navigation-mode-map (kbd "H-3") '(lambda () (interactive) (elscreen-goto 3)))
-(define-key jg-navigation-mode-map (kbd "H-4") '(lambda () (interactive) (elscreen-goto 4)))
-(define-key jg-navigation-mode-map (kbd "H-5") '(lambda () (interactive) (elscreen-goto 5)))
-(define-key jg-navigation-mode-map (kbd "H-6") '(lambda () (interactive) (elscreen-goto 6)))
-(define-key jg-navigation-mode-map (kbd "H-7") '(lambda () (interactive) (elscreen-goto 7)))
-(define-key jg-navigation-mode-map (kbd "H-8") '(lambda () (interactive) (elscreen-goto 8)))
-(define-key jg-navigation-mode-map (kbd "H-9") '(lambda () (interactive) (elscreen-goto 9)))
+(define-key jg-navigation-mode-map (kbd "M-{") 'persp-prev)
+(define-key jg-navigation-mode-map (kbd "M-}") 'persp-next)
+
 
 
 ;;buffers
@@ -130,7 +126,6 @@
 (define-key jg-navigation-mode-map (kbd "<help>") 'set-mark-command)
 (define-key jg-navigation-mode-map (kbd "<escape>") 'keyboard-quit)
 
-(define-key jg-navigation-mode-map (kbd "C-S-o") 'fiplr-find-file)
 ;;(define-key jg-navigation-mode-map (kbd "C-x p") 'ido-jg-set-project-root)
 
 (define-key jg-navigation-mode-map (kbd "C-x k") 'rake)
@@ -138,23 +133,19 @@
 
 (define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
-;;buffer switching. thanks to jg-elscreen-buffer-list, only switches buffer within the current tab.
-;; (define-key jg-navigation-mode-map (kbd "<C-tab>") 'wcy-switch-buffer-forward)
-;; (define-key jg-navigation-mode-map (kbd "<C-S-tab>") 'wcy-switch-buffer-backward)
-;; (define-key jg-navigation-mode-map (kbd "<C-tab>") 'jg-switch-buffer)
-;; (define-key jg-navigation-mode-map (kbd "C-v") 'jg-switch-buffer)
-(define-key jg-navigation-mode-map (kbd "<C-tab>") 'projectile-switch-to-buffer)
-(define-key jg-navigation-mode-map (kbd "C-v") 'projectile-switch-to-buffer)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if selectrum-is-active
+                                                                                 (selectrum-next-candidate)
+                                                                               (persp-switch-to-buffer*))))
+(define-key jg-navigation-mode-map (kbd "C-v") 'persp-switch-to-buffer*)
 
-;;(define-key jg-navigation-mode-map (kbd "M-b") 'helm-buffers-list)
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
-;;;(define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-recentf)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
-(define-key jg-navigation-mode-map (kbd "C-o") 'projectile-find-file)
+(define-key jg-navigation-mode-map (kbd "C-S-o") 'projectile-find-file)
+(define-key jg-navigation-mode-map (kbd "C-o") 'find-file)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
-(define-key jg-navigation-mode-map (kbd "C-/") '(lambda ()
+(define-key jg-navigation-mode-map (kbd "C-/") #'(lambda ()
                                                   (interactive)
                                                   (dired default-directory)))
 
@@ -164,24 +155,23 @@
 (define-key jg-navigation-mode-map (kbd "C-<") 'back-button-global-backward)
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
 ;; same, but only within the current file
-(define-key jg-navigation-mode-map (kbd "C-,") 'jg-back-button)
-(define-key jg-navigation-mode-map (kbd "C-.") 'jg-forward-button)
 
 (defun jg-back-button ()
   (interactive)
-  (cond ((minibufferp) (selectrum-backward-kill-sexp))
+  (cond (selectrum-is-active (selectrum-backward-kill-sexp))
         (t (back-button-local-backward) )))
 
 (defun jg-forward-button ()
   (interactive)
-  (cond ((minibufferp) nil)
-        (t (back-button-local-forward) )))
+  (cond (selectrum-is-active nil)
+        (t (back-button-local-forward))))
+
+(define-key jg-navigation-mode-map (kbd "C-,") 'jg-back-button)
+(define-key jg-navigation-mode-map (kbd "C-.") 'jg-forward-button)
 
 ;; lsp mode
 (define-key jg-navigation-mode-map (kbd "H-M-.") 'lsp-find-definition)
 
-
-;; (define-key jg-navigation-mode-map (kbd "M-m") 'helm-imenu)
 
 ;; isearch
 (define-key jg-navigation-mode-map (kbd "M-f") 'isearch-forward)
@@ -242,8 +232,11 @@
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
 
 
-(define-key jg-code-mode-map (kbd "H-l") 'downcase-dwim)
-(define-key jg-code-mode-map (kbd "H-u") 'downcase-dwim)
+(define-key jg-code-mode-map (kbd "C-c o") 'occur)
+
+
+;;(define-key jg-code-mode-map (kbd "H-l") nil)
+;;(define-key jg-code-mode-map (kbd "H-u") nil)
 
 (define-key jg-code-mode-map (kbd "C-H-n") 'mc/mark-next-lines)
 (define-key jg-code-mode-map (kbd "C-H-a") 'mc/mark-all-like-this-dwim)
@@ -290,8 +283,6 @@
 ;;(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "M-s") nil)
 (define-key jg-code-mode-map (kbd "M-s") 'save-buffer)
-;;(define-key jg-code-mode-map (kbd "C-x o") 'helm-occur)
-(define-key jg-code-mode-map (kbd "C-x n") 'elscreen-screen-nickname)
 (define-key jg-code-mode-map (kbd "C-M-j") 'join-line)
 
 ;;*******************
@@ -315,7 +306,7 @@
 ;;(define-key jg-code-mode-map (kbd "TAB") 'hippie-expand)
 (define-key jg-code-mode-map (kbd "H-q") 'fill-paragraph)
 
-(define-key jg-navigation-mode-map (kbd "H-SPC") '(lambda () (interactive) (insert-char ?_ 1)))
+(define-key jg-navigation-mode-map (kbd "H-SPC") #'(lambda () (interactive) (insert-char ?_ 1)))
 
 
 
@@ -413,7 +404,7 @@
   (jg-code-mode 0))
 
 ;;(add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
-(add-hook 'minibuffer-setup-hook '(lambda () (interactive) (disable-jg-code-mode) (define-key jg-navigation-mode-map (kbd "C-,") nil)))
+(add-hook 'minibuffer-setup-hook #'(lambda () (interactive) (disable-jg-code-mode) (define-key jg-navigation-mode-map (kbd "C-,") nil)))
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)
@@ -421,12 +412,12 @@
 (add-hook 'comint-mode-hook 'disable-jg-code-mode)
 (add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
-(add-hook 'magit-mode-hook '(lambda ()
+(add-hook 'magit-mode-hook #'(lambda ()
                               (jg-code-mode 0)
                               (jg-navigation-mode 0)))
 
 (defun c-k-clear-for-term-mode ()
-  (define-key (current-local-map) (kbd "M-k") '(lambda () (interactive) (term-send-raw-string "clear\r") )))
+  (define-key (current-local-map) (kbd "M-k") #'(lambda () (interactive) (term-send-raw-string "clear\r") )))
 
 
 (defadvice term-mode (after term-mode-fixes ())
@@ -461,10 +452,10 @@
 ;;   (define-key (current-local-map) (kbd "M-RET") 'term-line-mode)
 ;;   (define-key (current-local-map) (kbd "M-r") 'term-send-C-r)
 ;;   (c-k-clear-for-term-mode)
-;;   ;; (define-key (current-local-map) (kbd "C-h") '(lambda () (interactive) (term-send-raw-string "\M-b")))
-;;   ;; (define-key (current-local-map) (kbd "C-d") '(lambda () (interactive) (term-send-raw-string "\C-d")))
-;;   (define-key (current-local-map) (kbd "M-&") '(lambda () (interactive) (term-send-raw-string "\C-b")))
-;;   (define-key (current-local-map) (kbd "M-^") '(lambda () (interactive) (term-send-raw-string "\C-f")))
+;;   ;; (define-key (current-local-map) (kbd "C-h") #'(lambda () (interactive) (term-send-raw-string "\M-b")))
+;;   ;; (define-key (current-local-map) (kbd "C-d") #'(lambda () (interactive) (term-send-raw-string "\C-d")))
+;;   (define-key (current-local-map) (kbd "M-&") #'(lambda () (interactive) (term-send-raw-string "\C-b")))
+;;   (define-key (current-local-map) (kbd "M-^") #'(lambda () (interactive) (term-send-raw-string "\C-f")))
 ;;   )
 ;; (ad-activate 'term-char-mode)
 
@@ -499,8 +490,8 @@
 
 
 (add-hook 'dired-mode-hook 'disable-jg-code-mode)
-(add-hook 'dired-mode-hook '(lambda () (jg-navigation-mode -1)))
-;;(add-hook 'dired-mode-hook '(lambda () (interactive) (describe-function 'dired-mode)))
+(add-hook 'dired-mode-hook #'(lambda () (jg-navigation-mode -1)))
+;;(add-hook 'dired-mode-hook #'(lambda () (interactive) (describe-function 'dired-mode)))
 
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
@@ -521,7 +512,7 @@
 (define-key ssh-mode-map (kbd "TAB") nil)
 
 ;; scratch buffer
-                                        ;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
+;;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
 
 
 
@@ -546,4 +537,5 @@
 (define-key c++-mode-map (kbd "TAB") nil)
 
 (define-key selectrum-minibuffer-map (kbd "C-,") 'selectrum-backward-kill-sexp)
-(define-key selectrum-minibuffer-map (kbd "C-.") 'selectrum-select-from-history)
+;;(define-key selectrum-minibuffer-map (kbd "C-.") 'selectrum-select-from-history)
+;;(define-key selectrum-minibuffer-map (kbd "<RET>") 'selectrum-select-current-candidate)

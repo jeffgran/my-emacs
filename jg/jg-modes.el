@@ -1,3 +1,8 @@
+(require 'unicode-fonts)
+(unicode-fonts-setup)
+
+(require 'tramp)
+
 (add-to-list 'auto-mode-alist '("\\.el" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("Cask" . emacs-lisp-mode))
 (add-hook 'emacs-lisp-mode-hook '(lambda ()
@@ -6,22 +11,18 @@
 
 (cua-mode -1)
 ;; save my place in each file
-(require 'saveplace)
-(setq save-place-file (concat emacs-root "saved-places"))
-(setq-default save-place t)
+(save-place-mode t)
 
 
 (projectile-mode +1)
 (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
-(define-key projectile-mode-map (kbd "H-p") 'projectile-command-map)
 (require 'perspective)
-(global-set-key (kbd "C-x C-b") 'persp-list-buffers)
-;;(customize-set-variable 'persp-mode-prefix-key (kbd "C-x p"))
-(customize-set-variable 'persp-mode-prefix-key nil)
 (persp-mode)
 (require 'persp-projectile)
-(define-key projectile-command-map (kbd "p") 'projectile-persp-switch-project)
 (setq projectile-switch-project-action 'projectile-run-shell)
+(add-hook 'kill-emacs-hook #'persp-state-save)
+
+(require 'avy)
 
 (require 'undo-tree)
 ;; i stole this from the undo-tree code to override it because its "heuristic"
@@ -58,6 +59,7 @@
 (delete-selection-mode)
 
 ;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
+(require 'pbcopy)
 (turn-on-pbcopy)
 
 (require 'jg-paredit)
@@ -71,26 +73,7 @@
 
 (require 'jg-switch-buffer)
 
-;; god-mode cursor switch:
-(defun my-update-cursor ()
-  (setq cursor-type (if (or god-local-mode buffer-read-only)
-                        'box
-                      'bar)))
-
-(add-hook 'god-mode-enabled-hook 'my-update-cursor)
-(add-hook 'god-mode-disabled-hook 'my-update-cursor)
-
 (require 'view)
-
-(setq helm-idle-delay 1
-      helm-input-idle-delay 1
-      helm-quick-update nil
-      helm-buffer-max-length 70
-      helm-recentf-fuzzy-match t
-      )
-
-(require 'helm-find)
-(require 'helm-fuzzy-find)
 
 (global-subword-mode 1)
 
@@ -116,25 +99,25 @@
 (setq-default mode-line-front-space "")
 
 (setq-default mode-line-format
-      `(
-       "%e"
-       mode-line-front-space
-       mode-line-mule-info
-       mode-line-client
-       mode-line-modified
-       mode-line-remote
-       mode-line-frame-identification
-       mode-line-buffer-identification
-       sml/pos-id-separator
-       mode-line-position
-       smartrep-mode-line-string
-       rbenv--modestring
-       ;;(vc-mode vc-mode)
-       sml/pre-modes-separator
-       mode-line-modes
-       mode-line-misc-info
-       mode-line-end-spaces
-       ))
+              `(
+                "%e"
+                mode-line-front-space
+                mode-line-mule-info
+                mode-line-client
+                mode-line-modified
+                mode-line-remote
+                mode-line-frame-identification
+                mode-line-buffer-identification
+                sml/pos-id-separator
+                mode-line-position
+                smartrep-mode-line-string
+                rbenv--modestring
+                ;;(vc-mode vc-mode)
+                sml/pre-modes-separator
+                mode-line-modes
+                mode-line-misc-info
+                mode-line-end-spaces
+                ))
 
 
 
@@ -164,6 +147,10 @@
 (setq ruby-insert-encoding-magic-comment nil) ; for ruby-mode
 (setq enh-ruby-add-encoding-comment-on-save nil) ; for enh-ruby-mode
 
+
+(require 'lsp-mode)
+(setq lsp-keymap-prefix "H-l")
+(define-key lsp-mode-map (kbd "H-l") lsp-command-map)
 
 
 ;; (require 'lsp-sourcekit)
@@ -223,6 +210,13 @@
 (setq js2-basic-offset 2)
 (setq sgml-basic-offset 2)
 
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+(add-hook 'web-mode-hook
+          (lambda ()
+            (when (string-equal "tsx" (file-name-extension buffer-file-name))
+              (setup-tide-mode))))
+
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . web-mode))
 (add-to-list 'interpreter-mode-alist '("node" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
@@ -232,10 +226,10 @@
 
 ;; set to jsx mode by default in web-mode
 (add-hook 'web-mode-hook
-  (lambda ()
-    (if (equal web-mode-content-type "javascript")
-        (web-mode-set-content-type "jsx")
-      (message "now set to: %s" web-mode-content-type))))
+          (lambda ()
+            (if (equal web-mode-content-type "javascript")
+                (web-mode-set-content-type "jsx")
+              (message "now set to: %s" web-mode-content-type))))
 
 ;; another thing to try...
 ;; (setq web-mode-content-types-alist
@@ -254,8 +248,8 @@
 (setq web-mode-attr-indent-offset 2)
 (setq web-mode-enable-auto-indentation nil)
 
-(eval-after-load 'web-mode '(lambda ()
-                              (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
+(eval-after-load 'web-mode #'(lambda ()
+                               (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
 
 ;;(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
 (defun setup-tide-mode ()
@@ -268,12 +262,6 @@
   (company-mode +1))
 (add-hook 'typescript-mode-hook #'setup-tide-mode)
 
-(require 'web-mode)
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
-(add-hook 'web-mode-hook
-          (lambda ()
-            (when (string-equal "tsx" (file-name-extension buffer-file-name))
-              (setup-tide-mode))))
 
 (require 'flycheck)
 
@@ -334,15 +322,15 @@
   ;; (local-set-key (kbd "M-]") 'next-error)         ; Go to next error (or msg)
   ;; (local-set-key (kbd "M-[") 'previous-error)     ; Go to previous error or msg
 
-)                         ; Enable auto-complete mode
+  )                         ; Enable auto-complete mode
 (add-hook 'go-mode-hook 'my-go-mode-hook)
 (add-hook 'go-mode-hook 'lsp-deferred)
 
 
 
 
-
-
+(require 'which-key)
+(which-key-mode)
 
 
 
@@ -351,21 +339,13 @@
 (setq comment-auto-fill-only-comments t)
 
 
-(add-hook 'ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop/ruby-mode
-(add-hook 'enh-ruby-mode-hook '(lambda() (flycheck-mode))) ; for rubocop/enh-ruby-mode
+
+(add-hook 'ruby-mode-hook #'(lambda() (flycheck-mode))) ; for rubocop/ruby-mode
+(add-hook 'enh-ruby-mode-hook #'(lambda() (flycheck-mode))) ; for rubocop/enh-ruby-mode
+(add-hook 'enh-ruby-mode-hook 'lsp-deferred)
+(add-hook 'enh-ruby-mode-hook 'yard-mode)
+(add-hook 'enh-ruby-mode-hook 'eldoc-mode)
 (setq flycheck-rubocoprc ".ruby-style.yml")
-
-(defadvice ruby-electric-setup-keymap (after undo-some-keybindings-from-ruby-electric-mode activate)
-  "undo some stuff ruby-electric tries to force on us"
-  ;; fucking ruby-electric remaps keys in ruby-mode-map. USE YOUR OWN MAP!
-  (define-key ruby-mode-map (kbd "TAB") nil)
-  (define-key ruby-mode-map (kbd "RET") nil)
-  (define-key ruby-mode-map (kbd "C-m") nil)
-  (define-key ruby-mode-map (kbd "SPC") nil)
-  (define-key ruby-mode-map (kbd "C-j") nil)
-  (define-key ruby-mode-map (kbd "C-M-n") nil)
-  (define-key ruby-mode-map (kbd "C-M-p") nil))
-
 
 (add-to-list 'interpreter-mode-alist '("ruby" . enh-ruby-mode))
 (add-to-list 'auto-mode-alist '("\\.json_builder$" . enh-ruby-mode))
@@ -446,6 +426,9 @@
 (selectrum-mode)
 (selectrum-prescient-mode) ; not just prefix matching in minibuffer completions
 (hotfuzz-selectrum-mode)   ; fuzzy matching in completion
+(setq prescient-filter-method '(literal fuzzy regexp initialism))
+(setq prescient-use-char-folding t)
+(setq completion-ignore-case t)
 
 ;;(setq selectrum-display-action '(display-buffer-in-tab)) ;; there are different options
 (setq selectrum-display-action nil) ;; default
@@ -479,11 +462,6 @@
 ;;          (string= (buffer-name buf) "*Shell Command Output*")
 ;;          (with-current-buffer buf
 ;;            (ansi-color-apply-on-region (point-min) (point-max))))))
-
-
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize)
-  (exec-path-from-shell-copy-env "GOPATH"))
 
 
 
@@ -553,10 +531,7 @@
 
 ;;; org mode
 (setq org-todo-keywords
-       '((sequence "TODO" "WORKING" "DONE")))
-
-(setq fiplr-ignored-globs '((directories (".git" ".svn" "tmp" "temp"))
-                            (files ("*.jpg" "*.png" "*.zip" "*~" ".keep"))))
+      '((sequence "TODO" "WORKING" "DONE")))
 
 
 (require 'keyfreq)

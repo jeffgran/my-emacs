@@ -1,13 +1,8 @@
 ;; color theme stuff. 
 (add-to-list 'custom-theme-load-path (concat emacs-root "jg/color-themes/jg-zenburn"))
 (load-theme 'jg-zenburn t)
-(require 'unicode-fonts)
-(unicode-fonts-setup)
 
-(require 'tramp)
 
-(add-to-list 'load-path (concat emacs-root "jg/pbcopy.el"))
-(require 'pbcopy)
 
 (add-to-list 'load-path (concat emacs-root "jg"))
 
@@ -16,7 +11,7 @@
 (load-library "jg-setup")           ; basic stock on/off switches and stuff.
 (load-library "jg-mode")            ; my keys. they are sweeet.
 
-(server-start)
-(add-hook 'after-init-hook '(lambda ()
-                              (cd emacs-root)))
+(add-hook 'after-init-hook #'(lambda ()
+                               (cd emacs-root)))
 
+(persp-state-load (concat emacs-root ".persp"))

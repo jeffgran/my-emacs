@@ -12,12 +12,12 @@
 ;;                               (jg-paredit-mode 1)
 ;;                               ))
 
-(add-hook 'paredit-mode-hook '(lambda ()
-                                (jg-paredit-mode t)
-                                (define-key paredit-mode-map (kbd "C-k") 'paredit-kill)
-                                ;;(setq overriding-local-map paredit-mode-map)
-                                (rainbow-delimiters-mode t)
-                                ))
+(add-hook 'paredit-mode-hook #'(lambda ()
+                                 (jg-paredit-mode t)
+                                 (define-key paredit-mode-map (kbd "C-k") 'paredit-kill)
+                                 ;;(setq overriding-local-map paredit-mode-map)
+                                 (rainbow-delimiters-mode t)
+                                 ))
 
 
 ;;(jg-paredit-mode 0)
