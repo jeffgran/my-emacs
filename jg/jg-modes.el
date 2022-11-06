@@ -38,20 +38,18 @@
 (require 'ag)
 (setq ag-group-matches nil)
 (setq ag-highlight-search t)
-(setq ag-arguments (list
-                    "-W" "200"
-                    "--line-number"
-                    "--smart-case"
-                    "--nogroup"
-                    "--column"
-                    "--stats"
-                    "--ignore" "proxima_nova.scss"
-                    "--ignore" "react_bundle.js"
-                    "--ignore" "node_modules"
-                    "--ignore" "*.js.map"
-                    "--ignore" "*.min.js"
-                    "--"
-                    ))
+(customize-set-variable 'ag-arguments '("-W" "200"
+                                        "--line-number"
+                                        "--smart-case"
+                                        "--nogroup"
+                                        "--column"
+                                        "--stats"
+                                        "--ignore" "node_modules"
+                                        "--ignore" "*.js.map"
+                                        "--ignore" "*.min.js"
+                                        "--hidden"
+                                        "--"
+                                        ))
 
 
 
@@ -284,13 +282,12 @@
 (add-hook 'coffee-mode-hook
           '(lambda() (coffee-custom)))
 
-(custom-set-variables '(coffee-tab-width 2))
+(customize-set-variable 'coffee-tab-width 2)
 
 ;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
 ;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
 (require 'scss-mode)
 (add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
-;;(custom-set-variables '(css-indent-offset 2))
 
 
 
