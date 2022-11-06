@@ -6,14 +6,6 @@
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
 
-(setq backup-directory-alist
-      `((".*" . ,temporary-file-directory)))
-(setq auto-save-file-name-transforms
-      `((".*" ,temporary-file-directory t)))
-
-;; the above breaks saving remote tramp files, this fixes it, I have no idea how either mechanism works.
-(setq tramp-backup-directory-alist backup-directory-alist)
-
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (setq split-height-threshold 9999
@@ -25,6 +17,7 @@
 (setq
  backup-by-copying t                          ; don't clobber symlinks
  backup-directory-alist '(("." . "~/.saves")) ; don't litter my fs tree
+ tramp-backup-directory-alist backup-directory-alist
  delete-old-versions t
  kept-new-versions 6
  kept-old-versions 2
@@ -42,13 +35,12 @@
  ;; dired
  dired-listing-switches "-AlhopF"
 
- tags-add-tables t ; when loading up a second tags table, "add" it to the tags,
-                                        ; instead of replacing (or asking which)
+ tags-add-tables t ; when loading up a second tags table, "add" it to the tags, instead of replacing (or asking which)
  )
 
 (setq font-lock-global-modes t)
 
-(setq debug-on-error t)
+(setq debug-on-error nil)
 
 ;; default encoding for new buffers, among other default settings and fallbacks.
 (prefer-coding-system 'utf-8) 
@@ -72,11 +64,6 @@
 
   (setq dired-use-ls-dired nil) ; osx `ls` does not support `--dired` flag
   )
-
-
-
-(require 'tramp)
-(setq tramp-default-method "ssh") ; default is "scp"
 
 
 (setq-default cursor-type 'bar)

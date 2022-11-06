@@ -2,12 +2,13 @@
 (unicode-fonts-setup)
 
 (require 'tramp)
+(setq tramp-default-method "ssh") ; default is "scp"
 
 (add-to-list 'auto-mode-alist '("\\.el" . emacs-lisp-mode))
 (add-to-list 'auto-mode-alist '("Cask" . emacs-lisp-mode))
-(add-hook 'emacs-lisp-mode-hook '(lambda ()
-                                   (paredit-mode t)
-                                   ))
+(add-hook 'emacs-lisp-mode-hook #'(lambda ()
+                                    (paredit-mode t)
+                                    ))
 
 (cua-mode -1)
 ;; save my place in each file
@@ -17,6 +18,7 @@
 (projectile-mode +1)
 (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
 (require 'perspective)
+(setq persp-suppress-no-prefix-key-warning t)
 (persp-mode)
 (require 'persp-projectile)
 (setq projectile-switch-project-action 'projectile-run-shell)
@@ -76,10 +78,10 @@
 (global-subword-mode 1)
 
 (require 'smart-mode-line)
-(add-hook 'after-init-hook '(lambda ()
-                              (sml/setup)
-                              (setq sml/no-confirm-load-theme t)
-                              (sml/apply-theme 'respectful)))
+(add-hook 'after-init-hook #'(lambda ()
+                               (sml/setup)
+                               (setq sml/no-confirm-load-theme t)
+                               (sml/apply-theme 'respectful)))
 
 
 (require 'magit)
@@ -236,7 +238,7 @@
 ;; (web-mode-set-content-type "jsx") ; to force jsx mode
 
 (add-hook 'web-mode-hook
-          '(lambda() (flycheck-mode)))
+          #'(lambda() (flycheck-mode)))
 
 
 ;; adjust indents for web-mode to 2 spaces
@@ -280,7 +282,7 @@
   (set (make-local-variable 'coffee-cleanup-whitespace) nil)
   )
 (add-hook 'coffee-mode-hook
-          '(lambda() (coffee-custom)))
+          #'(lambda() (coffee-custom)))
 
 (customize-set-variable 'coffee-tab-width 2)
 

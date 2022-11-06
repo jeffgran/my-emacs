@@ -230,6 +230,8 @@
 (define-key jg-code-mode-map (kbd "M-x") 'kill-region)
 (define-key jg-navigation-mode-map (kbd "M-x") 'kill-region)
 (define-key jg-code-mode-map (kbd "C-k") 'kill-line)
+(define-key jg-code-mode-map (kbd "C-x M-d") 'zap-to-char)
+
 
 
 (define-key jg-code-mode-map (kbd "C-c o") 'occur)
@@ -403,8 +405,7 @@
 (defun disable-jg-code-mode ()
   (jg-code-mode 0))
 
-;;(add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
-(add-hook 'minibuffer-setup-hook #'(lambda () (interactive) (disable-jg-code-mode) (define-key jg-navigation-mode-map (kbd "C-,") nil)))
+(add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)
