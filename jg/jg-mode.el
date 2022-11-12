@@ -136,7 +136,7 @@
 
 (define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if selectrum-is-active
                                                                                  (selectrum-next-candidate)
-                                                                               (persp-switch-to-buffer*))))
+                                                                               (call-interactively 'persp-switch-to-buffer*))))
 (define-key jg-navigation-mode-map (kbd "C-v") 'persp-switch-to-buffer*)
 
 
@@ -204,7 +204,6 @@
 (define-key jg-navigation-mode-map (kbd "C-s s") 'jg-open-ssh)
 
 (define-key jg-navigation-mode-map (kbd "M-R") 'jg-new-inf-ruby) ;; new irb in the current project root
-(define-key jg-navigation-mode-map (kbd "C-c 0") 'copy-buffer-file-name-as-kill)
 
 ;; (define-key isearch-mode-map(kbd "M-s h") 'shell-command-insert-output-here) ;; Shell command, insert output Here.
 ;; (define-key isearch-mode-map(kbd "M-s h") nil) ;; Shell command, insert output Here.
@@ -516,8 +515,10 @@
 ;; scratch buffer
 ;;(define-key lisp-interaction-mode (kbd "C-c C-j") 'eval-print-last-sexp)
 
-
-
+;; switch to occur from isearch mode
+(define-key isearch-mode-map (kbd "C-o") 'isearch-occur)
+;; attempt to set up projectile-occur from isearch mode, but this is not right.
+;;(define-key isearch-mode-map (kbd "C-M-o") (lambda () (interactive) (let ((case-fold-search isearch-case-fold-search)) (projectile-multi-occur (if isearch-regexp isearch-string (regexp-quote isearch-string))))))
 
 (define-key eww-mode-map (kbd "B") 'eww-back-url)
 (define-key eww-mode-map (kbd "<") 'eww-back-url)

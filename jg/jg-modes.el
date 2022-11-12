@@ -15,6 +15,7 @@
 (save-place-mode t)
 
 
+(customize-set-variable 'persp-show-modestring 'header)
 (projectile-mode +1)
 (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
 (require 'perspective)
@@ -23,7 +24,6 @@
 (require 'persp-projectile)
 (setq projectile-switch-project-action 'projectile-run-shell)
 (add-hook 'kill-emacs-hook #'persp-state-save)
-(setq persp-show-modestring 'header)
 (setq persp-modestring-short nil)
 
 (require 'avy)
@@ -90,6 +90,7 @@
 (with-eval-after-load 'magit
   (require 'forge))
 (setq auth-sources '("~/.authinfo"))
+
 
 (column-number-mode 1)
 (size-indication-mode 1)
@@ -441,6 +442,11 @@
 
 (require 'dired-subtree)
 (setq diredp-hide-details-initially-flag nil)
+(dired-filter-mode)
+
+
+(recentf-mode 1)
+(setq recentf-max-saved-items 100)
 
 
 ;;(require 'smooth-scroll)

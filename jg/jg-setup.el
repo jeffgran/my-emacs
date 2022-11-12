@@ -38,6 +38,13 @@
  dired-listing-switches "-AlhopF"
 
  tags-add-tables t ; when loading up a second tags table, "add" it to the tags, instead of replacing (or asking which)
+
+ inhibit-startup-screen t ; don't show the welcome to emacs screen
+
+ ;; this sets the default value for reading regexp as the symbol at point.
+ ;; this is used in `occur', `projectile-multi-occur', etc.
+ ;; could be improved, i'd like to make it get the curent region if there's a region too.
+ read-regexp-defaults-function 'find-tag-default-as-regexp
  )
 
 (setq font-lock-global-modes t)
@@ -77,7 +84,10 @@
 (global-hl-line-mode 1)
 (icomplete-mode 1)
 
+;; switch to help buffer when it appears
 (setq help-window-select t)
+;; switch to occur buffer when it appears
+(add-hook 'occur-hook (lambda () (switch-to-buffer-other-window "*Occur*")))
 
 
 

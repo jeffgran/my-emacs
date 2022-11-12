@@ -627,25 +627,87 @@ there's a region, all lines that region covers will be duplicated."
           (find-tag-default)))
     (find-tag-default)))
 
+(defun current-relative-filename ()
+    (file-relative-name (buffer-file-name) (projectile-acquire-root)))
 
-;; from http://stackoverflow.com/questions/18812938/copy-full-file-path-into-copy-paste-clipboard
-;; edited to give me more options, like full-with-line-number
-(defun copy-buffer-file-name-as-kill (choice)
-  "Copy the buffer-file-name to the kill-ring"
-  (interactive "cCopy Buffer Name (L) Full with Line, (F) Full, (D) Directory, (N) Name")
-  (let ((new-kill-string)
-        (name (if (eq major-mode 'dired-mode)
-                  (dired-get-filename)
-                (or (buffer-file-name) ""))))
-    (cond ((eq choice ?f)
-           (setq new-kill-string name))
-          ((eq choice ?d)
-           (setq new-kill-string (file-name-directory name)))
-          ((eq choice ?n)
-           (setq new-kill-string (file-name-nondirectory name)))
-          ((eq choice ?l)
-           (setq new-kill-string (concat name ":" (number-to-string (line-number-at-pos)))))
-          (t (message "Quit")))
-    (when new-kill-string
-      (message "%s copied" new-kill-string)
-      (kill-new new-kill-string))))
+(defun copy-local-relative-filename ()
+  (interactive)
+  (kill-new (current-relative-filename))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-filename ()
+  (interactive)
+  (kill-new (file-name-nondirectory (buffer-file-name)))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-relative-filename-with-line ()
+  (interactive)
+  (kill-new
+   (concat (current-relative-filename) ":" (number-to-string (line-number-at-pos))))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-relative-directoryname ()
+  (interactive)
+  (kill-new (file-name-directory (current-relative-filename)))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-absolute-filename ()
+  (interactive)
+  (kill-new (buffer-file-name))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-absolute-filename-with-line ()
+  (interactive)
+  (kill-new (concat (buffer-file-name) ":" (number-to-string (line-number-at-pos))))
+  (message "Copied: %s" (current-kill 0 t)))
+
+(defun copy-local-absolute-directoryname ()
+  (interactive)
+  (kill-new (file-name-directory (buffer-file-name)))
+  (message "Copied: %s" (current-kill 0 t)))
+
+
+(defun git-link-with-prefix ()
+  (interactive)
+  (let ((current-prefix-arg '-))
+    (call-interactively 'git-link)))
+
+(defun git-link-visit-homepage ()
+  (interactive)
+  (let ((git-link-open-in-browser t))
+    (call-interactively 'git-link-homepage)))
+
+(defun git-link-visit ()
+  (interactive)
+  (let ((git-link-open-in-browser t))
+    (call-interactively 'git-link)))
+
+(defun git-link-visit-with-prefix ()
+  (interactive)
+  (let ((git-link-open-in-browser t)
+        (current-prefix-arg '-))
+    (call-interactively 'git-link)))
+
+
+(transient-define-prefix git-link-dispatch ()
+  ["Copy Path"
+   [("l d" "Relative Directory" copy-local-relative-directoryname)
+    ("l f" "Relative File" copy-local-relative-filename)
+    ("l l" "Relative File:Line" copy-local-relative-filename-with-line)
+    ("l n" "Filename" copy-local-filename)
+    ("a d" "Absolute Directory" copy-local-absolute-directoryname)
+    ("a f" "Absolute File" copy-local-absolute-filename)
+    ("a l" "Absolute File:Line" copy-local-absolute-filename-with-line)]
+   ]
+  ["Copy Link"
+   [("c r" "Repository" git-link-homepage)
+    ("c f" "File" git-link-with-prefix)
+    ("c l" "Line" git-link)]
+   ]
+  ["Open Link"
+   ("o r" "Repository" git-link-visit-homepage)
+   ("o f" "File" git-link-visit-with-prefix)
+   ("o l" "Line" git-link-visit)])
+
+(transient-insert-suffix 'magit-dispatch "l"
+  '("k" "Link" git-link-dispatch))

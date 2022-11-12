@@ -8,6 +8,7 @@
         clipboard-yank
         jg-delete-region-or-paredit-delete
         keyboard-quit
+        kill-region
         ))
 
 (setq mc/cmds-to-run-once
@@ -15,4 +16,5 @@
         amx
         markdown-outdent-or-delete
         mc/mark-next-lines
+        suspend-frame
         ))
