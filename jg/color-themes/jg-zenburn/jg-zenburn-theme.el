@@ -135,9 +135,9 @@
                   :background ,jg-zenburn-bg 
                   :slant normal
                   :weight thin
-                  :height 150
+                  :height 120
                   :width normal
-                  :family "Iosevka"))))
+                  :family "JetBrains Mono"))))
 
    `(cursor ((t (:foreground ,jg-zenburn-fg :background "white"))))
    `(escape-glyph-face ((t (:foreground ,jg-zenburn-red))))
@@ -751,6 +751,8 @@
    `(wl-highlight-summary-refiled-face ((t (:foreground ,jg-zenburn-fg))))
    `(wl-highlight-summary-displaying-face ((t (:underline t :weight bold))))
 
+   ;; persp
+   `(persp-selected-face ((t (:foreground ,jg-zenburn-cyan+2))))
    
    ;; which-func-mode
    `(which-func ((t (:foreground ,jg-zenburn-green+4))))

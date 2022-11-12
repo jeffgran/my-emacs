@@ -72,6 +72,10 @@
   (setq mac-option-modifier 'alt)
 
   (setq dired-use-ls-dired nil) ; osx `ls` does not support `--dired` flag
+
+  ;; bash installed via brew because the default bash is old
+  (setq shell-file-name "/usr/local/bin/bash")
+  (setq explicit-shell-file-name "/usr/local/bin/bash")
   )
 
 
@@ -89,7 +93,7 @@
 ;; switch to occur buffer when it appears
 (add-hook 'occur-hook (lambda () (switch-to-buffer-other-window "*Occur*")))
 
-
+(menu-bar-mode -1)
 
 ;; windows specific stuff
 (if (eq system-type 'windows-nt)

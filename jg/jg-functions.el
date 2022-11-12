@@ -51,35 +51,6 @@
 
 ;;*************************************************
 ;;*************************************************
-(defvar jg-default-project-root emacs-root)
-
-(defun jg-project-root ()
-  (or (cdr (assoc 'jg-project-root (elscreen-get-screen-property (elscreen-get-current-screen))))
-      jg-default-project-root))
-
-;; (defun jg-project-root ()
-;;   (projectile-project-root))
-
-
-(defun ido-jg-set-project-root ()
-  (interactive)
-  (let* ((dir-path (read-directory-name "[JG] Select project root: " (or default-directory emacs-root) default-directory))
-         (dir-name (nth 1 (reverse (split-string dir-path "/")))))
-    ;;; (message dir-path)
-    ;;; (message dir-name)
-
-    (let ((screen-properties (elscreen-get-screen-property (elscreen-get-current-screen))))
-      (elscreen--set-alist 'screen-properties 'jg-project-root dir-path)
-      (elscreen-set-screen-property (elscreen-get-current-screen) screen-properties))
-
-    (elscreen-screen-nickname dir-name)
-    (cd dir-path)
-    (call-interactively 'jg-new-shell)
-    ;; (if (file-exists-p (concat dir-path "TAGS"))
-    ;;     (visit-project-tags)
-    ;;   (build-ctags dir-path))
-    ))
-
 
 ;; from the internet somewhere. stackoverflow I think
 (defun what-face (pos)

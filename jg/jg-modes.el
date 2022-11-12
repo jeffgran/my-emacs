@@ -60,9 +60,7 @@
 (multiple-cursors-mode)
 (delete-selection-mode)
 
-;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
-(require 'pbcopy)
-(turn-on-pbcopy)
+
 
 (require 'jg-paredit)
 
@@ -422,7 +420,7 @@
                                        (progn
                                          (kill-buffer buff))))))))
 
-;; term-mode 
+;; term-mode
 ;;(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
@@ -464,10 +462,6 @@
 
 
 
-(require 'yasnippet)
-;; (setq yas-snippet-dirs '("~/.emacs.d/snippets" yas-installed-snippets-dir)) ;; default in case i need to reset it
-(setq yas-snippet-dirs (append yas-snippet-dirs `(,(concat emacs-root "jg/yas"))))
-
 (yas-global-mode 1)
 (define-key yas-minor-mode-map (kbd "<tab>") nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -476,10 +470,6 @@
 
 
 
-
-
-(setq shell-file-name "/usr/local/bin/bash")
-(setq explicit-shell-file-name "/usr/local/bin/bash")
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 (setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
@@ -517,6 +507,3 @@
 (require 'keyfreq)
 (keyfreq-mode 1)
 (keyfreq-autosave-mode 1)
-
-
-(require 'ql-mode-base)
