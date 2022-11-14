@@ -58,6 +58,7 @@
 (straight-use-package 'go-mode)
 (straight-use-package 'graphql-mode)
 (straight-use-package 'grizzl)
+(straight-use-package 'guix)
 (straight-use-package 'haml-mode)
 (straight-use-package 'hotfuzz)
 (straight-use-package 'htmlize)

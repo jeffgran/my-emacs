@@ -87,6 +87,12 @@
 (require 'magit)
 (with-eval-after-load 'magit
   (require 'forge))
+
+;; original:
+;;(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header magit-insert-tags-header))
+(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header)) ; remove tags header, it's slow and I don't care about it
+
+
 (setq auth-sources '("~/.authinfo"))
 
 

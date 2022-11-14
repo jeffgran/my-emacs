@@ -135,7 +135,6 @@
                   :background ,jg-zenburn-bg 
                   :slant normal
                   :weight thin
-                  :height 120
                   :width normal
                   :family "JetBrains Mono"))))
 

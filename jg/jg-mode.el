@@ -187,7 +187,7 @@
 
 ;; amx is m-x but with auto-completion
 (define-key jg-navigation-mode-map (kbd "H-x") 'amx)
-(define-key jg-navigation-mode-map (kbd "s-x") 'amx) ; temporary until i fix Hyper
+(define-key jg-navigation-mode-map (kbd "s-x") 'amx) ; for when hyper is broken
 
 ;; let's put the shell commands under the M-s prefix
 (define-key jg-navigation-mode-map (kbd "C-H-s") 'jg-new-shell) ;; new shell in the current project root
