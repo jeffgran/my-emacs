@@ -598,8 +598,10 @@ there's a region, all lines that region covers will be duplicated."
           (find-tag-default)))
     (find-tag-default)))
 
+;;-------------------------------------
+
 (defun current-relative-filename ()
-    (file-relative-name (buffer-file-name) (projectile-acquire-root)))
+  (file-relative-name (buffer-file-name) (projectile-acquire-root)))
 
 (defun copy-local-relative-filename ()
   (interactive)
@@ -661,24 +663,75 @@ there's a region, all lines that region covers will be duplicated."
 
 
 (transient-define-prefix git-link-dispatch ()
-  ["Copy Path"
-   [("l d" "Relative Directory" copy-local-relative-directoryname)
-    ("l f" "Relative File" copy-local-relative-filename)
-    ("l l" "Relative File:Line" copy-local-relative-filename-with-line)
-    ("l n" "Filename" copy-local-filename)
+  ["Git Links"
+   ["Copy"
+    ("c r" "Copy Repository" git-link-homepage)
+    ("c f" "Copy File" git-link-with-prefix)
+    ("c l" "Copy Line" git-link)
+    ]
+   ["Open"
+    ("o r" "Open Repository" git-link-visit-homepage)
+    ("o f" "Open File" git-link-visit-with-prefix)
+    ("o l" "Open Line" git-link-visit)]]
+  ["File Paths"
+   ["Relative"
+    ("d" "Directory" copy-local-relative-directoryname)
+    ("f" "File" copy-local-relative-filename)
+    ("l" "File with Line" copy-local-relative-filename-with-line)
+    ("n" "File Name Only" copy-local-filename)]
+   ["Absolute"
     ("a d" "Absolute Directory" copy-local-absolute-directoryname)
     ("a f" "Absolute File" copy-local-absolute-filename)
-    ("a l" "Absolute File:Line" copy-local-absolute-filename-with-line)]
+    ("a l" "Absolute File with Line" copy-local-absolute-filename-with-line)]
    ]
-  ["Copy Link"
-   [("c r" "Repository" git-link-homepage)
-    ("c f" "File" git-link-with-prefix)
-    ("c l" "Line" git-link)]
-   ]
-  ["Open Link"
-   ("o r" "Repository" git-link-visit-homepage)
-   ("o f" "File" git-link-visit-with-prefix)
-   ("o l" "Line" git-link-visit)])
+  )
 
 (transient-insert-suffix 'magit-dispatch "l"
-  '("k" "Link" git-link-dispatch))
+  '("k" "Links" git-link-dispatch))
+
+(transient-define-prefix describe-dispatch ()
+  ["Help"
+   ("b" "Describe Bindings" describe-bindings)
+   ("f" "Describe Function" describe-function)
+   ("k" "Describe Key" describe-key)
+   ("o" "Describe Symbol" describe-symbol)
+   ("m" "Describe Mode" describe-mode)
+   ("v" "Describe Variable" describe-variable)
+   ]
+  )
+
+(transient-define-prefix project-dispatch ()
+  ["Project"
+   ("r" "Refresh projects" projectile-discover-projects-in-search-path)
+   ]
+  )
+
+;;--------------------------------------------------
+
+;;(define-key slack-mode-map (kbd "C-n") nil)
+;;(define-key slack-mode-map (kbd "M-n") 'slack-buffer-goto-next-message)
+;;(define-key slack-mode-map (kbd "C-p") nil)
+;;(define-key slack-mode-map (kbd "M-p") 'slack-buffer-goto-prev-message)
+;;(define-key slack-mode-map (kbd "C-w") 'kill-buffer-and-window)
+;; (transient-define-prefix slack-dispatch ()
+;;   ["Slack"
+;;    [
+;;     ("m" "Compose Message" slack-message-write-another-buffer)
+;;     ("n" "New Messages" slack-select-unread-unmuted-rooms)
+;;     ("c" "Switch to Channel" slack-select-subscribed-rooms)
+;;     ("t" "All Threads" slack-all-threads)
+;;     ("T" "Show or Create Thread" slack-thread-show-or-create)
+;;     ("r" "Reaction" slack-message-add-reaction)
+;;     ]
+;;    ]
+;;   )
+
+(transient-define-prefix jg-dispatch ()
+  ["JG"
+   [
+    ("k" "Links" git-link-dispatch)
+    ("h" "Help" describe-dispatch)
+    ("p" "Project" project-dispatch)
+    ]
+   ]
+  )

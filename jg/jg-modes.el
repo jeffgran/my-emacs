@@ -60,7 +60,7 @@
 (multiple-cursors-mode)
 (delete-selection-mode)
 
-
+(customize-set-variable 'git-link-default-branch "master")
 
 (require 'jg-paredit)
 
@@ -92,8 +92,9 @@
 ;;(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header magit-insert-tags-header))
 (setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header)) ; remove tags header, it's slow and I don't care about it
 
-
 (setq auth-sources '("~/.authinfo"))
+
+(setq forge-post-mode-hook nil) ;; turns on flyspell by default which has annoying keybindings that conflict with jg-*-mode
 
 
 (column-number-mode 1)
@@ -348,14 +349,23 @@
 (setq comint-output-filter-functions
       (remove 'ansi-color-process-output comint-output-filter-functions))
 
+
+;; bash
+(setq shell-file-name "/usr/bin/bash")
+(setq comint-process-echoes t)
+(setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
+
+
 (add-hook 'shell-mode-hook
           (lambda ()
+            (setq comint-process-echoes t)
             ;; Disable font-locking in this buffer to improve performance
             (font-lock-mode -1)
             ;; Prevent font-locking from being re-enabled in this buffer
             (make-local-variable 'font-lock-function)
             (setq font-lock-function (lambda (_) nil))
-            (add-hook 'comint-preoutput-filter-functions 'xterm-color-filter nil t)))
+            (add-hook 'comint-preoutput-filter-functions 'xterm-color-filter nil t)
+            ))
 
 
 (set-face-attribute 'comint-highlight-prompt nil
@@ -408,6 +418,7 @@
 (setq prescient-filter-method '(literal fuzzy regexp initialism))
 (setq prescient-use-char-folding t)
 (setq completion-ignore-case t)
+(setq read-file-name-completion-ignore-case t)
 
 ;;(setq selectrum-display-action '(display-buffer-in-tab)) ;; there are different options
 (setq selectrum-display-action nil) ;; default
@@ -476,8 +487,6 @@
 
 
 
-(setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
-(setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
 
 ;; bash autocomplete working perfectly!
@@ -485,7 +494,7 @@
   (native-complete-setup-bash))
 (eval-after-load 'company
   '(add-to-list 'company-backends 'company-native-complete))
-
+;;(add-to-list 'company-backends '(company-shell company-shell-env))
 (setq tramp-shell-prompt-pattern ".*[#$%>)] *")
 
 
@@ -506,8 +515,8 @@
 
 
 ;;; org mode
-(setq org-todo-keywords
-      '((sequence "TODO" "WORKING" "DONE")))
+;; (setq org-todo-keywords
+;;       '((sequence "TODO" "WORKING" "DONE")))
 
 
 (require 'keyfreq)
