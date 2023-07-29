@@ -106,7 +106,7 @@
 
 
 ;;buffers
-(define-key jg-navigation-mode-map (kbd "C-w") 'kill-this-buffer)
+(define-key jg-navigation-mode-map (kbd "C-w") #'(lambda () (interactive) (kill-buffer (current-buffer))))
 (define-key jg-navigation-mode-map (kbd "C-q") 'keyboard-quit)
 (define-key jg-navigation-mode-map (kbd "M-g") nil)
 
@@ -187,6 +187,9 @@
 
 ;; amx is m-x but with auto-completion
 (define-key jg-navigation-mode-map (kbd "H-x") 'amx)
+(define-key jg-navigation-mode-map (kbd "s-x") 'amx) ; for when hyper is broken
+
+(define-key jg-navigation-mode-map (kbd "M-j") 'jg-dispatch)
 
 ;; let's put the shell commands under the M-s prefix
 (define-key jg-navigation-mode-map (kbd "C-H-s") 'jg-new-shell) ;; new shell in the current project root
@@ -282,7 +285,7 @@
 
 
 
-;;(define-key jg-code-mode-map (kbd "C-s") 'save-buffer)
+(define-key jg-code-mode-map (kbd "C-x s") 'shell)
 (define-key jg-code-mode-map (kbd "M-s") nil)
 (define-key jg-code-mode-map (kbd "M-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "C-M-j") 'join-line)
@@ -413,9 +416,10 @@
 (add-hook 'comint-mode-hook 'disable-jg-code-mode)
 (add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
+;;(setq magit-mode-hook '(forge-bug-reference-setup magit-load-config-extensions))
 (add-hook 'magit-mode-hook #'(lambda ()
-                              (jg-code-mode 0)
-                              (jg-navigation-mode 0)))
+                               (jg-code-mode 0)
+                               (jg-navigation-mode 1)))
 
 (defun c-k-clear-for-term-mode ()
   (define-key (current-local-map) (kbd "M-k") #'(lambda () (interactive) (term-send-raw-string "clear\r") )))
@@ -467,8 +471,8 @@
 (define-key dired-mode-map "B" 'jg-dired-updir) ; "updir", but let's me reuse the directory
 (define-key dired-mode-map (kbd "C-,") 'jg-dired-updir)
 (define-key dired-mode-map "f" 'dired-isearch-filenames)
-(define-key dired-mode-map "q" 'kill-this-buffer)
-(define-key dired-mode-map (kbd "C-g") 'kill-this-buffer)
+(define-key dired-mode-map "q" #'(lambda () (interactive) (kill-buffer (current-buffer))))
+(define-key dired-mode-map (kbd "C-g") #'(lambda () (interactive) (kill-buffer (current-buffer))))
 (define-key dired-mode-map (kbd "H-x") 'amx)
 (define-key dired-mode-map (kbd "M-0") 'other-window)
 (define-key dired-mode-map (kbd "M-1") 'delete-other-windows)

@@ -60,9 +60,7 @@
 (multiple-cursors-mode)
 (delete-selection-mode)
 
-;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
-(require 'pbcopy)
-(turn-on-pbcopy)
+(customize-set-variable 'git-link-default-branch "master")
 
 (require 'jg-paredit)
 
@@ -89,7 +87,14 @@
 (require 'magit)
 (with-eval-after-load 'magit
   (require 'forge))
+
+;; original:
+;;(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header magit-insert-tags-header))
+(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header)) ; remove tags header, it's slow and I don't care about it
+
 (setq auth-sources '("~/.authinfo"))
+
+(setq forge-post-mode-hook nil) ;; turns on flyspell by default which has annoying keybindings that conflict with jg-*-mode
 
 
 (column-number-mode 1)
@@ -344,14 +349,23 @@
 (setq comint-output-filter-functions
       (remove 'ansi-color-process-output comint-output-filter-functions))
 
+
+;; bash
+(setq shell-file-name "/usr/bin/bash")
+(setq comint-process-echoes t)
+(setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
+
+
 (add-hook 'shell-mode-hook
           (lambda ()
+            (setq comint-process-echoes t)
             ;; Disable font-locking in this buffer to improve performance
             (font-lock-mode -1)
             ;; Prevent font-locking from being re-enabled in this buffer
             (make-local-variable 'font-lock-function)
             (setq font-lock-function (lambda (_) nil))
-            (add-hook 'comint-preoutput-filter-functions 'xterm-color-filter nil t)))
+            (add-hook 'comint-preoutput-filter-functions 'xterm-color-filter nil t)
+            ))
 
 
 (set-face-attribute 'comint-highlight-prompt nil
@@ -404,6 +418,7 @@
 (setq prescient-filter-method '(literal fuzzy regexp initialism))
 (setq prescient-use-char-folding t)
 (setq completion-ignore-case t)
+(setq read-file-name-completion-ignore-case t)
 
 ;;(setq selectrum-display-action '(display-buffer-in-tab)) ;; there are different options
 (setq selectrum-display-action nil) ;; default
@@ -422,7 +437,7 @@
                                        (progn
                                          (kill-buffer buff))))))))
 
-;; term-mode 
+;; term-mode
 ;;(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
@@ -464,10 +479,6 @@
 
 
 
-(require 'yasnippet)
-;; (setq yas-snippet-dirs '("~/.emacs.d/snippets" yas-installed-snippets-dir)) ;; default in case i need to reset it
-(setq yas-snippet-dirs (append yas-snippet-dirs `(,(concat emacs-root "jg/yas"))))
-
 (yas-global-mode 1)
 (define-key yas-minor-mode-map (kbd "<tab>") nil)
 (define-key yas-minor-mode-map (kbd "TAB") nil)
@@ -476,12 +487,6 @@
 
 
 
-
-
-(setq shell-file-name "/usr/local/bin/bash")
-(setq explicit-shell-file-name "/usr/local/bin/bash")
-(setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
-(setq comint-process-echoes t)
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
 
 ;; bash autocomplete working perfectly!
@@ -489,7 +494,7 @@
   (native-complete-setup-bash))
 (eval-after-load 'company
   '(add-to-list 'company-backends 'company-native-complete))
-
+;;(add-to-list 'company-backends '(company-shell company-shell-env))
 (setq tramp-shell-prompt-pattern ".*[#$%>)] *")
 
 
@@ -510,13 +515,10 @@
 
 
 ;;; org mode
-(setq org-todo-keywords
-      '((sequence "TODO" "WORKING" "DONE")))
+;; (setq org-todo-keywords
+;;       '((sequence "TODO" "WORKING" "DONE")))
 
 
 (require 'keyfreq)
 (keyfreq-mode 1)
 (keyfreq-autosave-mode 1)
-
-
-(require 'ql-mode-base)

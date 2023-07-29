@@ -6,13 +6,16 @@
         back-to-indentation-or-beginning
         backward-to-char
         clipboard-yank
+        forward-to-char
         jg-delete-region-or-paredit-delete
         keyboard-quit
         kill-region
+        yaml-electric-backspace
         ))
 
 (setq mc/cmds-to-run-once
       '(
+        View-scroll-half-page-forward
         amx
         markdown-outdent-or-delete
         mc/mark-next-lines
