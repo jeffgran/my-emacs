@@ -322,27 +322,29 @@
 
 (add-hook 'ruby-mode-hook #'(lambda() (flycheck-mode))) ; for rubocop/ruby-mode
 (add-hook 'enh-ruby-mode-hook #'(lambda() (flycheck-mode))) ; for rubocop/enh-ruby-mode
+(add-hook 'ruby-ts-mode-hook #'(lambda() (flycheck-mode))) ; for rubocop/enh-ruby-mode
 (add-hook 'enh-ruby-mode-hook 'lsp-deferred)
 (add-hook 'enh-ruby-mode-hook 'yard-mode)
 (add-hook 'enh-ruby-mode-hook 'eldoc-mode)
 (setq flycheck-rubocoprc ".ruby-style.yml")
 
-(add-to-list 'interpreter-mode-alist '("ruby" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.json_builder$" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.rb$" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.rake\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.builder\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.json_builder\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.jbuilder\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Rakefile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("\\.ru\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Gemfile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Guardfile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Capfile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Thorfile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . enh-ruby-mode))
-(add-to-list 'auto-mode-alist '("Fastfile" . enh-ruby-mode))
+(add-to-list 'interpreter-mode-alist '("ruby" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder$" . ruby-ts-mode))
+;;(add-to-list 'auto-mode-alist '("\\.rb$" . enh-ruby-mode))
+(add-to-list 'auto-mode-alist '("\\.rb$" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.rake\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.builder\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.json_builder\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.jbuilder\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Rakefile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.gemspec\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("\\.ru\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Gemfile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Guardfile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Capfile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-ts-mode))
+(add-to-list 'auto-mode-alist '("Fastfile" . ruby-ts-mode))
 
 
 (require 'xterm-color)
@@ -412,16 +414,63 @@
 (amx-mode)
 
 ;; minibuffer completions vertical display
-(selectrum-mode)
-(selectrum-prescient-mode) ; not just prefix matching in minibuffer completions
-(hotfuzz-selectrum-mode)   ; fuzzy matching in completion
-(setq prescient-filter-method '(literal fuzzy regexp initialism))
-(setq prescient-use-char-folding t)
+;(setq prescient-filter-method '(literal fuzzy regexp initialism))
+(setq prescient-filter-method '(literal initialism prefix regexp fuzzy)
+      prescient-use-char-folding t
+      prescient-use-case-folding 'smart
+      prescient-sort-full-matches-first t ; Works well with `initialism'.
+      prescient-sort-length-enable t
+      vertico-prescient-enable-sorting nil)
+
 (setq completion-ignore-case t)
 (setq read-file-name-completion-ignore-case t)
+;;(setq completion-styles '(basic substring flex initials))
 
-;;(setq selectrum-display-action '(display-buffer-in-tab)) ;; there are different options
-(setq selectrum-display-action nil) ;; default
+(vertico-prescient-mode 1)
+(prescient-persist-mode 1)
+(setq vertico-cycle t)
+
+(defun vertico-delete-buffer ()
+  (interactive)
+  (persp-kill-buffer* (vertico--candidate))
+  (setq vertico--candidates (persp-current-buffer-names)
+        vertico--total (length (persp-current-buffer-names))
+        vertico--index (min vertico--total 0)
+        )
+  )
+;;completion-table-with-predicate
+
+;; taken from https://github.com/minad/vertico/wiki#pre-select-previous-directory-when-entering-parent-directory-from-within-find-file
+;;-----------------------------------------------------------------------------
+(defvar previous-directory nil
+  "The directory that was just left. It is set when leaving a directory and
+    set back to nil once it is used in the parent directory.")
+
+(defun set-previous-directory ()
+  "Set the directory that was just exited from within find-file."
+  ;; (when (> (minibuffer-prompt-end) (point))
+  (when t
+    (save-excursion
+      (goto-char (1- (point)))
+      (when (search-backward "/" (minibuffer-prompt-end) t)
+        ;; set parent directory
+        (setq previous-directory (buffer-substring (1+ (point)) (point-max)))
+        ;; set back to nil if not sorting by directories or what was deleted is not a directory
+        (when (not (string-suffix-p "/" previous-directory))
+          (setq previous-directory nil))
+        t))))
+
+(advice-add #'vertico-directory-up :before #'set-previous-directory)
+
+(define-advice vertico--update (:after (&rest _) choose-candidate)
+  "Pick the previous directory rather than the prompt after updating candidates."
+  (cond
+   (previous-directory                  ; select previous directory
+    (setq vertico--index (or (seq-position vertico--candidates previous-directory)
+                             vertico--index))
+    (setq previous-directory nil))))
+
+;;-----------------------------------------------------------------------------
 
 
 (require 'ws-butler)
@@ -464,9 +513,7 @@
 (setq recentf-max-saved-items 100)
 
 
-;;(require 'smooth-scroll)
-;;(smooth-scroll-mode nil)
-;;(setq smooth-scroll/vscroll-step-size 4)
+(pixel-scroll-precision-mode)
 (setq scroll-preserve-screen-position "yes")
 
 
@@ -522,3 +569,28 @@
 (require 'keyfreq)
 (keyfreq-mode 1)
 (keyfreq-autosave-mode 1)
+
+
+;; tree-sitter
+(setq treesit-language-source-alist
+   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+     (cmake "https://github.com/uyha/tree-sitter-cmake")
+     (css "https://github.com/tree-sitter/tree-sitter-css")
+     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+     (go "https://github.com/tree-sitter/tree-sitter-go")
+     (html "https://github.com/tree-sitter/tree-sitter-html")
+     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+     (json "https://github.com/tree-sitter/tree-sitter-json")
+     (make "https://github.com/alemuller/tree-sitter-make")
+     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+     (python "https://github.com/tree-sitter/tree-sitter-python")
+     (ruby "https://github.com/tree-sitter/tree-sitter-ruby")
+     (toml "https://github.com/tree-sitter/tree-sitter-toml")
+     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+
+;;(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist)) ; compiles all languages above ^ - should be done periodically to get latest versions
+
+
+(global-emojify-mode)

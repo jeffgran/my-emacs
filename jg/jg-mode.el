@@ -134,8 +134,8 @@
 
 (define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
-(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if selectrum-is-active
-                                                                                 (selectrum-next-candidate)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if (minibufferp)
+                                                                                 (vertico-next)
                                                                                (call-interactively 'persp-switch-to-buffer*))))
 (define-key jg-navigation-mode-map (kbd "C-v") 'persp-switch-to-buffer*)
 
@@ -157,18 +157,10 @@
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
 ;; same, but only within the current file
 
-(defun jg-back-button ()
-  (interactive)
-  (cond (selectrum-is-active (selectrum-backward-kill-sexp))
-        (t (back-button-local-backward) )))
-
-(defun jg-forward-button ()
-  (interactive)
-  (cond (selectrum-is-active nil)
-        (t (back-button-local-forward))))
-
-(define-key jg-navigation-mode-map (kbd "C-,") 'jg-back-button)
-(define-key jg-navigation-mode-map (kbd "C-.") 'jg-forward-button)
+(define-key jg-navigation-mode-map (kbd "C-,") #'(lambda () (interactive) (if (minibufferp) (vertico-directory-up) (back-button-local-backward))))
+(define-key jg-navigation-mode-map (kbd "C-.") #'(lambda () (interactive) (if (minibufferp) (vertico-insert) (back-button-local-forward))))
+;;(define-key jg-navigation-mode-map (kbd "C-d") #'(lambda () (interactive) (if (minibufferp) (vertico-delete-buffer) (back-button-local-forward))))
+(define-key vertico-map (kbd "C-d") 'vertico-delete-buffer)
 
 ;; lsp mode
 (define-key jg-navigation-mode-map (kbd "H-M-.") 'lsp-find-definition)
@@ -542,7 +534,3 @@
 
 
 (define-key c++-mode-map (kbd "TAB") nil)
-
-(define-key selectrum-minibuffer-map (kbd "C-,") 'selectrum-backward-kill-sexp)
-;;(define-key selectrum-minibuffer-map (kbd "C-.") 'selectrum-select-from-history)
-;;(define-key selectrum-minibuffer-map (kbd "<RET>") 'selectrum-select-current-candidate)
