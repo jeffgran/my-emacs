@@ -101,3 +101,5 @@
       (setq find-program "C:/GnuWin32/bin/find.exe")
       (setq grep-program "C:/GnuWin32/bin/grep.exe")
       ))
+
+(put 'downcase-region 'disabled nil)

@@ -16,7 +16,6 @@
 
 (straight-use-package 'adaptive-wrap)
 (straight-use-package 'ag)
-;;(straight-use-package 'alert)
 (straight-use-package 'amx)
 (straight-use-package 'async)
 (straight-use-package 'avy)
@@ -25,6 +24,26 @@
 (straight-use-package 'browse-kill-ring)
 (straight-use-package 'cask)
 (straight-use-package 'coffee-mode)
+;; (use-package combobulate
+;;     :preface
+;;     ;; You can customize Combobulate's key prefix here.
+;;     ;; Note that you may have to restart Emacs for this to take effect!
+;;     (setq combobulate-key-prefix "C-c o")
+
+;;     ;; Optional, but recommended.
+;;     ;;
+;;     ;; You can manually enable Combobulate with `M-x
+;;     ;; combobulate-mode'.
+;;     :hook ((python-ts-mode . combobulate-mode)
+;;            (js-ts-mode . combobulate-mode)
+;;            (css-ts-mode . combobulate-mode)
+;;            (yaml-ts-mode . combobulate-mode)
+;;            (json-ts-mode . combobulate-mode)
+;;            (typescript-ts-mode . combobulate-mode)
+;;            (tsx-ts-mode . combobulate-mode))
+;;     ;; Amend this to the directory where you keep Combobulate's source
+;;     ;; code.
+;;     :load-path "combobulate")
 (straight-use-package 'company)
 (straight-use-package 'company-flow)
 (straight-use-package 'company-go)
@@ -40,8 +59,7 @@
 (straight-use-package 'doom-modeline)
 (straight-use-package 'drag-stuff)
 (straight-use-package 'elixir-mode)
-;;(straight-use-package 'elscreen)
-;;(straight-use-package 'elscreen-buffer-group)
+(straight-use-package 'emacsql-sqlite-builtin)
 (straight-use-package 'emojify)
 (straight-use-package 'enh-ruby-mode)
 (straight-use-package 'epl)
@@ -61,10 +79,9 @@
 (straight-use-package 'git-timemachine)
 (straight-use-package 'go-mode)
 (straight-use-package 'graphql-mode)
-(straight-use-package 'grizzl)
-(straight-use-package 'guix)
 (straight-use-package 'haml-mode)
-(straight-use-package 'hotfuzz)
+;;(straight-use-package 'hotfuzz)
+(straight-use-package 'helm)
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
@@ -118,14 +135,10 @@
 (straight-use-package 's)
 (straight-use-package 'scad-mode)
 (straight-use-package 'scss-mode)
-(straight-use-package 'selectrum)
-(straight-use-package 'selectrum-prescient)
 (straight-use-package 'shut-up)
-;;(straight-use-package 'slack)
 (straight-use-package 'slim-mode)
 (straight-use-package 'smartparens)
 (straight-use-package 'smartrep)
-(straight-use-package 'smooth-scroll)
 (straight-use-package 'ssh)
 (straight-use-package 'swift-mode)
 (straight-use-package 'terraform-mode)
@@ -134,6 +147,25 @@
 (straight-use-package 'undo-tree)
 (straight-use-package 'unicode-fonts)
 (straight-use-package 'use-package)
+(use-package vertico
+  :straight (:files (:defaults "extensions/*"))
+  :init
+  (vertico-mode))
+;; Configure directory extension.
+(use-package vertico-directory
+  :after vertico
+  :ensure nil
+  ;; More convenient directory navigation commands
+  :bind (:map vertico-map
+              ;; these don't work because they get overridden by jg-navigation-mode
+              ;; ("RET" . vertico-directory-enter)
+              ;; ("DEL" . vertico-directory-delete-char)
+              ;; ("M-DEL" . vertico-directory-delete-word)
+              ;; ("C-," . vertico-directory-delete-word)
+              )
+  ;; Tidy shadowed file names
+  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
+(straight-use-package 'vertico-prescient)
 (straight-use-package 'vimrc-mode)
 (straight-use-package 'vue-mode)
 (straight-use-package 'web-mode)

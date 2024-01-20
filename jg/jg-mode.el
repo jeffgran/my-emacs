@@ -134,8 +134,8 @@
 
 (define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
-(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if selectrum-is-active
-                                                                                 (selectrum-next-candidate)
+(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if (minibufferp)
+                                                                                 (vertico-next)
                                                                                (call-interactively 'persp-switch-to-buffer*))))
 (define-key jg-navigation-mode-map (kbd "C-v") 'persp-switch-to-buffer*)
 
@@ -145,6 +145,8 @@
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'projectile-find-file)
 (define-key jg-navigation-mode-map (kbd "C-o") 'find-file)
+(define-key jg-navigation-mode-map (kbd "C-x C-r") 'recentf-open)
+(define-key jg-navigation-mode-map (kbd "H-p x r") 'projectile-recentf)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
 (define-key jg-navigation-mode-map (kbd "C-/") #'(lambda ()
                                                   (interactive)
@@ -157,18 +159,10 @@
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
 ;; same, but only within the current file
 
-(defun jg-back-button ()
-  (interactive)
-  (cond (selectrum-is-active (selectrum-backward-kill-sexp))
-        (t (back-button-local-backward) )))
-
-(defun jg-forward-button ()
-  (interactive)
-  (cond (selectrum-is-active nil)
-        (t (back-button-local-forward))))
-
-(define-key jg-navigation-mode-map (kbd "C-,") 'jg-back-button)
-(define-key jg-navigation-mode-map (kbd "C-.") 'jg-forward-button)
+(define-key jg-navigation-mode-map (kbd "C-,") #'(lambda () (interactive) (if (minibufferp) (vertico-directory-up) (back-button-local-backward))))
+(define-key jg-navigation-mode-map (kbd "C-.") #'(lambda () (interactive) (if (minibufferp) (vertico-insert) (back-button-local-forward))))
+;;(define-key jg-navigation-mode-map (kbd "C-d") #'(lambda () (interactive) (if (minibufferp) (vertico-delete-buffer) (back-button-local-forward))))
+(define-key vertico-map (kbd "C-d") 'vertico-delete-buffer)
 
 ;; lsp mode
 (define-key jg-navigation-mode-map (kbd "H-M-.") 'lsp-find-definition)
@@ -284,8 +278,21 @@
 (define-key jg-code-mode-map (kbd "C-M-z") 'undo-tree-visualize)
 
 
+(defun switch-to-shell ()
+  (interactive)
+  (let ((buf (seq-find '(lambda (b)
+                          (with-current-buffer b
+                            (and (eq major-mode 'shell-mode)
+				                         (not (null (get-buffer-process
+				                                     (current-buffer)))))))
+                       (persp-buffer-list-filter (buffer-list)))))
+    (if (bufferp buf)
+        (switch-to-buffer buf)
+      (shell))))
 
 (define-key jg-code-mode-map (kbd "C-x s") 'shell)
+(define-key jg-navigation-mode-map (kbd "C-x C-s") 'switch-to-shell)
+(define-key jg-code-mode-map (kbd "C-x C-s") 'switch-to-shell)
 (define-key jg-code-mode-map (kbd "M-s") nil)
 (define-key jg-code-mode-map (kbd "M-s") 'save-buffer)
 (define-key jg-code-mode-map (kbd "C-M-j") 'join-line)
@@ -293,8 +300,8 @@
 ;;*******************
 ;; Search/Replace/Etc
 ;;*******************
-;;(define-key jg-code-mode-map (kbd "C-S-f") 'ag)
-(define-key jg-code-mode-map (kbd "C-S-f") 'projectile-ag)
+(define-key jg-code-mode-map (kbd "C-S-f") 'ag)
+;;(define-key jg-code-mode-map (kbd "C-S-f") 'projectile-ag)
 (define-key jg-code-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-code-mode-map (kbd "C-S-r") 'query-replace)
 
@@ -333,13 +340,6 @@
 (transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
 
 
-;; set up a new help key prefix since I use C-h for movement
-;; this breaks shit. apparently it has to be a single key, not a sequence.
-;; (if window-system
-;;     (progn
-;;       (setq help-char ?\M-?)
-;;       (global-set-key "\M-?" 'help-for-help)
-;;       ))
 (define-key help-mode-map (kbd "B") 'help-go-back)
 (define-key help-mode-map (kbd "F") 'help-go-forward)
 
@@ -378,19 +378,6 @@
 (define-key enh-ruby-mode-map (kbd "M-'") 'enh-ruby-forward-sexp)
 (define-key enh-ruby-mode-map (kbd "C-M-h") 'enh-ruby-beginning-of-block)
 (define-key enh-ruby-mode-map (kbd "C-M-'") 'enh-ruby-end-of-block)
-
-
-
-
-
-
-;; for some reason they don't take effect unless I bind them every time, in this hook.
-;; (add-hook 'ido-setup-hook 'ido-jg-keys)
-;; (defun ido-jg-keys ()
-;;   "Add my keybindings for ido."
-;;   (define-key ido-completion-map (kbd "C-n") 'ido-next-match)
-;;   (define-key ido-completion-map (kbd "C-p") 'ido-prev-match)
-;;   )
 
 
 
@@ -542,7 +529,3 @@
 
 
 (define-key c++-mode-map (kbd "TAB") nil)
-
-(define-key selectrum-minibuffer-map (kbd "C-,") 'selectrum-backward-kill-sexp)
-;;(define-key selectrum-minibuffer-map (kbd "C-.") 'selectrum-select-from-history)
-;;(define-key selectrum-minibuffer-map (kbd "<RET>") 'selectrum-select-current-candidate)
