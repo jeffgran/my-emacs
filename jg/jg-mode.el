@@ -285,7 +285,7 @@
                             (and (eq major-mode 'shell-mode)
 				                         (not (null (get-buffer-process
 				                                     (current-buffer)))))))
-                       (buffer-list))))
+                       (persp-buffer-list-filter (buffer-list)))))
     (if (bufferp buf)
         (switch-to-buffer buf)
       (shell))))

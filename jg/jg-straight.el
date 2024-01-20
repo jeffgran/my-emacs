@@ -81,6 +81,7 @@
 (straight-use-package 'graphql-mode)
 (straight-use-package 'haml-mode)
 ;;(straight-use-package 'hotfuzz)
+(straight-use-package 'helm)
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
