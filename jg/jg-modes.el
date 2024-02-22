@@ -407,8 +407,7 @@
 
 (require 'grep-buffers)
 
-(require 'linum)
-(global-linum-mode 1)
+(global-display-line-numbers-mode 1)
 
 ;; successor to smex. better M-x
 (amx-mode)
