@@ -118,6 +118,9 @@
 ;; (setq ruby-align-to-stmt-keywords nil)
 ;; (setq ruby-indent-level 2)
 
+(add-to-list 'safe-local-variable-values
+             '(rspec-spec-command . "dox-do bundle exec rspec"))
+
 
 (require 'enh-ruby-mode)
 (add-hook 'enh-ruby-mode-hook 'erm-define-faces)
@@ -420,7 +423,7 @@
 
 ;; minibuffer completions vertical display
 ;(setq prescient-filter-method '(literal fuzzy regexp initialism))
-(setq prescient-filter-method '(literal initialism prefix regexp fuzzy)
+(setq prescient-filter-method '(fuzzy literal initialism prefix regexp)
       prescient-use-char-folding t
       prescient-use-case-folding 'smart
       prescient-sort-full-matches-first t ; Works well with `initialism'.
