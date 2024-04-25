@@ -484,21 +484,11 @@
 (require 'ws-butler)
 (ws-butler-global-mode)
 
-;; kill the buffer upon completion of the process.
-(defun kill-buffer-on-exit-shell ()
-  (let* ((buff (current-buffer))
-         (proc (get-buffer-process buff)))
-    (lexical-let ((buff buff))
-      (set-process-sentinel proc (lambda (process event)
-                                   (if (string= event "finished\n")
-                                       (progn
-                                         (kill-buffer buff))))))))
-
 ;; term-mode
 ;;(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
-(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
+;;(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)
 
 

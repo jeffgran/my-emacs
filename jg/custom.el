@@ -20,7 +20,11 @@
    '(dired-filter doom-modeline yard-mode which-key lsp-ui avy vue-mode forge git-link persp-projectile xterm-color hotfuzz amx selectrum k8s-mode poly-markdown lsp-mode company-native-complete company-go flymake-go jenkinsfile-mode tide elixir-mode graphql-mode lsp-typescript company-terraform swift-mode web-mode fish-completion fish-mode enh-ruby-mode rubocop undo-tree dired-subtree company-flow flycheck-flow flow-mode zoom-frm yaml-mode ws-butler vkill vimrc-mode use-package unicode-fonts swbuff ssh smartparens slim-mode scad-mode rust-mode ruby-additional rspec-mode redo+ rbenv rake rainbow-mode rainbow-delimiters python-mode projectile prodigy processing-mode popwin ponylang-mode php-mode pbcopy paredit pallet nyan-mode multiple-cursors modeline-posn maxframe magit lua-mode less-css-mode keyfreq jsx-mode json-mode js2-mode jg-quicknav idle-highlight-mode htmlize haml-mode git-timemachine ggtags flycheck-package flycheck-cask expand-region exec-path-from-shell eww-lnum ensime elscreen-buffer-group drag-stuff dired+ deferred csv-mode coffee-mode browse-kill-ring back-button ag adaptive-wrap))
  '(persp-state-default-file "~/.emacs.d/.persp")
  '(safe-local-variable-values
-   '((encoding . utf-8)
+   '((encoding . binary)
+     (rspec-use-relative-path . t)
+     (rspec-use-bundler-when-possible)
+     (rspec-spec-command . "dox-do bundle exec rspec")
+     (encoding . utf-8)
      (eval when
            (fboundp 'rainbow-mode)
            (rainbow-mode 1))))
