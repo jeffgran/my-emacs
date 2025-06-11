@@ -192,17 +192,38 @@
 (setq sgml-basic-offset 2)
 
 (require 'web-mode)
-(add-to-list 'auto-mode-alist '("\\.tsx\\'" . web-mode))
+
+(add-hook 'web-mode-hook  '(lambda ()
+                             (setq web-mode-style-padding 0
+                                   web-mode-script-padding 0
+                                   web-mode-block-padding 0
+                                   web-mode-markup-indent-offset 2
+                                   web-mode-css-indent-offset 2
+                                   web-mode-code-indent-offset 2)
+                             ))
+(setf (alist-get 'web-mode lsp--formatting-indent-alist) 'web-mode-code-indent-offset) ;; fixes indentation
+(add-to-list 'auto-mode-alist '("\\.tsx?$" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
 (add-hook 'web-mode-hook
           (lambda ()
-            (when (string-equal "tsx" (file-name-extension buffer-file-name))
+            (when (or
+                   (string-equal "tsx" (file-name-extension buffer-file-name))
+                   (string-equal "ts" (file-name-extension buffer-file-name)))
               (setup-tide-mode))))
+(add-hook 'web-mode-hook
+          (lambda ()
+            (when (string-equal "vue" (file-name-extension buffer-file-name))
+              (lsp-deferred))))
 
 (add-to-list 'auto-mode-alist '("\\.conkerorrc$" . web-mode))
 (add-to-list 'interpreter-mode-alist '("node" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.jsx?" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.erb$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\.eex$" . web-mode))
+
+
+(add-to-list 'web-mode-content-types
+             '("sass" . "\\.sass\\'"))
 
 
 ;; set to jsx mode by default in web-mode
@@ -572,22 +593,22 @@
 
 ;; tree-sitter
 (setq treesit-language-source-alist
-   '((bash "https://github.com/tree-sitter/tree-sitter-bash")
-     (cmake "https://github.com/uyha/tree-sitter-cmake")
-     (css "https://github.com/tree-sitter/tree-sitter-css")
-     (elisp "https://github.com/Wilfred/tree-sitter-elisp")
-     (go "https://github.com/tree-sitter/tree-sitter-go")
-     (html "https://github.com/tree-sitter/tree-sitter-html")
-     (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
-     (json "https://github.com/tree-sitter/tree-sitter-json")
-     (make "https://github.com/alemuller/tree-sitter-make")
-     (markdown "https://github.com/ikatyang/tree-sitter-markdown")
-     (python "https://github.com/tree-sitter/tree-sitter-python")
-     (ruby "https://github.com/tree-sitter/tree-sitter-ruby")
-     (toml "https://github.com/tree-sitter/tree-sitter-toml")
-     (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
-     (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
-     (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
+      '((bash "https://github.com/tree-sitter/tree-sitter-bash")
+        (cmake "https://github.com/uyha/tree-sitter-cmake")
+        (css "https://github.com/tree-sitter/tree-sitter-css")
+        (elisp "https://github.com/Wilfred/tree-sitter-elisp")
+        (go "https://github.com/tree-sitter/tree-sitter-go")
+        (html "https://github.com/tree-sitter/tree-sitter-html")
+        (javascript "https://github.com/tree-sitter/tree-sitter-javascript" "master" "src")
+        (json "https://github.com/tree-sitter/tree-sitter-json")
+        (make "https://github.com/alemuller/tree-sitter-make")
+        (markdown "https://github.com/ikatyang/tree-sitter-markdown")
+        (python "https://github.com/tree-sitter/tree-sitter-python")
+        (ruby "https://github.com/tree-sitter/tree-sitter-ruby")
+        (toml "https://github.com/tree-sitter/tree-sitter-toml")
+        (tsx "https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src")
+        (typescript "https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src")
+        (yaml "https://github.com/ikatyang/tree-sitter-yaml")))
 
 ;;(mapc #'treesit-install-language-grammar (mapcar #'car treesit-language-source-alist)) ; compiles all languages above ^ - should be done periodically to get latest versions
 
