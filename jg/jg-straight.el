@@ -167,7 +167,7 @@
   :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
 (straight-use-package 'vertico-prescient)
 (straight-use-package 'vimrc-mode)
-(straight-use-package 'vue-mode)
+;;(straight-use-package 'vue-mode)
 (straight-use-package 'web-mode)
 (straight-use-package 'which-key)
 (straight-use-package 'with-editor)
@@ -175,3 +175,4 @@
 (straight-use-package 'xterm-color)
 (straight-use-package 'yaml-mode)
 (straight-use-package 'yard-mode)
+(straight-use-package 'sass-mode)
