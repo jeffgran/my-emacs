@@ -118,6 +118,9 @@
 ;; (setq ruby-align-to-stmt-keywords nil)
 ;; (setq ruby-indent-level 2)
 
+(add-to-list 'safe-local-variable-values
+             '(rspec-spec-command . "dox-do bundle exec rspec"))
+
 
 (require 'enh-ruby-mode)
 (add-hook 'enh-ruby-mode-hook 'erm-define-faces)
@@ -249,7 +252,7 @@
 (eval-after-load 'web-mode #'(lambda ()
                                (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
 
-;;(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -316,7 +319,9 @@
   )                         ; Enable auto-complete mode
 (add-hook 'go-mode-hook 'my-go-mode-hook)
 (add-hook 'go-mode-hook 'lsp-deferred)
-
+(eval-after-load 'flycheck
+  '(add-hook 'flycheck-mode-hook #'flycheck-golangci-lint-setup))
+;;(flycheck-remove-next-checker 'lsp 'golangci-lint)
 
 
 
@@ -356,6 +361,10 @@
 (add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-ts-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-ts-mode))
 (add-to-list 'auto-mode-alist '("Fastfile" . ruby-ts-mode))
+
+
+(add-hook 'xref-backend-functions #'dumb-jump-xref-activate) ;; enable xref mode for dumb-jump
+(setq xref-show-definitions-function #'xref-show-definitions-completing-read) ;; use completing-read (currently vertico) for xref
 
 
 (require 'xterm-color)
@@ -413,27 +422,17 @@
 
 (require 'grep-buffers)
 
-(require 'linum)
-(global-linum-mode 1)
+(global-display-line-numbers-mode 1)
 
 ;; successor to smex. better M-x
 (amx-mode)
 
-;; minibuffer completions vertical display
-;(setq prescient-filter-method '(literal fuzzy regexp initialism))
-(setq prescient-filter-method '(literal initialism prefix regexp fuzzy)
-      prescient-use-char-folding t
-      prescient-use-case-folding 'smart
-      prescient-sort-full-matches-first t ; Works well with `initialism'.
-      prescient-sort-length-enable t
-      vertico-prescient-enable-sorting nil)
-
 (setq completion-ignore-case t)
 (setq read-file-name-completion-ignore-case t)
-;;(setq completion-styles '(basic substring flex initials))
+(setq completion-styles '(basic substring flex initials))
 
-(vertico-prescient-mode 1)
-(prescient-persist-mode 1)
+;;(vertico-prescient-mode -1)
+;;(prescient-persist-mode 1)
 (setq vertico-cycle t)
 
 (defun vertico-delete-buffer ()
@@ -482,21 +481,11 @@
 (require 'ws-butler)
 (ws-butler-global-mode)
 
-;; kill the buffer upon completion of the process.
-(defun kill-buffer-on-exit-shell ()
-  (let* ((buff (current-buffer))
-         (proc (get-buffer-process buff)))
-    (lexical-let ((buff buff))
-      (set-process-sentinel proc (lambda (process event)
-                                   (if (string= event "finished\n")
-                                       (progn
-                                         (kill-buffer buff))))))))
-
 ;; term-mode
 ;;(add-hook 'term-exec-hook 'kill-buffer-on-exit-shell)
 
 ;; shell mode
-(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
+;;(add-hook 'shell-mode-hook 'kill-buffer-on-exit-shell)
 (add-hook 'comint-output-filter-functions 'comint-truncate-buffer)
 
 

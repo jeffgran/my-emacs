@@ -41,9 +41,9 @@
 (setq shift-select-mode nil)
 (define-key jg-navigation-mode-map (kbd "C-l") 'forward-char)
 (define-key jg-navigation-mode-map (kbd "C-j") 'backward-char)
-(define-key jg-navigation-mode-map (kbd "C-;") 'forward-word)
+(define-key jg-navigation-mode-map (kbd "C-;") '(lambda () (interactive) (forward-word-strictly)))
 (define-key jg-navigation-mode-map (kbd "C-\"") nil)
-(define-key jg-navigation-mode-map (kbd "C-h") 'backward-word)
+(define-key jg-navigation-mode-map (kbd "C-h") '(lambda () (interactive) (backward-word-strictly)))
 
 ;; real toggle mark command. how does this not exist? but it doesn't
 (define-key jg-navigation-mode-map (kbd "C-f") #'(lambda ()

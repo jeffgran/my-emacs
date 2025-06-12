@@ -703,6 +703,13 @@ there's a region, all lines that region covers will be duplicated."
 (transient-define-prefix project-dispatch ()
   ["Project"
    ("r" "Refresh projects" projectile-discover-projects-in-search-path)
+   ("k" "Clear project (kill other buffers)" persp-kill-other-buffers)
+   ]
+  )
+
+(transient-define-prefix browse-dispatch ()
+  ["Browse"
+   ("p" "URL at Point" browse-url-at-point)
    ]
   )
 
@@ -729,6 +736,7 @@ there's a region, all lines that region covers will be duplicated."
 (transient-define-prefix jg-dispatch ()
   ["JG"
    [
+    ("b" "Browse" browse-dispatch)
     ("k" "Links" git-link-dispatch)
     ("h" "Help" describe-dispatch)
     ("p" "Project" project-dispatch)
