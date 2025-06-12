@@ -1,5 +1,12 @@
 this is just my personal emacs setup, 10 years in the making.
 
+# Building emacs on ubuntu-ish linux
+
+$ sudo apt install libgccjit-12-dev
+$ export CC="gcc-12"
+
+https://ryanfleck.ca/2025/compiling-emacs-30/
+
 # Install Notes:
 
 see install.md

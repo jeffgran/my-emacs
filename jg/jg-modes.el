@@ -182,10 +182,6 @@
                 poly-markdown-yaml-metadata-innermode))
 
 
-;; php mode
-(require 'php-mode)
-
-
 ;; js mode
 (setq js-indent-level 2)
 (setq js2-basic-offset 2)
@@ -288,12 +284,6 @@
 
 (customize-set-variable 'coffee-tab-width 2)
 
-;;(add-to-list 'auto-mode-alist '("\\.scss$" . css-mode))
-;;(autoload 'css-mode "css-mode" "CSS editing mode" t)
-(require 'scss-mode)
-(add-to-list 'auto-mode-alist '("\\.scss\\'" . scss-mode))
-
-
 
 ;;(require 'shell-script-mode)
 (add-to-list 'auto-mode-alist '("\\.aliases$" . sh-mode))
@@ -393,11 +383,6 @@
 
 (set-face-attribute 'comint-highlight-prompt nil
                     :inherit nil) ; don't override the prompt colors
-
-
-;; use c++ for torquescript
-(add-to-list 'auto-mode-alist '("\\.cs$" . c++-mode))
-(setq c-basic-offset 4)
 
 (add-hook 'c-mode-common-hook
           (lambda ()
