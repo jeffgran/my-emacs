@@ -526,6 +526,3 @@
 (add-hook 'mu4e-main-mode-hook 'disable-jg-code-mode)
 (add-hook 'mu4e-headers-mode-hook 'disable-jg-code-mode)
 (add-hook 'mu4e-view-mode-hook 'disable-jg-code-mode)
-
-
-(define-key c++-mode-map (kbd "TAB") nil)
