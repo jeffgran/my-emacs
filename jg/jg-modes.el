@@ -252,7 +252,7 @@
 (eval-after-load 'web-mode #'(lambda ()
                                (define-key web-mode-map (kbd "M-;") 'demi-brolin)))
 
-;;(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx?$" . typescript-mode))
 (defun setup-tide-mode ()
   (interactive)
   (tide-setup)
@@ -319,7 +319,9 @@
   )                         ; Enable auto-complete mode
 (add-hook 'go-mode-hook 'my-go-mode-hook)
 (add-hook 'go-mode-hook 'lsp-deferred)
-
+(eval-after-load 'flycheck
+  '(add-hook 'flycheck-mode-hook #'flycheck-golangci-lint-setup))
+;;(flycheck-remove-next-checker 'lsp 'golangci-lint)
 
 
 
@@ -359,6 +361,10 @@
 (add-to-list 'auto-mode-alist '("Thorfile\\'" . ruby-ts-mode))
 (add-to-list 'auto-mode-alist '("Vagrantfile\\'" . ruby-ts-mode))
 (add-to-list 'auto-mode-alist '("Fastfile" . ruby-ts-mode))
+
+
+(add-hook 'xref-backend-functions #'dumb-jump-xref-activate) ;; enable xref mode for dumb-jump
+(setq xref-show-definitions-function #'xref-show-definitions-completing-read) ;; use completing-read (currently vertico) for xref
 
 
 (require 'xterm-color)
@@ -421,21 +427,12 @@
 ;; successor to smex. better M-x
 (amx-mode)
 
-;; minibuffer completions vertical display
-;(setq prescient-filter-method '(literal fuzzy regexp initialism))
-(setq prescient-filter-method '(fuzzy literal initialism prefix regexp)
-      prescient-use-char-folding t
-      prescient-use-case-folding 'smart
-      prescient-sort-full-matches-first t ; Works well with `initialism'.
-      prescient-sort-length-enable t
-      vertico-prescient-enable-sorting nil)
-
 (setq completion-ignore-case t)
 (setq read-file-name-completion-ignore-case t)
-;;(setq completion-styles '(basic substring flex initials))
+(setq completion-styles '(basic substring flex initials))
 
-(vertico-prescient-mode 1)
-(prescient-persist-mode 1)
+;;(vertico-prescient-mode -1)
+;;(prescient-persist-mode 1)
 (setq vertico-cycle t)
 
 (defun vertico-delete-buffer ()

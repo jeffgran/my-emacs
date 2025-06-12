@@ -12,4 +12,3 @@
 (load-library "jg-setup")           ; basic stock on/off switches and stuff.
 (load-library "jg-mode")            ; my keys. they are sweeet.
 
-(persp-state-load (concat user-emacs-directory ".persp"))
