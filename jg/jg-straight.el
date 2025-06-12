@@ -21,13 +21,9 @@
   :bind (("C-c a" . aidermacs-transient-menu))
   :custom
   (aidermacs-default-model "gemini-2.0-flash"))
-(straight-use-package 'amx)
 (straight-use-package 'async)
-(straight-use-package 'avy)
 (straight-use-package 'back-button)
 (straight-use-package 'bind-key)
-(straight-use-package 'browse-kill-ring)
-(straight-use-package 'cask)
 (straight-use-package 'coffee-mode)
 ;; (use-package combobulate
 ;;     :preface
@@ -73,7 +69,6 @@
 (straight-use-package 'expand-region)
 (straight-use-package 'f)
 (straight-use-package 'flycheck)
-(straight-use-package 'flycheck-cask)
 (straight-use-package 'flycheck-flow)
 (straight-use-package 'flycheck-package)
 (straight-use-package 'forge)
@@ -84,7 +79,37 @@
 (straight-use-package 'go-mode)
 (straight-use-package 'graphql-mode)
 (straight-use-package 'haml-mode)
-(straight-use-package 'helm)
+(use-package helm
+  :straight t
+  :demand t
+  :bind (
+         :map helm-map
+         ("TAB" . 'helm-execute-persistent-action)
+         )
+  :init
+  (helm-mode)
+  (setq helm-mode-fuzzy-match t)
+  (setq helm-completion-in-region-fuzzy-match t)
+  )
+(use-package helm-files
+  :bind (
+         :map helm-find-files-map
+         ("C-d" . 'helm-ff-persistent-delete)
+         ("C-." . 'helm-find-files-down-last-level)
+         ("C-," . 'helm-find-files-up-one-level)
+         )
+  )
+(use-package helm-buffers
+  :bind (
+         :map helm-buffer-map
+         ("C-d" . 'helm-buffer-run-kill-persistent)
+         )
+  )
+;; (use-package helm-fuzzy
+;;   :straight t
+;;   :init
+;;   (with-eval-after-load 'helm
+;;     (helm-fuzzy-mode 1)))
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
@@ -148,25 +173,6 @@
 (straight-use-package 'ucs-utils)
 (straight-use-package 'undo-tree)
 (straight-use-package 'unicode-fonts)
-(use-package vertico
-  :straight (:files (:defaults "extensions/*"))
-  :init
-  (vertico-mode))
-;; Configure directory extension.
-(use-package vertico-directory
-  :after vertico
-  :ensure nil
-  ;; More convenient directory navigation commands
-  :bind (:map vertico-map
-              ;; these don't work because they get overridden by jg-navigation-mode
-              ;; ("RET" . vertico-directory-enter)
-              ;; ("DEL" . vertico-directory-delete-char)
-              ;; ("M-DEL" . vertico-directory-delete-word)
-              ;; ("C-," . vertico-directory-delete-word)
-              )
-  ;; Tidy shadowed file names
-  :hook (rfn-eshadow-update-overlay . vertico-directory-tidy))
-(straight-use-package 'vertico-prescient)
 (straight-use-package 'vimrc-mode)
 ;;(straight-use-package 'vue-mode)
 (straight-use-package 'web-mode)

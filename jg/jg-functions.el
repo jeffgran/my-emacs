@@ -320,84 +320,6 @@
                (message "File '%s' successfully renamed to '%s'" name (file-name-nondirectory new-name))))))))
 
 
-;; dunno where I found this but then I modified it.
-;; (defun move-text-internal (arg)
-;;   (cond
-;;    ((and mark-active transient-mark-mode)
-;;     (let* ((point-was-backwards (progn
-;;                                   (if (> (point) (mark))
-;;                                       (progn (exchange-point-and-mark) t)
-;;                                     nil)
-;;                                   ))
-;;            (original-point-column (current-column))
-;;            (original-mark-column (prog2
-;;                                      (exchange-point-and-mark)
-;;                                      (current-column)
-;;                                    (exchange-point-and-mark))))
-;;       (let* ((beg (line-beginning-position))
-;;              (end (progn
-;;                     (exchange-point-and-mark)
-;;                     (if (and (eq (line-beginning-position) (point))
-;;                              (not (eq beg (point))))
-;;                         (line-beginning-position)
-;;                       (+ 1 (line-end-position)))))
-;;              (text   (delete-and-extract-region beg end)))
-;;         (forward-line arg)
-;;         (beginning-of-line)
-;;         (insert text)
-;;         (if point-was-backwards
-;;             (progn
-;;               (backward-char (length text))
-;;               (move-to-column original-point-column)
-;;               (set-mark (point))
-;;               (beginning-of-line)
-;;               (forward-char (length text))
-;;               (unless (eq 0 original-mark-column)
-;;                 (progn (backward-char)
-;;                        (move-to-column original-mark-column)))
-;;               )
-;;           (progn
-;;             (unless (eq 0 original-mark-column)
-;;               (backward-char))
-;;             (move-to-column original-mark-column)
-;;             (set-mark (point))
-;;             (unless (eq 0 original-mark-column)
-;;               (end-of-line))
-;;             (backward-char (- (length text) 1))
-;;             (move-to-column original-point-column)
-;;             ))
-
-;;         (setq deactivate-mark nil)
-;;         )))
-;;    (t
-;;     (let ((original-column (current-column)))
-;;       (shut-up 
-;;         (beginning-of-line)
-;;         (kill-line)
-;;         (when (not (eobp))
-;;           (delete-forward-char 1))
-;;         (forward-line arg)
-;;         (yank)
-;;         (newline)
-;;         (forward-line (- 1))
-;;         (beginning-of-line)
-;;         (forward-char original-column))))
-;;    ))
-
-
-
-;; (defun move-text-down (arg)
-;;    "Move region (transient-mark-mode active) or current line
-;;   arg lines down."
-;;    (interactive "*p")
-;;    (move-text-internal arg))
-
-;; (defun move-text-up (arg)
-;;    "Move region (transient-mark-mode active) or current line
-;;   arg lines up."
-;;    (interactive "*p")
-;;    (move-text-internal (- arg)))
-
 (defun duplicate-current-line-or-region (arg)
   "Duplicates the current line or region ARG times.
 If there's no region, the current line will be duplicated. However, if
@@ -490,22 +412,6 @@ there's a region, all lines that region covers will be duplicated."
   (interactive) 
   (if (bolp) (back-to-indentation) (beginning-of-line)))
 
-;; ------------------------------------------------------------------------
-;; from http://mattbriggs.net/blog/2012/03/18/awesome-emacs-plugins-ctags/
-(defun build-ctags (&optional passed-root)
-  (interactive)
-  (message "building project tags")
-  (let ((root (or passed-root (jg-project-root))))
-    (shell-command (concat "ctags -e -R --extra=+fq --exclude=db --exclude=jars --exclude=vendor --exclude=.git --exclude=public -f " root ".tags " root))
-    (visit-project-tags))
-  (message "tags built successfully"))
-
-(defun visit-project-tags ()
-  (interactive)
-  (let ((tags-file (concat (jg-project-root) "TAGS")))
-    (visit-tags-table tags-file)
-    (message (concat "Loaded " tags-file))))
-;; ------------------------------------------------------------------------
 
 
 ;; from http://stackoverflow.com/questions/3139970/open-a-file-at-line-with-filenameline-syntax
@@ -712,26 +618,6 @@ there's a region, all lines that region covers will be duplicated."
    ("p" "URL at Point" browse-url-at-point)
    ]
   )
-
-;;--------------------------------------------------
-
-;;(define-key slack-mode-map (kbd "C-n") nil)
-;;(define-key slack-mode-map (kbd "M-n") 'slack-buffer-goto-next-message)
-;;(define-key slack-mode-map (kbd "C-p") nil)
-;;(define-key slack-mode-map (kbd "M-p") 'slack-buffer-goto-prev-message)
-;;(define-key slack-mode-map (kbd "C-w") 'kill-buffer-and-window)
-;; (transient-define-prefix slack-dispatch ()
-;;   ["Slack"
-;;    [
-;;     ("m" "Compose Message" slack-message-write-another-buffer)
-;;     ("n" "New Messages" slack-select-unread-unmuted-rooms)
-;;     ("c" "Switch to Channel" slack-select-subscribed-rooms)
-;;     ("t" "All Threads" slack-all-threads)
-;;     ("T" "Show or Create Thread" slack-thread-show-or-create)
-;;     ("r" "Reaction" slack-message-add-reaction)
-;;     ]
-;;    ]
-;;   )
 
 (transient-define-prefix jg-dispatch ()
   ["JG"

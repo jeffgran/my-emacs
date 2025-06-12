@@ -134,17 +134,15 @@
 
 (define-key jg-navigation-mode-map (kbd "C-x C-b") 'ibuffer)
 
-(define-key jg-navigation-mode-map (kbd "<C-tab>") #'(lambda () (interactive) (if (minibufferp)
-                                                                                 (vertico-next)
-                                                                               (call-interactively 'persp-switch-to-buffer*))))
-(define-key jg-navigation-mode-map (kbd "C-v") 'persp-switch-to-buffer*)
+
+(define-key jg-navigation-mode-map (kbd "C-v") 'helm-buffers-list)
 
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
 (define-key jg-navigation-mode-map (kbd "C-S-o") 'projectile-find-file)
-(define-key jg-navigation-mode-map (kbd "C-o") 'find-file)
+(define-key jg-navigation-mode-map (kbd "C-o") 'helm-find-files)
 (define-key jg-navigation-mode-map (kbd "C-x C-r") 'recentf-open)
 (define-key jg-navigation-mode-map (kbd "H-p x r") 'projectile-recentf)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
@@ -158,11 +156,6 @@
 (define-key jg-navigation-mode-map (kbd "C-<") 'back-button-global-backward)
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
 ;; same, but only within the current file
-
-(define-key jg-navigation-mode-map (kbd "C-,") #'(lambda () (interactive) (if (minibufferp) (vertico-directory-up) (back-button-local-backward))))
-(define-key jg-navigation-mode-map (kbd "C-.") #'(lambda () (interactive) (if (minibufferp) (vertico-insert) (back-button-local-forward))))
-;;(define-key jg-navigation-mode-map (kbd "C-d") #'(lambda () (interactive) (if (minibufferp) (vertico-delete-buffer) (back-button-local-forward))))
-(define-key vertico-map (kbd "C-d") 'vertico-delete-buffer)
 
 ;; lsp mode
 (define-key jg-navigation-mode-map (kbd "H-M-.") 'lsp-find-definition)
@@ -180,8 +173,8 @@
 (define-key jg-navigation-mode-map (kbd "M-q") 'save-buffers-kill-terminal)
 
 ;; amx is m-x but with auto-completion
-(define-key jg-navigation-mode-map (kbd "H-x") 'amx)
-(define-key jg-navigation-mode-map (kbd "s-x") 'amx) ; for when hyper is broken
+(define-key jg-navigation-mode-map (kbd "H-x") 'helm-M-x)
+(define-key jg-navigation-mode-map (kbd "s-x") 'helm-M-x) ; for when hyper is broken
 
 (define-key jg-navigation-mode-map (kbd "M-j") 'jg-dispatch)
 
@@ -476,7 +469,7 @@
 (define-key dired-jump-map (kbd "e") 'dired-subtree-end)
 (define-key dired-jump-map (kbd "s") 'dired-subtree-beginning)
 
-(define-key dired-mode-map (kbd "C-o") 'jg-quicknav)
+(define-key dired-mode-map (kbd "C-o") 'helm-find-files)
 ;; (define-key dired-mode-map (kbd "C-o") 'dired-display-file)
 
 
