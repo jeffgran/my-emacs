@@ -41,21 +41,22 @@
 (jg-global-undo-tree-mode)
 (setq undo-tree-auto-save-history nil)
 
-(require 'ag)
-(setq ag-group-matches nil)
-(setq ag-highlight-search t)
-(customize-set-variable 'ag-arguments '("-W" "200"
-                                        "--line-number"
-                                        "--smart-case"
-                                        "--nogroup"
-                                        "--column"
-                                        "--stats"
-                                        "--ignore" "node_modules"
-                                        "--ignore" "*.js.map"
-                                        "--ignore" "*.min.js"
-                                        "--hidden"
-                                        "--"
-                                        ))
+;;(require 'ag)
+;;(setq ag-group-matches nil)
+;;(setq ag-highlight-search t)
+
+;; (customize-set-variable 'ag-arguments '("-W" "200" ;
+;;                                         "--line-number"
+;;                                         "--smart-case"
+;;                                         "--nogroup"
+;;                                         "--column"
+;;                                         "--stats"
+;;                                         "--ignore" "node_modules"
+;;                                         "--ignore" "*.js.map"
+;;                                         "--ignore" "*.min.js"
+;;                                         "--hidden"
+;;                                         "--"
+;;                                         ))
 
 
 

@@ -15,7 +15,7 @@
 ;;;-------------------------------------
 
 (straight-use-package 'adaptive-wrap)
-(straight-use-package 'ag)
+;;(straight-use-package 'ag)
 
 (use-package aidermacs
   :straight t
@@ -114,6 +114,21 @@
   (setq helm-mode-fuzzy-match t)
   (setq helm-completion-in-region-fuzzy-match t)
   )
+
+(use-package helm-ag
+  :after transient
+  :straight t
+  :bind (
+         :map helm-ag-mode-map
+         ("RET" . helm-ag-mode-jump-other-window)
+         )
+  :init
+  (defun helm-ag-with-prefix ()
+    (interactive)
+    (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
+      (call-interactively 'helm-ag)))
+  )
+
 (use-package helm-files
   :bind (
          :map helm-find-files-map

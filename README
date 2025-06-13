@@ -11,6 +11,12 @@ For doom-modeline, need to run:
 
     M-x nerd-icons-install-fonts
 
+Notes:
+
+for helm-ag, during the results:
+- C-c C-e to "edit results", then do whatever you want in that buffer, then C-c C-c to commit all results!
+- C-x C-s to "save results" to a buffer, then RET on a line to visit it in other window
+
 # Install Notes:
 
 see install.md
