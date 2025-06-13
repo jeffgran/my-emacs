@@ -462,10 +462,6 @@ there's a region, all lines that region covers will be duplicated."
 ;;     (save-buffer 16)))
 ;; (global-set-key [remap save-buffer] 'le::save-buffer-force-backup)
 
-(defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
-  "Center the view after moving it"
-  (recenter))
-
 
 
 

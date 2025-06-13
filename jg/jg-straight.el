@@ -16,13 +16,24 @@
 
 (straight-use-package 'adaptive-wrap)
 (straight-use-package 'ag)
+
 (use-package aidermacs
   :straight t
   :bind (("C-c a" . aidermacs-transient-menu))
   :custom
   (aidermacs-default-model "gemini-2.0-flash"))
+
 (straight-use-package 'async)
-(straight-use-package 'back-button)
+
+(use-package back-button
+  :straight t
+  :init
+  (back-button-mode)
+  (defadvice back-button-pop-local-mark (after center-after-back-button-local activate)
+    "Center the view after moving it"
+    (recenter))
+  )
+
 (straight-use-package 'bind-key)
 (straight-use-package 'coffee-mode)
 ;; (use-package combobulate

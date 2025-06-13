@@ -409,11 +409,6 @@
 (setenv "LANG" "en_US.UTF-8")
 
 
-(require 'back-button)
-(back-button-mode 1)
-
-
-
 (setq-default save-interprogram-paste-before-kill t)
 (setq-default indent-tabs-mode nil)
 

@@ -155,6 +155,8 @@
 ;; forward/back buttons like in a browser. go to the last place I was.
 (define-key jg-navigation-mode-map (kbd "C-<") 'back-button-global-backward)
 (define-key jg-navigation-mode-map (kbd "C->") 'back-button-global-forward)
+(define-key jg-navigation-mode-map (kbd "C-,") 'back-button-local-backward)
+(define-key jg-navigation-mode-map (kbd "C-.") 'back-button-local-forward)
 ;; same, but only within the current file
 
 ;; lsp mode
