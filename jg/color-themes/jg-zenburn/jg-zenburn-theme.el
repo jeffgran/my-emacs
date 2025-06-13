@@ -459,22 +459,64 @@
    `(gnus-x ((t (:background ,jg-zenburn-fg :foreground ,jg-zenburn-bg))))
 
    ;; helm
+
    `(helm-header
      ((t (:foreground ,jg-zenburn-green
                       :background ,jg-zenburn-bg
                       :underline nil
-                      :box nil))))
+                      :box nil
+                      :extend t))))
    `(helm-source-header
      ((t (:foreground ,jg-zenburn-yellow
                       :background ,jg-zenburn-bg-1
                       :underline nil
                       :weight bold
-                      :box (:line-width -1 :style released-button)))))
-   `(helm-selection ((t (:background ,jg-zenburn-bg+3 :underline nil))))
-
+                      :box (:line-width -1 :style released-button)
+                      :extend t))))
+   `(helm-selection ((t (:background ,jg-zenburn-bg+1 :underline nil))))
    `(helm-selection-line ((t (:background ,jg-zenburn-bg+1))))
    `(helm-visible-mark ((t (:foreground ,jg-zenburn-bg :background ,jg-zenburn-yellow-2))))
    `(helm-candidate-number ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg-1))))
+   `(helm-separator ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))
+   `(helm-time-zone-current ((t (:foreground ,jg-zenburn-green+2 :background ,jg-zenburn-bg))))
+   `(helm-time-zone-home ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))
+   `(helm-bookmark-addressbook ((t (:foreground ,jg-zenburn-orange :background ,jg-zenburn-bg))))
+   `(helm-bookmark-directory ((t (:foreground unspecified :background unspecified :inherit helm-ff-directory))))
+   `(helm-bookmark-file ((t (:foreground unspecified :background unspecified :inherit helm-ff-file))))
+   `(helm-bookmark-gnus ((t (:foreground ,jg-zenburn-magenta :background ,jg-zenburn-bg))))
+   `(helm-bookmark-info ((t (:foreground ,jg-zenburn-green+2 :background ,jg-zenburn-bg))))
+   `(helm-bookmark-man ((t (:foreground ,jg-zenburn-yellow :background ,jg-zenburn-bg))))
+   `(helm-bookmark-w3m ((t (:foreground ,jg-zenburn-magenta :background ,jg-zenburn-bg))))
+   `(helm-buffer-not-saved ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))
+   `(helm-buffer-process ((t (:foreground ,jg-zenburn-cyan :background ,jg-zenburn-bg))))
+   `(helm-buffer-saved-out ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg))))
+   `(helm-buffer-size ((t (:foreground ,jg-zenburn-fg-1 :background ,jg-zenburn-bg))))
+   `(helm-ff-directory ((t (:foreground ,jg-zenburn-cyan :background ,jg-zenburn-bg :weight bold))))
+   `(helm-ff-dotted-directory ((t (:foreground ,jg-zenburn-cyan-2 :background ,jg-zenburn-bg :weight bold))))
+   `(helm-ff-dotted-symlink-directory ((t (:foreground ,jg-zenburn-yellow-2 :background ,jg-zenburn-bg :weight bold))))
+   `(helm-ff-file ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg :weight normal))))
+   `(helm-ff-file-extension ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg :weight normal))))
+   `(helm-ff-executable ((t (:foreground ,jg-zenburn-green+2 :background ,jg-zenburn-bg :weight normal))))
+   `(helm-ff-invalid-symlink ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg :weight bold))))
+   `(helm-ff-symlink ((t (:foreground ,jg-zenburn-yellow :background ,jg-zenburn-bg :weight bold))))
+   `(helm-ff-prefix ((t (:foreground ,jg-zenburn-bg :background ,jg-zenburn-yellow :weight normal))))
+   `(helm-grep-cmd-line ((t (:foreground ,jg-zenburn-cyan :background ,jg-zenburn-bg))))
+   `(helm-grep-file ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg))))
+   `(helm-grep-finish ((t (:foreground ,jg-zenburn-green+2 :background ,jg-zenburn-bg))))
+   `(helm-grep-lineno ((t (:foreground ,jg-zenburn-fg-1 :background ,jg-zenburn-bg))))
+   `(helm-grep-match ((t (:foreground unspecified :background unspecified :inherit helm-match))))
+   `(helm-grep-running ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))
+   `(helm-match ((t (:foreground ,jg-zenburn-orange :background ,jg-zenburn-bg-1 :weight bold))))
+   `(helm-moccur-buffer ((t (:foreground ,jg-zenburn-cyan :background ,jg-zenburn-bg))))
+   `(helm-mu-contacts-address-face ((t (:foreground ,jg-zenburn-fg-1 :background ,jg-zenburn-bg))))
+   `(helm-mu-contacts-name-face ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg))))
+;;;;; helm-lxc
+   `(helm-lxc-face-frozen ((t (:foreground ,jg-zenburn-blue :background ,jg-zenburn-bg))))
+   `(helm-lxc-face-running ((t (:foreground ,jg-zenburn-green :background ,jg-zenburn-bg))))
+   `(helm-lxc-face-stopped ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))
+;;;;; helm-swoop
+   `(helm-swoop-target-line-face ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-bg+1))))
+   `(helm-swoop-target-word-face ((t (:foreground ,jg-zenburn-yellow :background ,jg-zenburn-bg+2 :weight bold))))
 
    ;; hl-line-mode
    `(hl-line-face ((t (:background ,jg-zenburn-blue-6))))

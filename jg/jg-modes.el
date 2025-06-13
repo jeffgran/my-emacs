@@ -5,7 +5,6 @@
 (setq tramp-default-method "ssh") ; default is "scp"
 
 (add-to-list 'auto-mode-alist '("\\.el" . emacs-lisp-mode))
-(add-to-list 'auto-mode-alist '("Cask" . emacs-lisp-mode))
 (add-hook 'emacs-lisp-mode-hook #'(lambda ()
                                     (paredit-mode t)
                                     ))
@@ -25,8 +24,6 @@
 (setq projectile-switch-project-action 'projectile-run-shell)
 (add-hook 'kill-emacs-hook #'persp-state-save)
 (setq persp-modestring-short nil)
-
-(require 'avy)
 
 (require 'undo-tree)
 ;; i stole this from the undo-tree code to override it because its "heuristic"
@@ -364,7 +361,7 @@
 
 
 (add-hook 'xref-backend-functions #'dumb-jump-xref-activate) ;; enable xref mode for dumb-jump
-(setq xref-show-definitions-function #'xref-show-definitions-completing-read) ;; use completing-read (currently vertico) for xref
+(setq xref-show-definitions-function #'xref-show-definitions-completing-read) ;; use completing-read for xref
 
 
 (require 'xterm-color)
@@ -424,58 +421,10 @@
 
 (global-display-line-numbers-mode 1)
 
-;; successor to smex. better M-x
-(amx-mode)
 
 (setq completion-ignore-case t)
 (setq read-file-name-completion-ignore-case t)
 (setq completion-styles '(basic substring flex initials))
-
-;;(vertico-prescient-mode -1)
-;;(prescient-persist-mode 1)
-(setq vertico-cycle t)
-
-(defun vertico-delete-buffer ()
-  (interactive)
-  (persp-kill-buffer* (vertico--candidate))
-  (setq vertico--candidates (persp-current-buffer-names)
-        vertico--total (length (persp-current-buffer-names))
-        vertico--index (min vertico--total 0)
-        )
-  )
-;;completion-table-with-predicate
-
-;; taken from https://github.com/minad/vertico/wiki#pre-select-previous-directory-when-entering-parent-directory-from-within-find-file
-;;-----------------------------------------------------------------------------
-(defvar previous-directory nil
-  "The directory that was just left. It is set when leaving a directory and
-    set back to nil once it is used in the parent directory.")
-
-(defun set-previous-directory ()
-  "Set the directory that was just exited from within find-file."
-  ;; (when (> (minibuffer-prompt-end) (point))
-  (when t
-    (save-excursion
-      (goto-char (1- (point)))
-      (when (search-backward "/" (minibuffer-prompt-end) t)
-        ;; set parent directory
-        (setq previous-directory (buffer-substring (1+ (point)) (point-max)))
-        ;; set back to nil if not sorting by directories or what was deleted is not a directory
-        (when (not (string-suffix-p "/" previous-directory))
-          (setq previous-directory nil))
-        t))))
-
-(advice-add #'vertico-directory-up :before #'set-previous-directory)
-
-(define-advice vertico--update (:after (&rest _) choose-candidate)
-  "Pick the previous directory rather than the prompt after updating candidates."
-  (cond
-   (previous-directory                  ; select previous directory
-    (setq vertico--index (or (seq-position vertico--candidates previous-directory)
-                             vertico--index))
-    (setq previous-directory nil))))
-
-;;-----------------------------------------------------------------------------
 
 
 (require 'ws-butler)
