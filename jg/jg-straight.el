@@ -68,7 +68,18 @@
 (straight-use-package 'dired-filter)
 (straight-use-package 'dired-subtree)
 (straight-use-package 'dockerfile-mode)
-(straight-use-package 'doom-modeline)
+
+(use-package doom-modeline
+  :straight t
+  :ensure t
+  :init
+  (doom-modeline-mode 1)
+  (setq doom-modeline-height 16)
+  ;;(setq doom-modeline-persp-name nil)
+  (doom-modeline-mode +1)
+  (with-eval-after-load 'persp-mode
+    (setq global-mode-string (delete '(:eval (persp-mode-line)) global-mode-string)))
+  )
 (straight-use-package 'drag-stuff)
 (straight-use-package 'dumb-jump)
 (straight-use-package 'elixir-mode)
@@ -91,6 +102,7 @@
 (straight-use-package 'graphql-mode)
 (straight-use-package 'haml-mode)
 (use-package helm
+  :after helm-icons
   :straight t
   :demand t
   :bind (
@@ -116,6 +128,13 @@
          ("C-d" . 'helm-buffer-run-kill-persistent)
          )
   )
+
+(use-package helm-icons
+  :straight t
+  :init
+  (setq helm-icons-provider 'nerd-icons)
+  (helm-icons-enable)
+  )
 ;; (use-package helm-fuzzy
 ;;   :straight t
 ;;   :init
@@ -140,6 +159,12 @@
 (straight-use-package 'maxframe)
 (straight-use-package 'multiple-cursors)
 (straight-use-package 'nav-flash)
+
+(use-package nerd-icons-dired
+  :straight t
+  :hook
+  (dired-mode . nerd-icons-dired-mode))
+
 (straight-use-package 'nix-mode)
 (straight-use-package 'package-build)
 (straight-use-package 'package-lint)
@@ -183,7 +208,7 @@
 (straight-use-package 'typescript-mode)
 (straight-use-package 'ucs-utils)
 (straight-use-package 'undo-tree)
-(straight-use-package 'unicode-fonts)
+;;(straight-use-package 'unicode-fonts)
 (straight-use-package 'vimrc-mode)
 ;;(straight-use-package 'vue-mode)
 (straight-use-package 'web-mode)

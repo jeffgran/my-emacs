@@ -7,6 +7,10 @@ $ export CC="gcc-12"
 
 https://ryanfleck.ca/2025/compiling-emacs-30/
 
+For doom-modeline, need to run:
+
+    M-x nerd-icons-install-fonts
+
 # Install Notes:
 
 see install.md

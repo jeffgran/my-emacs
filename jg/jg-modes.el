@@ -1,5 +1,5 @@
-(require 'unicode-fonts)
-(unicode-fonts-setup)
+;;(require 'unicode-fonts)
+;;(unicode-fonts-setup)
 
 (require 'tramp)
 (setq tramp-default-method "ssh") ; default is "scp"
@@ -80,11 +80,6 @@
 (global-subword-mode 1)
 
 
-(require 'doom-modeline)
-(setq doom-modeline-height 16)
-;;(setq doom-modeline-persp-name nil)
-(doom-modeline-mode +1)
-(setq global-mode-string (delete '(:eval (persp-mode-line)) global-mode-string))
 
 (require 'magit)
 (with-eval-after-load 'magit
