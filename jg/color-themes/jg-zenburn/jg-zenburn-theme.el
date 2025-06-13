@@ -341,6 +341,24 @@
      ((,class (:background ,jg-zenburn-bg+2 :foreground ,jg-zenburn-fg :bold t))
       (t (:background ,jg-zenburn-fg :foreground ,jg-zenburn-bg :bold t))))
 
+   ;; ediff
+   `(ediff-current-diff-A ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-red-4))))
+   `(ediff-current-diff-Ancestor ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-red-4))))
+   `(ediff-current-diff-B ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-green-3))))
+   `(ediff-current-diff-C ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-blue-5))))
+   `(ediff-even-diff-A ((t (:background ,jg-zenburn-bg+1))))
+   `(ediff-even-diff-Ancestor ((t (:background ,jg-zenburn-bg+1))))
+   `(ediff-even-diff-B ((t (:background ,jg-zenburn-bg+1))))
+   `(ediff-even-diff-C ((t (:background ,jg-zenburn-bg+1))))
+   `(ediff-fine-diff-A ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-red-3 :weight bold))))
+   `(ediff-fine-diff-Ancestor ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-red-3 weight bold))))
+   `(ediff-fine-diff-B ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-green-2 :weight bold))))
+   `(ediff-fine-diff-C ((t (:foreground ,jg-zenburn-fg :background ,jg-zenburn-blue-3 :weight bold ))))
+   `(ediff-odd-diff-A ((t (:background ,jg-zenburn-bg+2))))
+   `(ediff-odd-diff-Ancestor ((t (:background ,jg-zenburn-bg+2))))
+   `(ediff-odd-diff-B ((t (:background ,jg-zenburn-bg+2))))
+   `(ediff-odd-diff-C ((t (:background ,jg-zenburn-bg+2))))
+
    ;; ert
    `(ert-test-result-expected ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg))))
    `(ert-test-result-unexpected ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))

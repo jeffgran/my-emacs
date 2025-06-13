@@ -14,6 +14,11 @@
 (save-place-mode t)
 
 
+;; ediff
+(setq ediff-window-setup-function 'ediff-setup-windows-plain)
+(setq ediff-split-window-function 'split-window-horizontally)
+
+
 (customize-set-variable 'persp-show-modestring 'header)
 (projectile-mode +1)
 (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
