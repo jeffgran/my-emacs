@@ -72,10 +72,6 @@
 (show-smartparens-global-mode t)
 (setq sp-highlight-pair-overlay nil)
 
-(require 'jg-quicknav)
-
-(require 'jg-switch-buffer)
-
 (require 'view)
 
 (global-subword-mode 1)

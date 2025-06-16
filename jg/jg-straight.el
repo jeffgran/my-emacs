@@ -187,7 +187,6 @@
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
-(straight-use-package 'jg-quicknav)
 (straight-use-package 'js2-mode)
 (straight-use-package 'json-mode)
 (straight-use-package 'k8s-mode)

@@ -140,10 +140,8 @@
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
-;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
-(define-key jg-navigation-mode-map (kbd "C-S-o") 'helm-projectile-ag)
 (define-key jg-navigation-mode-map (kbd "C-o") 'helm-find-files)
-(define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-projectile-find-file)
+(define-key jg-navigation-mode-map (kbd "C-S-o") 'helm-projectile-find-file)
 (define-key jg-navigation-mode-map (kbd "C-x C-r") 'recentf-open)
 (define-key jg-navigation-mode-map (kbd "H-p x r") 'projectile-recentf)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)
@@ -304,7 +302,7 @@
       ("d" "this directory" helm-ag)
       ("f" "this file" helm-ag-this-file)
       ("b" "buffers" helm-ag-buffers)
-      ("p" "Project" helm-ag-project-root)
+      ("p" "Project" helm-projectile-ag)
       ]
      ]
     )
