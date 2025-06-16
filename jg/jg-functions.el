@@ -225,19 +225,10 @@
             (setq point-to-char-use-last-char t))
         (if point-to-char-use-last-char
             (progn
-              (message (char-to-string point-to-char-last-char))
-                                        ;(message "use last char!")
               (setq char point-to-char-last-char)
               (setq point-to-char-use-last-char nil))
-          (progn
-            (message (char-to-string char))
-                                        ;(message "don't use last char!")
-                                        ;(message (char-to-string char))
-            (setq point-to-char-last-char char)
-            )
-          )
+          (setq point-to-char-last-char char))
         (local-set-key (kbd "C-6") nil)
-                                        ;(message "hi")
         char)
     ;; else
     (progn
