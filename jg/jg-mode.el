@@ -96,7 +96,7 @@
 (define-key jg-navigation-mode-map (kbd "M-3") 'split-window-right)
 
 ;; project
-(define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-switch-project)
+(define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-persp-switch-project)
 
 ;;screens (tabs)
 (define-key jg-navigation-mode-map (kbd "M-w") #'(lambda () (interactive) (persp-kill (persp-current-name))))
@@ -141,8 +141,9 @@
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'ido-find-file)
 ;;(define-key jg-navigation-mode-map (kbd "C-o") 'jg-quicknav)
-(define-key jg-navigation-mode-map (kbd "C-S-o") 'projectile-find-file)
+(define-key jg-navigation-mode-map (kbd "C-S-o") 'helm-projectile-ag)
 (define-key jg-navigation-mode-map (kbd "C-o") 'helm-find-files)
+(define-key jg-navigation-mode-map (kbd "C-M-o") 'helm-projectile-find-file)
 (define-key jg-navigation-mode-map (kbd "C-x C-r") 'recentf-open)
 (define-key jg-navigation-mode-map (kbd "H-p x r") 'projectile-recentf)
 (define-key jg-navigation-mode-map (kbd "M-o") 'find-file-at-point-with-line)

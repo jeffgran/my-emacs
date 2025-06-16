@@ -491,8 +491,8 @@
                       :weight bold
                       :box (:line-width -1 :style released-button)
                       :extend t))))
-   `(helm-selection ((t (:background ,jg-zenburn-bg+1 :underline nil))))
-   `(helm-selection-line ((t (:background ,jg-zenburn-bg+1))))
+   `(helm-selection ((t (:background ,jg-zenburn-bg+3 :underline nil))))
+   `(helm-selection-line ((t (:background ,jg-zenburn-bg+3))))
    `(helm-visible-mark ((t (:foreground ,jg-zenburn-bg :background ,jg-zenburn-yellow-2))))
    `(helm-candidate-number ((t (:foreground ,jg-zenburn-green+4 :background ,jg-zenburn-bg-1))))
    `(helm-separator ((t (:foreground ,jg-zenburn-red :background ,jg-zenburn-bg))))

@@ -18,6 +18,10 @@ for helm-ag, during the results:
 - C-x C-s to "save results" to a buffer, then RET on a line to visit it in other window
 - C-x c b revives the last helm session if you accidentally quit
 
+To explore:
+- more helm-projectile commands that seem useful
+
+
 # Install Notes:
 
 see install.md

@@ -181,6 +181,9 @@
   (helm-icons-enable)
   )
 
+;; full fuzzy helm for files within project
+(use-package helm-projectile :straight t)
+
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
