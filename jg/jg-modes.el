@@ -19,16 +19,17 @@
 (setq ediff-split-window-function 'split-window-horizontally)
 
 
-(customize-set-variable 'persp-show-modestring 'header)
-(projectile-mode +1)
-(setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
-(require 'perspective)
-(setq persp-suppress-no-prefix-key-warning t)
-(persp-mode)
-(require 'persp-projectile)
+;; (customize-set-variable 'persp-show-modestring 'header)
+;; (projectile-mode +1)
+;; (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
+;; (require 'perspective)
+;; (setq persp-suppress-no-prefix-key-warning t)
+;; (persp-mode)
+;; (require 'persp-projectile)
 (setq projectile-switch-project-action 'projectile-run-shell)
-(add-hook 'kill-emacs-hook #'persp-state-save)
-(setq persp-modestring-short nil)
+;; (add-hook 'kill-emacs-hook #'persp-state-save)
+;; (setq persp-modestring-short nil)
+
 
 (require 'undo-tree)
 ;; i stole this from the undo-tree code to override it because its "heuristic"

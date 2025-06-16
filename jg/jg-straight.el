@@ -221,7 +221,16 @@
 (straight-use-package 'pcache)
 (straight-use-package 'persistent-soft)
 (straight-use-package 'persp-projectile)
-(straight-use-package 'perspective)
+(use-package perspective
+  :straight t
+  :init
+  (persp-mode)
+  (setq persp-suppress-no-prefix-key-warning t)
+  :custom
+  (persp-show-modestring 'header)
+  :config
+  (setq persp-modestring-short nil)
+  )
 (straight-use-package 'pkg-info)
 (straight-use-package 'poly-markdown)
 (straight-use-package 'ponylang-mode)
@@ -229,7 +238,14 @@
 (straight-use-package 'popwin)
 (straight-use-package 'processing-mode)
 (straight-use-package 'prodigy)
-(straight-use-package 'projectile)
+(use-package projectile
+  :straight t
+  :init
+  (projectile-mode +1)
+  ;;(setq projectile-switch-project-action '(lambda) () (treemacs-set-root (projectile-acquire-root)) (projectile-run-shell))
+  :config
+  (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
+  )
 (straight-use-package 'python-mode)
 (straight-use-package 'rainbow-delimiters)
 (straight-use-package 'rainbow-mode)
@@ -248,6 +264,31 @@
 (straight-use-package 'swift-mode)
 (straight-use-package 'terraform-mode)
 (straight-use-package 'tide)
+
+(use-package treemacs
+  :straight t
+  :bind (
+         :map treemacs-mode-map
+         ("M-." . 'treemacs-root-down)
+         ("M-," . 'treemacs-root-up)
+         )
+  :config
+  (treemacs-add-and-display-current-project-exclusively)
+  )
+
+(use-package treemacs-nerd-icons
+  :straight t
+  :config
+  (treemacs-load-theme "nerd-icons"))
+
+(use-package treemacs-projectile
+  :straight t)
+(use-package treemacs-perspective
+  :straight t
+  :demand t
+  )
+
+
 (straight-use-package 'typescript-mode)
 (straight-use-package 'ucs-utils)
 (straight-use-package 'undo-tree)

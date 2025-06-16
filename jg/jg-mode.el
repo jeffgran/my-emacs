@@ -149,6 +149,7 @@
                                                   (interactive)
                                                   (dired default-directory)))
 
+(define-key jg-navigation-mode-map (kbd "M-t") 'treemacs)
 
 
 ;; forward/back buttons like in a browser. go to the last place I was.

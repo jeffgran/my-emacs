@@ -20,6 +20,10 @@ for helm-ag, during the results:
 
 To explore:
 - more helm-projectile commands that seem useful
+- treemacs
+  - M-t opens tree
+  - M-. / M-, to change root of the tree.
+  - try to figure out how to keep single root per persp
 
 
 # Install Notes:
