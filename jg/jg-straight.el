@@ -123,12 +123,15 @@
          ("C-SPC" . nil)
          ("C-g" . 'jg-helm-keyboard-quit)
          )
+  :custom
+  (helm-move-to-line-cycle-in-source nil)
   :config
   (helm-mode)
   (setq helm-mode-fuzzy-match t)
   (setq helm-completion-in-region-fuzzy-match t)
   (defun jg-helm-keyboard-quit () (interactive) (if mark-active (deactivate-mark) (helm-keyboard-quit)))
   )
+
 (use-package helm-ag
   :after transient
   :straight t
