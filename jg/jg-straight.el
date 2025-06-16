@@ -108,21 +108,38 @@
   :bind (
          :map helm-map
          ("TAB" . 'helm-execute-persistent-action)
+         ("C-/" . 'helm-select-action)
+         ("M-C-p" . 'helm-scroll-up)
+         ("M-C-n" . 'helm-scroll-down)
+         ("M-v" . 'helm-yank-selection)
+         ("M-z" . 'undo-tree-undo)
+         ("M-Z" . 'undo-tree-redo)
+         ("M-SPC" . 'helm-toggle-visible-mark)
+
+         ("C-l" . 'forward-char)
+         ("C-j" . 'backward-char)
+         ("C-;" . 'forward-word)
+         ("C-h" . 'backward-word)
+         ("C-SPC" . nil)
+         ("C-g" . 'jg-helm-keyboard-quit)
          )
-  :init
+  :config
   (helm-mode)
   (setq helm-mode-fuzzy-match t)
   (setq helm-completion-in-region-fuzzy-match t)
+  (defun jg-helm-keyboard-quit () (interactive) (if mark-active (deactivate-mark) (helm-keyboard-quit)))
   )
-
 (use-package helm-ag
   :after transient
   :straight t
+  :demand t
   :bind (
          :map helm-ag-mode-map
          ("RET" . helm-ag-mode-jump-other-window)
+         ("TAB" . next-logical-line)
+         ("<backtab>" . previous-logical-line)
          )
-  :init
+  :config
   (defun helm-ag-with-prefix ()
     (interactive)
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
@@ -130,17 +147,27 @@
   )
 
 (use-package helm-files
+  :after helm
   :bind (
          :map helm-find-files-map
          ("C-d" . 'helm-ff-persistent-delete)
          ("C-." . 'helm-find-files-down-last-level)
          ("C-," . 'helm-find-files-up-one-level)
+         ("C-l" . nil)
+         ("C-/" . 'helm-select-action)
+
+         :map helm-read-file-map
+         ("C-." . 'helm-find-files-down-last-level)
+         ("C-," . 'helm-find-files-up-one-level)
+         ("C-l" . nil)
          )
   )
 (use-package helm-buffers
   :bind (
          :map helm-buffer-map
          ("C-d" . 'helm-buffer-run-kill-persistent)
+         ("C-l" . nil)
+         ("C-/" . 'helm-select-action)
          )
   )
 
@@ -150,11 +177,7 @@
   (setq helm-icons-provider 'nerd-icons)
   (helm-icons-enable)
   )
-;; (use-package helm-fuzzy
-;;   :straight t
-;;   :init
-;;   (with-eval-after-load 'helm
-;;     (helm-fuzzy-mode 1)))
+
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
