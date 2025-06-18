@@ -42,7 +42,6 @@
 (jg-global-undo-tree-mode)
 (setq undo-tree-auto-save-history nil)
 
-;;(require 'ag)
 ;;(setq ag-group-matches nil)
 ;;(setq ag-highlight-search t)
 
@@ -61,7 +60,6 @@
 
 
 
-(multiple-cursors-mode)
 (delete-selection-mode)
 
 (customize-set-variable 'git-link-default-branch "master")

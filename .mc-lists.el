@@ -10,6 +10,7 @@
         jg-delete-region-or-paredit-delete
         keyboard-quit
         kill-region
+        paredit-delete-char
         yaml-electric-backspace
         ))
 
@@ -17,6 +18,8 @@
       '(
         View-scroll-half-page-forward
         amx
+        helm-confirm-and-exit-minibuffer
+        jg-dispatch-mc
         markdown-outdent-or-delete
         mc/mark-next-lines
         suspend-frame

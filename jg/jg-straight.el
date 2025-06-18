@@ -293,6 +293,9 @@
 (straight-use-package 'rainbow-mode)
 (straight-use-package 'rake)
 (straight-use-package 'rbenv)
+
+(use-package restart-emacs :straight t)
+
 (straight-use-package 'rspec-mode)
 (straight-use-package 'rubocop)
 (straight-use-package 'rust-mode)

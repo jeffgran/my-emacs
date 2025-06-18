@@ -178,6 +178,8 @@
 ;; amx is m-x but with auto-completion
 (define-key jg-navigation-mode-map (kbd "H-x") 'helm-M-x)
 (define-key jg-navigation-mode-map (kbd "s-x") 'helm-M-x) ; for when hyper is broken
+(define-key jg-navigation-mode-map (kbd "C-c M-x") 'execute-extended-command)
+
 
 (define-key jg-navigation-mode-map (kbd "M-j") 'jg-dispatch)
 
@@ -226,6 +228,19 @@
 (define-key jg-code-mode-map (kbd "C-x M-d") 'zap-to-char)
 
 
+
+(transient-define-prefix jg-dispatch-mc ()
+  ["Multiple Cursors"
+   [
+    ("l" "lines (mc/edit-lines)" mc/edit-lines)
+    ("d" "dwim (mc/mark-all-dwim" mc/mark-all-dwim)
+    ("f" "func (mc/mark-all-like-this-in-defun" mc/mark-all-like-this-in-defun)
+    ("n" "next (mc/mark-next-like-this" mc/mark-next-like-this)
+    ("p" "prev (mc/mark-previous-like-this" mc/mark-previous-like-this)
+    ]
+   ]
+  )
+(define-key jg-code-mode-map (kbd "C-c H-m") 'jg-dispatch-mc)
 
 (define-key jg-code-mode-map (kbd "C-c o") 'occur)
 
