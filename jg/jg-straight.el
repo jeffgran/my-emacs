@@ -15,7 +15,6 @@
 ;;;-------------------------------------
 
 (straight-use-package 'adaptive-wrap)
-;;(straight-use-package 'ag)
 
 (use-package aidermacs
   :straight t
@@ -122,6 +121,8 @@
          ("C-h" . 'backward-word)
          ("C-SPC" . nil)
          ("C-g" . 'jg-helm-keyboard-quit)
+         ("M-i" . 'helm-yank-text-at-point)
+         ("M-z" . 'helm-undo-yank-text-at-point)
          )
   :custom
   (helm-move-to-line-cycle-in-source nil)
@@ -143,6 +144,7 @@
          ("<backtab>" . previous-logical-line)
          )
   :config
+  (setq helm-ag-fuzzy-match t)
   (defun helm-ag-with-prefix ()
     (interactive)
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
@@ -191,6 +193,15 @@
   (helm-projectile-on)
   )
 
+(use-package helm-swoop
+  :straight t
+  :init
+  ;;(setq helm-swoop-use-fuzzy-match t)
+
+  :custom
+  (helm-swoop-pre-input-function '(lambda () nil))
+  )
+
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
@@ -235,9 +246,9 @@
   (defun persp-projectile-helm-switch-project (project)
     (let ((projectile-completion-system 'helm))
       (projectile-persp-switch-project project)
-      (treemacs--show-single-project project project)
-      (treemacs) ;;toggle off by default
       ))
+
+
   :custom
   (helm-source-projectile-projects-actions
    '(("Switch to project" . persp-projectile-helm-switch-project)
@@ -303,8 +314,6 @@
          ("M-." . 'treemacs-root-down)
          ("M-," . 'treemacs-root-up)
          )
-  :config
-  (treemacs-add-and-display-current-project-exclusively)
   )
 
 (use-package treemacs-nerd-icons

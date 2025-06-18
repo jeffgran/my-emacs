@@ -149,7 +149,8 @@
                                                   (interactive)
                                                   (dired default-directory)))
 
-(define-key jg-navigation-mode-map (kbd "M-t") 'treemacs)
+
+(define-key jg-navigation-mode-map (kbd "M-t") '(lambda () (interactive) (treemacs-with-toggle (treemacs-add-and-display-current-project-exclusively))))
 
 
 ;; forward/back buttons like in a browser. go to the last place I was.
@@ -299,16 +300,15 @@
   (transient-define-prefix jg-dispatch-helm-ag ()
     ["Helm-ag"
      [
-      ("c" "choose directory" helm-ag-with-prefix)
-      ("d" "this directory" helm-ag)
-      ("f" "this file" helm-ag-this-file)
-      ("b" "buffers" helm-ag-buffers)
+      ("d" "this directory" helm-do-ag)
+      ("f" "this file" helm-swoop)
+      ("b" "buffers" helm-multi-swoop-projectile)
       ("p" "Project" helm-projectile-ag)
       ]
      ]
     )
   (define-key jg-code-mode-map (kbd "C-S-f") 'jg-dispatch-helm-ag))
-;;(define-key jg-code-mode-map (kbd "C-S-f") 'projectile-ag)
+
 (define-key jg-code-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-code-mode-map (kbd "C-S-r") 'query-replace)
 
