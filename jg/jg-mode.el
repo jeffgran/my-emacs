@@ -96,7 +96,7 @@
 (define-key jg-navigation-mode-map (kbd "M-3") 'split-window-right)
 
 ;; project
-(define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-persp-switch-project)
+(define-key jg-navigation-mode-map (kbd "C-x p") 'helm-projectile-switch-project)
 
 ;;screens (tabs)
 (define-key jg-navigation-mode-map (kbd "M-w") #'(lambda () (interactive) (persp-kill (persp-current-name))))
@@ -495,7 +495,7 @@
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
 ;;(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
-(define-key shell-mode-map (kbd "C-S-f") 'ag)
+(define-key shell-mode-map (kbd "C-S-f") 'jg-dispatch-helm-ag)
 (define-key shell-mode-map (kbd "M-S-v") 'yank-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
 (define-key shell-mode-map (kbd "M-z") 'undo-tree-undo)
