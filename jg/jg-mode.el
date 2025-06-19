@@ -136,6 +136,7 @@
 
 
 (define-key jg-navigation-mode-map (kbd "C-v") 'helm-buffers-list)
+(define-key jg-navigation-mode-map (kbd "C-<tab>") 'helm-buffers-list)
 
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
@@ -244,6 +245,7 @@
 
 (define-key jg-code-mode-map (kbd "C-c o") 'occur)
 
+(define-key jg-code-mode-map (kbd "C-c y") 'yas-describe-tables)
 
 ;;(define-key jg-code-mode-map (kbd "H-l") nil)
 ;;(define-key jg-code-mode-map (kbd "H-u") nil)

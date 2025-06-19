@@ -461,13 +461,6 @@
 
 
 
-(yas-global-mode 1)
-(define-key yas-minor-mode-map (kbd "<tab>") nil)
-(define-key yas-minor-mode-map (kbd "TAB") nil)
-(define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
-(define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
-
-
 
 ;; ASIDE: if you call ssh from shell directly, add "-t" to explicit-ssh-args to enable terminal.
 

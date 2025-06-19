@@ -345,4 +345,17 @@
 (straight-use-package 'xterm-color)
 (straight-use-package 'yaml-mode)
 (straight-use-package 'yard-mode)
+(use-package yasnippet
+  :straight t
+  :config
+  (yas-global-mode 1)
+  (define-key yas-minor-mode-map (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (define-key yas-keymap (kbd "TAB") nil)
+  (define-key yas-keymap (kbd "C-e") 'yas-next-field)
+  (define-key yas-keymap (kbd "C-a") 'yas-prev-field)
+  (define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
+  (define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
+  )
+(use-package yasnippet-snippets :straight t)
 (straight-use-package 'sass-mode)
