@@ -42,7 +42,6 @@
 (jg-global-undo-tree-mode)
 (setq undo-tree-auto-save-history nil)
 
-;;(require 'ag)
 ;;(setq ag-group-matches nil)
 ;;(setq ag-highlight-search t)
 
@@ -61,7 +60,6 @@
 
 
 
-(multiple-cursors-mode)
 (delete-selection-mode)
 
 (customize-set-variable 'git-link-default-branch "master")
@@ -461,13 +459,6 @@
 (setq company-dabbrev-downcase nil)
 (setq company-tooltip-align-annotations t)
 
-
-
-(yas-global-mode 1)
-(define-key yas-minor-mode-map (kbd "<tab>") nil)
-(define-key yas-minor-mode-map (kbd "TAB") nil)
-(define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
-(define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
 
 
 

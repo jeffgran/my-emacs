@@ -96,7 +96,7 @@
 (define-key jg-navigation-mode-map (kbd "M-3") 'split-window-right)
 
 ;; project
-(define-key jg-navigation-mode-map (kbd "C-x p") 'projectile-persp-switch-project)
+(define-key jg-navigation-mode-map (kbd "C-x p") 'helm-projectile-switch-project)
 
 ;;screens (tabs)
 (define-key jg-navigation-mode-map (kbd "M-w") #'(lambda () (interactive) (persp-kill (persp-current-name))))
@@ -136,6 +136,7 @@
 
 
 (define-key jg-navigation-mode-map (kbd "C-v") 'helm-buffers-list)
+(define-key jg-navigation-mode-map (kbd "C-<tab>") 'helm-buffers-list)
 
 
 ;;(define-key jg-navigation-mode-map (kbd "M-b") 'electric-buffer-list)
@@ -149,7 +150,8 @@
                                                   (interactive)
                                                   (dired default-directory)))
 
-(define-key jg-navigation-mode-map (kbd "M-t") 'treemacs)
+
+(define-key jg-navigation-mode-map (kbd "M-t") '(lambda () (interactive) (treemacs-with-toggle (treemacs-add-and-display-current-project-exclusively))))
 
 
 ;; forward/back buttons like in a browser. go to the last place I was.
@@ -177,6 +179,8 @@
 ;; amx is m-x but with auto-completion
 (define-key jg-navigation-mode-map (kbd "H-x") 'helm-M-x)
 (define-key jg-navigation-mode-map (kbd "s-x") 'helm-M-x) ; for when hyper is broken
+(define-key jg-navigation-mode-map (kbd "C-c M-x") 'execute-extended-command)
+
 
 (define-key jg-navigation-mode-map (kbd "M-j") 'jg-dispatch)
 
@@ -226,8 +230,22 @@
 
 
 
+(transient-define-prefix jg-dispatch-mc ()
+  ["Multiple Cursors"
+   [
+    ("l" "lines (mc/edit-lines)" mc/edit-lines)
+    ("d" "dwim (mc/mark-all-dwim" mc/mark-all-dwim)
+    ("f" "func (mc/mark-all-like-this-in-defun" mc/mark-all-like-this-in-defun)
+    ("n" "next (mc/mark-next-like-this" mc/mark-next-like-this)
+    ("p" "prev (mc/mark-previous-like-this" mc/mark-previous-like-this)
+    ]
+   ]
+  )
+(define-key jg-code-mode-map (kbd "C-c H-m") 'jg-dispatch-mc)
+
 (define-key jg-code-mode-map (kbd "C-c o") 'occur)
 
+(define-key jg-code-mode-map (kbd "C-c y") 'yas-describe-tables)
 
 ;;(define-key jg-code-mode-map (kbd "H-l") nil)
 ;;(define-key jg-code-mode-map (kbd "H-u") nil)
@@ -299,16 +317,15 @@
   (transient-define-prefix jg-dispatch-helm-ag ()
     ["Helm-ag"
      [
-      ("c" "choose directory" helm-ag-with-prefix)
-      ("d" "this directory" helm-ag)
-      ("f" "this file" helm-ag-this-file)
-      ("b" "buffers" helm-ag-buffers)
+      ("d" "this directory" helm-do-ag)
+      ("f" "this file" helm-swoop)
+      ("b" "buffers" helm-multi-swoop-projectile)
       ("p" "Project" helm-projectile-ag)
       ]
      ]
     )
   (define-key jg-code-mode-map (kbd "C-S-f") 'jg-dispatch-helm-ag))
-;;(define-key jg-code-mode-map (kbd "C-S-f") 'projectile-ag)
+
 (define-key jg-code-mode-map (kbd "C-M-f") 'grep-buffers)
 (define-key jg-code-mode-map (kbd "C-S-r") 'query-replace)
 
@@ -495,7 +512,7 @@
 ;; shell-mode stuff
 (define-key shell-mode-map (kbd "M-k") 'clear-shell)
 ;;(define-key shell-mode-map (kbd "C-o") (kbd "C-x C-f RET"))
-(define-key shell-mode-map (kbd "C-S-f") 'ag)
+(define-key shell-mode-map (kbd "C-S-f") 'jg-dispatch-helm-ag)
 (define-key shell-mode-map (kbd "M-S-v") 'yank-pop)
 (define-key shell-mode-map (kbd "C-M-v") 'paste-unshift)
 (define-key shell-mode-map (kbd "M-z") 'undo-tree-undo)

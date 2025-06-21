@@ -15,7 +15,6 @@
 ;;;-------------------------------------
 
 (straight-use-package 'adaptive-wrap)
-;;(straight-use-package 'ag)
 
 (use-package aidermacs
   :straight t
@@ -122,6 +121,8 @@
          ("C-h" . 'backward-word)
          ("C-SPC" . nil)
          ("C-g" . 'jg-helm-keyboard-quit)
+         ("M-i" . 'helm-yank-text-at-point)
+         ("M-z" . 'helm-undo-yank-text-at-point)
          )
   :custom
   (helm-move-to-line-cycle-in-source nil)
@@ -143,6 +144,7 @@
          ("<backtab>" . previous-logical-line)
          )
   :config
+  (setq helm-ag-fuzzy-match t)
   (defun helm-ag-with-prefix ()
     (interactive)
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
@@ -182,7 +184,23 @@
   )
 
 ;; full fuzzy helm for files within project
-(use-package helm-projectile :straight t)
+(use-package helm-projectile
+  :after (helm projectile)
+  :demand t
+  :straight t
+  :config
+  (require 'helm-for-files)
+  (helm-projectile-on)
+  )
+
+(use-package helm-swoop
+  :straight t
+  :init
+  ;;(setq helm-swoop-use-fuzzy-match t)
+
+  :custom
+  (helm-swoop-pre-input-function '(lambda () nil))
+  )
 
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
@@ -220,16 +238,41 @@
   (turn-on-pbcopy))
 (straight-use-package 'pcache)
 (straight-use-package 'persistent-soft)
-(straight-use-package 'persp-projectile)
+(use-package persp-projectile
+  :straight t
+  :after (perspective projectile helm-projectile)
+  :demand t
+  :config
+  (defun persp-projectile-helm-switch-project (project)
+    (let ((projectile-completion-system 'helm))
+      (projectile-persp-switch-project project)
+      ))
+
+
+  :custom
+  (helm-source-projectile-projects-actions
+   '(("Switch to project" . persp-projectile-helm-switch-project)
+     ("Open Dired in project's directory `C-d'" . dired)
+     ("Open project root in vc-dir or magit `M-g'"
+      . helm-projectile-vc)
+     ("Switch to Eshell `M-e'" . helm-projectile-switch-to-shell)
+     ("Grep in projects `C-s'" . helm-projectile-grep)
+     ("Compile project `M-c'. With C-u, new compile command"
+      . helm-projectile-compile-project)
+     ("Remove project(s) from project list `M-D'"
+      . helm-projectile-remove-known-project)))
+  )
 (use-package perspective
   :straight t
   :init
-  (persp-mode)
   (setq persp-suppress-no-prefix-key-warning t)
+  (persp-mode)
   :custom
   (persp-show-modestring 'header)
   :config
   (setq persp-modestring-short nil)
+  ;;(setq persp-switch-hook '(lambda () (treemacs--show-single-project default-directory default-directory)))
+  (setq persp-switch-hook nil)
   )
 (straight-use-package 'pkg-info)
 (straight-use-package 'poly-markdown)
@@ -242,7 +285,6 @@
   :straight t
   :init
   (projectile-mode +1)
-  ;;(setq projectile-switch-project-action '(lambda) () (treemacs-set-root (projectile-acquire-root)) (projectile-run-shell))
   :config
   (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
   )
@@ -251,6 +293,9 @@
 (straight-use-package 'rainbow-mode)
 (straight-use-package 'rake)
 (straight-use-package 'rbenv)
+
+(use-package restart-emacs :straight t)
+
 (straight-use-package 'rspec-mode)
 (straight-use-package 'rubocop)
 (straight-use-package 'rust-mode)
@@ -272,8 +317,6 @@
          ("M-." . 'treemacs-root-down)
          ("M-," . 'treemacs-root-up)
          )
-  :config
-  (treemacs-add-and-display-current-project-exclusively)
   )
 
 (use-package treemacs-nerd-icons
@@ -302,4 +345,17 @@
 (straight-use-package 'xterm-color)
 (straight-use-package 'yaml-mode)
 (straight-use-package 'yard-mode)
+(use-package yasnippet
+  :straight t
+  :config
+  (yas-global-mode 1)
+  (define-key yas-minor-mode-map (kbd "<tab>") nil)
+  (define-key yas-minor-mode-map (kbd "TAB") nil)
+  (define-key yas-keymap (kbd "TAB") nil)
+  (define-key yas-keymap (kbd "C-e") 'yas-next-field)
+  (define-key yas-keymap (kbd "C-a") 'yas-prev-field)
+  (define-key yas-minor-mode-map (kbd "C-y") 'yas-expand)
+  (define-key yas-minor-mode-map (kbd "C-M-e") 'yas-expand)
+  )
+(use-package yasnippet-snippets :straight t)
 (straight-use-package 'sass-mode)
