@@ -110,7 +110,7 @@
          ("C-/" . 'helm-select-action)
          ("M-C-p" . 'helm-scroll-up)
          ("M-C-n" . 'helm-scroll-down)
-         ("M-v" . 'helm-yank-selection)
+         ("M-v" . 'clipboard-yank)
          ("M-z" . 'undo-tree-undo)
          ("M-Z" . 'undo-tree-redo)
          ("M-SPC" . 'helm-toggle-visible-mark)
@@ -122,10 +122,12 @@
          ("C-SPC" . nil)
          ("C-g" . 'jg-helm-keyboard-quit)
          ("M-i" . 'helm-yank-text-at-point)
-         ("M-z" . 'helm-undo-yank-text-at-point)
+         ("M-y" . 'helm-yank-selection)
+         ("M-k" . 'helm-kill-selection-and-quit)
          )
   :custom
   (helm-move-to-line-cycle-in-source nil)
+  (helm-split-window-inside-p t)
   :config
   (helm-mode)
   (setq helm-mode-fuzzy-match t)
