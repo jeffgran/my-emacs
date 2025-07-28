@@ -20,7 +20,12 @@
   :straight t
   :bind (("C-c a" . aidermacs-transient-menu))
   :custom
-  (aidermacs-default-model "gemini-2.0-flash"))
+  (aidermacs-default-model "gemini/gemini-2.5-pro")
+  (aidermacs-show-diff-after-change nil)
+  (transient-remove-suffix 'aidermacs-transient-menu "s")
+  :hook (
+         (aidermacs-comint-mode . jg-navigation-mode)
+         ))
 
 (straight-use-package 'async)
 
@@ -35,27 +40,15 @@
 
 (straight-use-package 'bind-key)
 (straight-use-package 'coffee-mode)
-;; (use-package combobulate
-;;     :preface
-;;     ;; You can customize Combobulate's key prefix here.
-;;     ;; Note that you may have to restart Emacs for this to take effect!
-;;     (setq combobulate-key-prefix "C-c o")
-
-;;     ;; Optional, but recommended.
-;;     ;;
-;;     ;; You can manually enable Combobulate with `M-x
-;;     ;; combobulate-mode'.
-;;     :hook ((python-ts-mode . combobulate-mode)
-;;            (js-ts-mode . combobulate-mode)
-;;            (css-ts-mode . combobulate-mode)
-;;            (yaml-ts-mode . combobulate-mode)
-;;            (json-ts-mode . combobulate-mode)
-;;            (typescript-ts-mode . combobulate-mode)
-;;            (tsx-ts-mode . combobulate-mode))
-;;     ;; Amend this to the directory where you keep Combobulate's source
-;;     ;; code.
-;;     :load-path "combobulate")
-(straight-use-package 'company)
+(use-package company
+  :straight t
+  :bind (
+         :map company-active-map
+         ("C-n" . 'company-select-next)
+         ("C-p" . 'company-select-previous)
+         ("C-f" . 'company-filter-candidates)
+         )
+  )
 (straight-use-package 'company-flow)
 (straight-use-package 'company-go)
 (straight-use-package 'company-native-complete)
@@ -83,9 +76,17 @@
 (straight-use-package 'dumb-jump)
 (straight-use-package 'elixir-mode)
 (straight-use-package 'emojify)
-(straight-use-package 'enh-ruby-mode)
+(use-package enh-ruby-mode
+  :straight t
+  :bind (
+         :map enh-ruby-mode-map
+         ("M-h" . 'enh-ruby-backward-sexp)
+         ("M-'" . 'enh-ruby-forward-sexp)
+         ("C-M-h" . 'enh-ruby-beginning-of-block)
+         ("C-M-'" . 'enh-ruby-end-of-block)
+         )
+  )
 (straight-use-package 'epl)
-(straight-use-package 'eww-lnum)
 (straight-use-package 'exec-path-from-shell)
 (straight-use-package 'expand-region)
 (straight-use-package 'f)
@@ -108,8 +109,8 @@
          :map helm-map
          ("TAB" . 'helm-execute-persistent-action)
          ("C-/" . 'helm-select-action)
-         ("M-C-p" . 'helm-scroll-up)
-         ("M-C-n" . 'helm-scroll-down)
+         ("C-M-p" . 'helm-scroll-up)
+         ("C-M-n" . 'helm-scroll-down)
          ("M-v" . 'clipboard-yank)
          ("M-z" . 'undo-tree-undo)
          ("M-Z" . 'undo-tree-redo)
@@ -151,6 +152,17 @@
     (interactive)
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
       (call-interactively 'helm-ag)))
+
+  (transient-define-prefix jg-dispatch-helm-ag ()
+    ["Helm-ag"
+     [
+      ("d" "this directory" helm-do-ag)
+      ("f" "this file" helm-swoop)
+      ("b" "buffers" helm-multi-swoop-projectile)
+      ("p" "Project" helm-projectile-ag)
+      ]
+     ]
+    )
   )
 
 (use-package helm-files
@@ -207,6 +219,17 @@
 (straight-use-package 'htmlize)
 (straight-use-package 'idle-highlight-mode)
 (straight-use-package 'jenkinsfile-mode)
+(use-package jest
+  :straight t
+  :after (js2-mode)
+  :hook
+  (js2-mode . jest-minor-mode)
+  (typescript-mode . jest-minor-mode)
+  :bind (
+         :map jest-minor-mode-map
+         ("C-c ," . jest-popup)
+         )
+  )
 (straight-use-package 'js2-mode)
 (straight-use-package 'json-mode)
 (straight-use-package 'k8s-mode)
@@ -214,15 +237,45 @@
 (straight-use-package 'less-css-mode)
 (straight-use-package 'let-alist)
 (straight-use-package 'list-utils)
-(straight-use-package 'lsp-mode)
+(use-package lsp-mode
+  :straight t
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :hook (
+         (typescript-mode . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration))
+  :commands (lsp lsp-deferred))
 (straight-use-package 'lsp-ui)
 (straight-use-package 'lua-mode)
-(straight-use-package 'magit)
+(use-package magit
+  :straight t
+  :config
+  (add-hook 'magit-mode-hook #'(lambda ()
+                                 (jg-code-mode 0)
+                                 (jg-navigation-mode 1)))
+  (transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
+  )
 (straight-use-package 'markdown-mode)
 (straight-use-package 'maxframe)
 (straight-use-package 'multiple-cursors)
+
+(with-eval-after-load 'transient
+  (transient-define-prefix jg-dispatch-mc ()
+    ["Multiple Cursors"
+     [
+      ("l" "lines (mc/edit-lines)" mc/edit-lines)
+      ("d" "dwim (mc/mark-all-dwim" mc/mark-all-dwim)
+      ("f" "func (mc/mark-all-like-this-in-defun" mc/mark-all-like-this-in-defun)
+      ("n" "next (mc/mark-next-like-this" mc/mark-next-like-this)
+      ("p" "prev (mc/mark-previous-like-this" mc/mark-previous-like-this)
+      ]
+     ]
+    )
+  )
+
 (straight-use-package 'nav-flash)
 
+(use-package nerd-icons :straight t)
 (use-package nerd-icons-dired
   :straight t
   :hook
@@ -232,7 +285,16 @@
 (straight-use-package 'package-build)
 (straight-use-package 'package-lint)
 (straight-use-package 'pallet)
-(straight-use-package 'paredit)
+(use-package paredit
+  :straight t
+  :bind (
+         :map paredit-mode-map
+         ("C-j" . nil)
+         ("M-s" . nil)
+         ("C-M-n" . nil)
+         ("C-M-p" . nil)
+         )
+  )
 (when (memq window-system '(mac ns))
 	;; allows me to copy from emacs in the terminal, and get it in the osx pasteboard
   (straight-use-package 'pbcopy)
@@ -244,6 +306,10 @@
   :straight t
   :after (perspective projectile helm-projectile)
   :demand t
+  :bind (
+         :map projectile-command-map
+         ("p" . 'projectile-persp-switch-project)
+         )
   :config
   (defun persp-projectile-helm-switch-project (project)
     (let ((projectile-completion-system 'helm))
@@ -271,6 +337,7 @@
   (persp-mode)
   :custom
   (persp-show-modestring 'header)
+  (persp-mode-prefix-key nil)
   :config
   (setq persp-modestring-short nil)
   ;;(setq persp-switch-hook '(lambda () (treemacs--show-single-project default-directory default-directory)))
@@ -285,10 +352,14 @@
 (straight-use-package 'prodigy)
 (use-package projectile
   :straight t
+  :bind (
+         :map projectile-mode-map
+         ("C-c C-p" . 'projectile-command-map)
+         )
   :init
   (projectile-mode +1)
   :config
-  (setq projectile-project-search-path '("~/dev/" "~/dox/" "~/dox/gems"))
+  (setq projectile-project-search-path '("~/dev/"))
   )
 (straight-use-package 'python-mode)
 (straight-use-package 'rainbow-delimiters)
@@ -305,9 +376,28 @@
 (straight-use-package 'scad-mode)
 (straight-use-package 'shut-up)
 (straight-use-package 'slim-mode)
-(straight-use-package 'smartparens)
+(use-package smartparens
+  :straight t
+  :bind (
+         :map smartparens-mode-map
+         ("C-)" . sp-forward-slurp-sexp)
+         ("C-M-)" . sp-slurp-hybrid-sexp)
+         ("C-(" . sp-backward-slurp-sexp)
+         ("C-}" . sp-forward-barf-sexp)
+         ("C-{" . sp-backward-barf-sexp)
+         ("C-\\" . sp-rewrap-sexp)
+         ("C-|" . sp-backward-unwrap-sexp)
+         ("M-r" . nil)
+         )
+  )
 (straight-use-package 'smartrep)
-(straight-use-package 'ssh)
+(use-package ssh
+  :straight t
+  :bind (
+         :map ssh-mode-map
+         ("TAB" . nil)
+         )
+  )
 (straight-use-package 'swift-mode)
 (straight-use-package 'terraform-mode)
 (straight-use-package 'tide)

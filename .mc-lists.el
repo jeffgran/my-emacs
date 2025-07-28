@@ -22,5 +22,7 @@
         jg-dispatch-mc
         markdown-outdent-or-delete
         mc/mark-next-lines
+        persp-next
         suspend-frame
+        switch-to-shell
         ))

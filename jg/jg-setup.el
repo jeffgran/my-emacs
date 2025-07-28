@@ -103,3 +103,5 @@
       ))
 
 (put 'downcase-region 'disabled nil)
+
+(setq shift-select-mode nil)

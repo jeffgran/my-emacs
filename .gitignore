@@ -11,3 +11,4 @@ rake.cache
 /saved-places
 /smex-items
 /url/*
+.aider*
