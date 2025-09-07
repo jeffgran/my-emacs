@@ -124,12 +124,6 @@
 (setq enh-ruby-add-encoding-comment-on-save nil) ; for enh-ruby-mode
 
 
-(require 'lsp-mode)
-(setq lsp-keymap-prefix "H-l")
-(define-key lsp-mode-map (kbd "H-l") lsp-command-map)
-(setq lsp-headerline-breadcrumb-enable nil)
-
-
 ;; (require 'lsp-sourcekit)
 ;; ;;(setenv "SOURCEKIT_TOOLCHAIN_PATH" "/Library/Developer/Toolchains/swift-DEVELOPMENT-SNAPSHOT-2018-11-01-a.xctoolchain")
 ;; (setq lsp-sourcekit-executable (expand-file-name "/Users/jgran/dev/sourcekit-lsp/.build/debug/sourcekit-lsp"))
@@ -193,7 +187,6 @@
                                    web-mode-css-indent-offset 2
                                    web-mode-code-indent-offset 2)
                              ))
-(setf (alist-get 'web-mode lsp--formatting-indent-alist) 'web-mode-code-indent-offset) ;; fixes indentation
 (add-to-list 'auto-mode-alist '("\\.tsx?$" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.vue$" . web-mode))
 (add-hook 'web-mode-hook
@@ -290,7 +283,7 @@
 
 
 
-
+(customize-set-variable 'lsp-go-build-flags ["-tags=test"])
 
 (defun my-go-mode-hook ()
   (add-hook 'before-save-hook 'gofmt-before-save) ; gofmt before every save

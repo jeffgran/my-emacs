@@ -7,10 +7,12 @@
         backward-to-char
         clipboard-yank
         forward-to-char
+        helm-M-x
         jg-delete-region-or-paredit-delete
         keyboard-quit
         kill-region
         paredit-delete-char
+        slim-electric-backspace
         yaml-electric-backspace
         ))
 
@@ -19,6 +21,7 @@
         View-scroll-half-page-forward
         amx
         helm-confirm-and-exit-minibuffer
+        ignore-preserving-kill-region
         jg-dispatch-mc
         markdown-outdent-or-delete
         mc/mark-next-lines

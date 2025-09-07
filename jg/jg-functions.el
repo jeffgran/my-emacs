@@ -440,6 +440,8 @@ there's a region, all lines that region covers will be duplicated."
   (isearch-search-and-update))
 
 
+(defalias 'aidermacs-add-files-from-list
+   (kmacro "M-o C-c a F C-x o C-w M-1 C-n"))
 
 
 ;; (defun le::save-buffer-force-backup (arg)

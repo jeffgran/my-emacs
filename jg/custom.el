@@ -25,7 +25,6 @@
  '(jsx-indent-level 2)
  '(lsp-ui-doc-show-with-cursor nil)
  '(magit-push-arguments nil)
- '(markdown-command "maruku")
  '(package-selected-packages
    '(dired-filter doom-modeline yard-mode which-key lsp-ui avy vue-mode
                   forge git-link persp-projectile xterm-color hotfuzz
