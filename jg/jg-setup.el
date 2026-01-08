@@ -74,8 +74,8 @@
   (setq dired-use-ls-dired nil) ; osx `ls` does not support `--dired` flag
 
   ;; bash installed via brew because the default bash is old
-  (setq shell-file-name "/usr/local/bin/bash")
-  (setq explicit-shell-file-name "/usr/local/bin/bash")
+  (setq shell-file-name "/opt/homebrew/bin/bash")
+  (setq explicit-shell-file-name "/opt/homebrew/bin/bash")
   )
 
 

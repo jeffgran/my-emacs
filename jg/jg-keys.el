@@ -1,6 +1,15 @@
 (jg-navigation-mode 1)
 (jg-code-mode 1)
 
+;; Make jg-* modes take precedence over all other minor modes
+;; by registering them as emulation modes (highest precedence)
+(defvar jg-mode-emulation-alist
+  `((jg-navigation-mode . ,jg-navigation-mode-map)
+    (jg-code-mode . ,jg-code-mode-map)
+    (jg-comint-mode . ,jg-comint-mode-map)))
+
+(add-to-list 'emulation-mode-map-alists 'jg-mode-emulation-alist)
+
 (global-set-key [remap move-beginning-of-line] 'move-beginning-of-line)
 
 (setq ns-alternate-modifier 'hyper)
@@ -41,37 +50,13 @@
 (define-key minibuffer-local-isearch-map (kbd "TAB") 'isearch-complete-edit)
 
 
-;;*************************************************
-;;                 JG Comint Mode
-;;*************************************************
-(defvar-keymap jg-comint-mode-map
-  "C-M-x" 'eval-expression
-  "M-k" 'clear-shell
-  "C-S-f" 'jg-dispatch-helm-ag
-  "M-S-v" 'yank-pop
-  "C-M-v" 'paste-unshift
-  "M-z" 'undo-tree-undo
-  "M-Z" 'undo-tree-redo
-  "C-M-z" 'undo-tree-visualize
-  "M-." 'comint-restore-input
-  "C-r" 'comint-history-isearch-backward
-  "M-g" 'magit-dispatch
-  "TAB" nil)
-
-(define-minor-mode jg-comint-mode
-  "JG Comint Mode Keys"
-  :init-value nil
-  :lighter " [JGs]"
-  :keymap jg-comint-mode-map)
-
-
+;; disabling jg-code-mode/comint-mode for specific major modes where there are conflicts
 (add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)
 (add-hook 'erc-mode-hook 'disable-jg-code-mode)
 (add-hook 'comint-mode-hook 'disable-jg-code-mode)
-(add-hook 'comint-mode-hook 'jg-comint-mode)
 (add-hook 'custom-mode-hook 'disable-jg-code-mode)
 
 

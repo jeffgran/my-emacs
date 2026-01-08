@@ -20,7 +20,7 @@
   :straight t
   :bind (("C-c a" . aidermacs-transient-menu))
   :custom
-  (aidermacs-default-model "openai/claude-sonnet-4")
+  (aidermacs-default-model "openai/gpt-5")
   (aidermacs-show-diff-after-change nil)
   (transient-remove-suffix 'aidermacs-transient-menu "s")
   ;;(aidermacs-extra-args '("--edit-format" "diff"))
@@ -100,10 +100,13 @@
 (use-package eat
   :straight t
   :bind (
-         :map eat-semi-char-mode-map
-              ("M-v" . 'eat-yank)
+         :map
+         eat-semi-char-mode-map
+         ("M-v" . eat-yank)
          )
-
+  :config
+  (add-hook 'eat-mode-hook #'(lambda ()
+                                 (display-line-numbers-mode -1)))
   )
 (straight-use-package 'elixir-mode)
 (straight-use-package 'emojify)
@@ -133,7 +136,7 @@
 (straight-use-package 'graphql-mode)
 (straight-use-package 'haml-mode)
 (use-package helm
-  :after helm-icons
+  :after helm-icons exec-path-from-shell
   :straight t
   :demand t
   :bind (
@@ -168,9 +171,8 @@
   )
 
 (use-package helm-ag
-  :after transient
+  :after transient helm-projectile
   :straight t
-  :demand t
   :bind (
          :map helm-ag-mode-map
          ("RET" . helm-ag-mode-jump-other-window)
@@ -184,18 +186,23 @@
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
       (call-interactively 'helm-ag)))
 
+  ;; set this back to the default, it is getting nuked for some reason during boot. My theory
+  ;; is because at the moment it tries to set the default the path isn't set correctly yet
+  ;; so (executable-find "ag") returns nil so it sets it to nil?
+
   (transient-define-prefix jg-dispatch-helm-ag ()
     ["Helm-ag"
      [
       ("d" "this directory" helm-do-ag)
       ("f" "this file" helm-swoop)
       ("b" "buffers" helm-multi-swoop-projectile)
-      ("p" "Project" helm-projectile-ag)
+      ("p" "Project" helm-do-ag-project-root)
       ]
      ]
     )
+  :commands (jg-dispatch-helm-ag helm-ag)
   )
-
+(use-package helm-rg :straight t)
 (use-package helm-files
   :after helm
   :bind (
@@ -219,7 +226,38 @@
          ("C-l" . nil)
          ("C-/" . 'helm-select-action)
          )
-  )
+  :custom
+  ;; Enable fuzzy matching for filtering, but we'll preserve MRU order
+  (helm-buffers-fuzzy-matching t)
+  (helm-buffer-skip-remote-checking t)
+  :config
+  ;; Customize buffer source: fuzzy filter but keep MRU order
+  (setq helm-source-buffers-list
+        (helm-make-source "Buffers" 'helm-source-buffers
+          :candidate-transformer
+          (lambda (candidates)
+            ;; Remove current buffer and filter out any nil values
+            (let ((current (buffer-name (current-buffer))))
+              (delq nil
+                    (mapcar (lambda (cand)
+                              (when cand
+                                (let ((buf-name (if (consp cand) (car cand) cand)))
+                                  (unless (equal buf-name current)
+                                    cand))))
+                            candidates))))
+          :filtered-candidate-transformer
+          (lambda (candidates _source)
+            ;; After fuzzy filtering, re-sort by buffer-list order (MRU)
+            ;; but only if we have candidates
+            (when candidates
+              (let ((buffer-order (mapcar #'buffer-name (buffer-list))))
+                (sort candidates
+                      (lambda (c1 c2)
+                        (let ((n1 (if (consp c1) (car c1) c1))
+                              (n2 (if (consp c2) (car c2) c2)))
+                          (< (or (cl-position n1 buffer-order :test #'equal) 9999)
+                             (or (cl-position n2 buffer-order :test #'equal) 9999)))))))))
+  ))
 
 (use-package helm-icons
   :straight t
@@ -231,11 +269,35 @@
 ;; full fuzzy helm for files within project
 (use-package helm-projectile
   :after (helm projectile)
-  :demand t
   :straight t
   :config
   (require 'helm-for-files)
   (helm-projectile-on)
+
+  ;; Customize project switcher: fuzzy filter but keep MRU order
+  (setq helm-source-projectile-projects
+        (helm-build-sync-source "Projectile projects"
+          :candidates (lambda ()
+                        ;; Get projects excluding current project (if in a project)
+                        (let ((current (projectile-project-root)))
+                          (if current
+                              (cl-remove-if (lambda (proj)
+                                              (equal (file-truename proj)
+                                                     (file-truename current)))
+                                            projectile-known-projects)
+                            ;; Not in a project, return all projects
+                            projectile-known-projects)))
+          :fuzzy-match t
+          :filtered-candidate-transformer
+          (lambda (candidates _source)
+            ;; After fuzzy filtering, re-sort by projectile-known-projects order (MRU)
+            (when candidates
+              (let ((project-order projectile-known-projects))
+                (sort candidates
+                      (lambda (c1 c2)
+                        (< (or (cl-position c1 project-order :test #'equal) 9999)
+                           (or (cl-position c2 project-order :test #'equal) 9999)))))))
+          :action 'helm-source-projectile-projects-actions))
   )
 
 (use-package helm-swoop
@@ -281,8 +343,13 @@
     (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]vendor\\'"))
   :hook (
          (typescript-mode . lsp-deferred)
-         (lsp-mode . lsp-enable-which-key-integration))
-  :commands (lsp lsp-deferred))
+         (go-mode . lsp-deferred)
+         (lsp-mode . lsp-enable-which-key-integration)
+         )
+  :commands (lsp lsp-deferred)
+  :custom
+  (lsp-go-gopls-server-path "gopls")
+  )
 
 (straight-use-package 'lsp-ui)
 (straight-use-package 'lua-mode)
@@ -489,7 +556,8 @@
 
 (straight-use-package 'which-key)
 (straight-use-package 'with-editor)
-(straight-use-package '(ws-butler :type git :host github :repo "lewang/ws-butler"))
+(use-package ws-butler :ensure t :hook (prog-mode . ws-butler-mode))
+;;(straight-use-package '(ws-butler :type git :host github :repo "lewang/ws-butler"))
 (straight-use-package 'xterm-color)
 (straight-use-package 'yaml-mode)
 (straight-use-package 'yard-mode)
