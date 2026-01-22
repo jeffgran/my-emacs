@@ -150,3 +150,6 @@
   :init-value t
   :lighter " [JGn]"
   :keymap jg-navigation-mode-map)
+
+(defun disable-jg-navigation-mode ()
+  (jg-navigation-mode 0))

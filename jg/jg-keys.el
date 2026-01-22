@@ -6,7 +6,9 @@
 (defvar jg-mode-emulation-alist
   `((jg-navigation-mode . ,jg-navigation-mode-map)
     (jg-code-mode . ,jg-code-mode-map)
-    (jg-comint-mode . ,jg-comint-mode-map)))
+    (jg-comint-mode . ,jg-comint-mode-map)
+    (jg-minibuffer-mode . ,jg-minibuffer-mode-map)
+    ))
 
 (add-to-list 'emulation-mode-map-alists 'jg-mode-emulation-alist)
 
@@ -22,7 +24,6 @@
 (global-set-key (kbd "H-o") #'(lambda () (interactive) (insert-char ?ó)))
 (global-set-key (kbd "H-u") #'(lambda () (interactive) (insert-char ?ú)))
 (global-set-key (kbd "H-n") #'(lambda () (interactive) (insert-char ?ñ)))
-
 
 (defun switch-to-shell ()
   (interactive)
@@ -50,8 +51,10 @@
 (define-key minibuffer-local-isearch-map (kbd "TAB") 'isearch-complete-edit)
 
 
-;; disabling jg-code-mode/comint-mode for specific major modes where there are conflicts
+;; disabling jg-code-mode/comint-mode/navigation-mode for specific major modes where there are conflicts
 (add-hook 'minibuffer-setup-hook 'disable-jg-code-mode)
+(add-hook 'minibuffer-setup-hook 'disable-jg-navigation-mode)
+(add-hook 'minibuffer-setup-hook '(lambda () (jg-minibuffer-mode 1)))
 (add-hook 'help-mode-hook 'disable-jg-code-mode)
 (add-hook 'compilation-mode-hook 'disable-jg-code-mode)
 (add-hook 'grep-mode-hook 'disable-jg-code-mode)

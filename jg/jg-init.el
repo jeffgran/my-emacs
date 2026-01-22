@@ -8,6 +8,7 @@
 
 (load-library "jg-straight")        ; load packages via straight, and configuration per package with use-package
 (load-library "jg-navigation-mode") ; navigation keys
+(load-library "jg-minibuffer-mode") ; minimal navigation keys specifically for minibuffer
 (load-library "jg-code-mode")       ; text/code editing keys
 (load-library "jg-comint-mode")     ; keys for shell mode and other comint-derived repl modes
 (load-library "jg-modes")           ; my various major/minor modes and their setups

@@ -106,7 +106,7 @@
          )
   :config
   (add-hook 'eat-mode-hook #'(lambda ()
-                                 (display-line-numbers-mode -1)))
+                               (display-line-numbers-mode -1)))
   )
 (straight-use-package 'elixir-mode)
 (straight-use-package 'emojify)
@@ -207,6 +207,7 @@
   :after helm
   :bind (
          :map helm-find-files-map
+         ("TAB" . 'helm-execute-persistent-action)
          ("C-d" . 'helm-ff-persistent-delete)
          ("C-." . 'helm-find-files-down-last-level)
          ("C-," . 'helm-find-files-up-one-level)
@@ -257,7 +258,7 @@
                               (n2 (if (consp c2) (car c2) c2)))
                           (< (or (cl-position n1 buffer-order :test #'equal) 9999)
                              (or (cl-position n2 buffer-order :test #'equal) 9999)))))))))
-  ))
+        ))
 
 (use-package helm-icons
   :straight t
@@ -462,8 +463,8 @@
   :bind
   (
    :map polymode-minor-mode-map
-        ("M-n" . nil)
-        ("C-c n" . polymode-map)
+   ("M-n" . nil)
+   ("C-c n" . polymode-map)
    )
   ;;unbind the default M-n prefix
   )
