@@ -11,6 +11,7 @@
         jg-delete-region-or-paredit-delete
         keyboard-quit
         kill-region
+        markdown-end-of-line
         paredit-delete-char
         slim-electric-backspace
         yaml-electric-backspace

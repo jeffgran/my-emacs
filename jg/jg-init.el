@@ -1,3 +1,9 @@
+;; local.el — machine-specific overrides, gitignored.  Loaded first so
+;; downstream config sees overridden values.  See jg/local.el for template.
+(let ((local-file (concat user-emacs-directory "jg/local.el")))
+  (when (file-exists-p local-file)
+    (load local-file)))
+
 (setq custom-file "~/.emacs.d/jg/custom.el")
 (load custom-file)
 

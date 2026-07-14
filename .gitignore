@@ -12,3 +12,4 @@ rake.cache
 /smex-items
 /url/*
 .aider*
+jg/local.el
