@@ -38,11 +38,7 @@
   :straight t
   :after agent-shell
   :hook (agent-shell-mode . agent-recall-track-sessions)
-  :config
-  (setq agent-recall-search-paths '("~/dev" "~/dox")
-        ;;agent-recall-search-function 'consult-ripgrep
-        ;;agent-recall-browse-sort 'modified-desc
-        ))
+        )
 
 (straight-use-package 'async)
 
@@ -497,7 +493,6 @@
   :init
   (projectile-mode +1)
   :config
-  (setq projectile-project-search-path '("~/dev/"))
   (projectile-discover-projects-in-search-path)
   )
 (straight-use-package 'python-mode)
