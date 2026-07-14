@@ -12,7 +12,7 @@
   "C-a" 'back-to-indentation-or-beginning
   "M-x" 'kill-region
   "M-c" 'kill-ring-save
-  "C-g" '(lambda () (interactive) (if mark-active (deactivate-mark) (transient-quit-one)))
+  "C-g" '(lambda () (interactive) (if mark-active (deactivate-mark) (abort-recursive-edit)))
   "M-v" 'clipboard-yank
   "M-V" 'yank-pop
   "C-M-v" 'paste-unshift
