@@ -359,7 +359,7 @@
 
 
 ;; bash
-(setq shell-file-name "/usr/bin/bash")
+(setq shell-file-name "/opt/homebrew/bin/bash")
 (setq comint-process-echoes t)
 (setq explicit-bash-args '("-c" "export EMACS=; stty echo; bash"))
 

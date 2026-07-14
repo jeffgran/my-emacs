@@ -16,16 +16,33 @@
 
 (straight-use-package 'adaptive-wrap)
 
-(use-package aidermacs
+(use-package agent-shell
   :straight t
-  :bind (("C-c a" . aidermacs-transient-menu))
-  :custom
-  (aidermacs-default-model "openai/gpt-5")
-  (aidermacs-show-diff-after-change nil)
-  (transient-remove-suffix 'aidermacs-transient-menu "s")
-  ;;(aidermacs-extra-args '("--edit-format" "diff"))
-  ;;(aidermacs-extra-args '())
+  :ensure t
+  :bind
+  ("C-c C-a s" . agent-shell)
+  ("C-c C-a o" . agent-shell-opencode-start-agent)
+  :config
+  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
   )
+
+(use-package agent-shell-manager
+  :straight (:type git :host github :repo "jethrokuan/agent-shell-manager")
+  :after agent-shell
+  :bind
+  ("C-c C-a m" . agent-shell-manager-toggle)
+  )
+
+(use-package agent-recall
+  :ensure t
+  :straight t
+  :after agent-shell
+  :hook (agent-shell-mode . agent-recall-track-sessions)
+  :config
+  (setq agent-recall-search-paths '("~/dev" "~/dox")
+        ;;agent-recall-search-function 'consult-ripgrep
+        ;;agent-recall-browse-sort 'modified-desc
+        ))
 
 (straight-use-package 'async)
 
@@ -332,16 +349,14 @@
 (straight-use-package 'let-alist)
 (straight-use-package 'list-utils)
 (use-package lsp-mode
-  :after (web-mode)
   :straight t
-  :config
-  ;; set up both "C-c l" and "H-l" as lsp prefix
+  :init
   (setq lsp-keymap-prefix "C-c l")
+  :config
   (define-key lsp-mode-map (kbd "H-l") lsp-command-map)
   (setq lsp-headerline-breadcrumb-enable nil)
-	(setf (alist-get 'web-mode lsp--formatting-indent-alist) 'web-mode-code-indent-offset) ;; fixes indentation
-  (with-eval-after-load 'lsp-mode
-    (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]vendor\\'"))
+  (setf (alist-get 'web-mode lsp--formatting-indent-alist) 'web-mode-code-indent-offset)
+  (add-to-list 'lsp-file-watch-ignored-directories "[/\\\\]vendor\\'")
   :hook (
          (typescript-mode . lsp-deferred)
          (go-mode . lsp-deferred)

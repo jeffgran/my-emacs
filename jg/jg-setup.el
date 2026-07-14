@@ -59,10 +59,16 @@
 ;; osx specific
 (when (memq window-system '(mac ns))
 
+  ;; bash installed via brew because the default bash is old
+  (setq shell-file-name "/opt/homebrew/bin/bash")
+  (setq explicit-shell-file-name "/opt/homebrew/bin/bash")
+
   ;; load up a shell and snarf the env vars from there (like $PATH eg)
   ;; so that shell commands etc work inside emacs the same as they would from a shell.
   (require 'exec-path-from-shell)
   (setq exec-path-from-shell-arguments '("-l"))
+  (dolist (variable '("FIREWORKS_API_KEY" "OPENAI_API_KEY" "CODEX_API_KEY"))
+    (add-to-list 'exec-path-from-shell-variables variable))
   (exec-path-from-shell-initialize)
 
   ;;osx keys
@@ -72,10 +78,6 @@
   (setq mac-option-modifier 'alt)
 
   (setq dired-use-ls-dired nil) ; osx `ls` does not support `--dired` flag
-
-  ;; bash installed via brew because the default bash is old
-  (setq shell-file-name "/opt/homebrew/bin/bash")
-  (setq explicit-shell-file-name "/opt/homebrew/bin/bash")
   )
 
 
