@@ -498,6 +498,7 @@
   (projectile-mode +1)
   :config
   (setq projectile-project-search-path '("~/dev/"))
+  (projectile-discover-projects-in-search-path)
   )
 (straight-use-package 'python-mode)
 (straight-use-package 'rainbow-delimiters)
