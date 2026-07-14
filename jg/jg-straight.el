@@ -19,9 +19,6 @@
 (use-package agent-shell
   :straight t
   :ensure t
-  :bind
-  ("C-c C-a s" . agent-shell)
-  ("C-c C-a o" . agent-shell-opencode-start-agent)
   :config
   (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
   )
@@ -29,8 +26,6 @@
 (use-package agent-shell-manager
   :straight (:type git :host github :repo "jethrokuan/agent-shell-manager")
   :after agent-shell
-  :bind
-  ("C-c C-a m" . agent-shell-manager-toggle)
   )
 
 (use-package agent-recall

@@ -1,6 +1,7 @@
 ;;*************************************************
 ;;               JG Navigation Mode
 ;;*************************************************
+
 (defvar-keymap jg-navigation-mode-map
   "C-l" 'forward-char
   "C-j" 'backward-char
@@ -56,7 +57,6 @@
 
   ;; my custom selection stuff
   "M-e" 'select-whole-line-or-lines
-  "M-a" 'select-whole-line-or-lines-backwards
   "C-a" 'back-to-indentation-or-beginning
   "<home>" 'back-to-indentation-or-beginning
   "<end>" 'move-end-of-line
@@ -116,6 +116,12 @@
   "M-j" 'jg-dispatch
 
   "C-s s" 'jg-open-ssh
+
+  ;; agent-shell prefix
+  "M-a" nil
+  "M-a s" 'agent-shell
+  "M-a o" 'agent-shell-opencode-start-agent
+  "M-a m" 'agent-shell-manager-toggle
 
   "M-x" 'kill-region
 
