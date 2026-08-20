@@ -20,7 +20,12 @@
   :straight t
   :ensure t
   :config
-  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
+  ;;(setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
+  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/deepseek-v4-pro-0813")
+  :bind (
+         :map agent-shell-mode-map
+         ("C-RET" . newline)
+         )
   )
 
 (use-package agent-shell-manager
@@ -33,7 +38,7 @@
   :straight t
   :after agent-shell
   :hook (agent-shell-mode . agent-recall-track-sessions)
-        )
+  )
 
 (straight-use-package 'async)
 
