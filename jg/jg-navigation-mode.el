@@ -111,6 +111,7 @@
   ;; amx is m-x but with auto-completion
   "H-x" 'helm-M-x
   "s-x" 'helm-M-x ; for when hyper is broken
+  "C-M-S-x" 'helm-M-x ; for when hyper is broken
   "C-c M-x" 'execute-extended-command
 
   "M-j" 'jg-dispatch
