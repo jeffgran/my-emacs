@@ -21,7 +21,8 @@
   :ensure t
   :config
   ;;(setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
-  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/deepseek-v4-pro-0813")
+  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/kimi-k3")
+
   :bind (
          :map agent-shell-mode-map
          ("C-RET" . newline)
@@ -31,6 +32,26 @@
 (use-package agent-shell-manager
   :straight (:type git :host github :repo "jethrokuan/agent-shell-manager")
   :after agent-shell
+  )
+
+(use-package jg-project-sidebar
+  ;; The user's own global project-management sidebar, usurping the local
+  ;; agent-shell-hq fork (lisp/agent-shell-hq-perspective/, no longer wired
+  ;; up).  Lists every perspective (project) with its agent-shell AND regular
+  ;; shell buffers, and doubles as a project switcher: RET on an entry runs
+  ;; `persp-switch' so buffer lists follow.  The sidebar is global — a side
+  ;; window over whatever perspective is current, re-displayed by
+  ;; `persp-activated-hook' after perspective switches — instead of living in
+  ;; a dedicated "*agent-shell*" perspective like the fork did.
+  ;; Source of truth lives in lisp/jg-project-sidebar/, symlinked into
+  ;; straight/repos/jg-project-sidebar for straight to build.  Entry point
+  ;; `jg-project-sidebar-toggle' is bound to "M-a h" in jg-navigation-mode.el
+  ;; (autoloaded, so the binding works before agent-shell loads).
+  ;; :defer t keeps agent-shell out of startup — straight still activates the
+  ;; package (build + autoloads) immediately, and the first "M-a h" press
+  ;; loads everything on demand.
+  :straight (jg-project-sidebar :type nil :local-repo "jg-project-sidebar")
+  :defer t
   )
 
 (use-package agent-recall
@@ -97,7 +118,10 @@
   (setq doom-modeline-height 16)
   ;;(setq doom-modeline-persp-name nil)
   (doom-modeline-mode +1)
-  (with-eval-after-load 'persp-mode
+  ;; perspective-el provides the `persp-mode-line' function (and the
+  ;; feature is named `perspective', not `persp-mode' -- that name is
+  ;; Bad-ptr's incompatible package, which we no longer install).
+  (with-eval-after-load 'perspective
     (setq global-mode-string (delete '(:eval (persp-mode-line)) global-mode-string)))
   )
 

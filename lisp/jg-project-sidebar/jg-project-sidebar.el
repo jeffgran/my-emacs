@@ -1,0 +1,1372 @@
+;;; jg-project-sidebar.el --- Global project sidebar over perspective-el  -*- lexical-binding: t; -*-
+
+;; Copyright (C) 2026
+
+;; Author: jgran
+;; Package-Requires: ((emacs "29.1") (agent-shell "0.66.1") (posframe "1.4") (perspective "2.22"))
+
+;; The user's own project-management sidebar.  It usurps the local
+;; agent-shell-hq fork (lisp/agent-shell-hq-perspective/, itself a fork of
+;; https://github.com/sreenivasvrao/agent-shell-hq ported to perspective-el):
+;; the transient peek and the session-labelling feature were ported, while the
+;; persistent sidebar was redesigned around perspective-el instead of living
+;; inside a dedicated "*agent-shell*" perspective.
+
+;;; Commentary:
+
+;; A persistent, global sidebar (a side window, not a perspective) that lists
+;; every open project and doubles as a project switcher:
+
+;;   ● ▾ projA                       <- current perspective (project)
+;;       $ *shell*                   <- regular shell/terminal buffer
+;;       ✓ my-agent-session          <- agent-shell buffer (state icon)
+;;     ▾ projB
+;;       $ *shell<projB>*
+;;       ◔ other-session
+
+;; Data model
+;;   One entry per perspective (perspective-el is the source of truth:
+;;   projects opened via `C-x p' / projectile + persp-projectile each get a
+;;   perspective named after the project).  Sub-entries are the perspective's
+;;   agent-shell buffers (state icons) and regular shell/terminal buffers
+;;   (`$'; see `jg-project-sidebar-shell-modes').  agent-shell buffers whose
+;;   project has no perspective are shown in trailing dimmed "(loose)" groups.
+
+;; Global by construction
+;;   The sidebar is never trapped in a perspective.  Perspective switches
+;;   restore saved window configurations, so `persp-activated-hook'
+;;   re-displays the side window whenever it was lost, and the sidebar buffer
+;;   is made a member of every perspective (so `persp-kill' forgets it rather
+;;   than killing it).  A polling timer re-renders only when the structural
+;;   signature (projects, buffers, states) actually changed.
+
+;; Selecting = switching wholesale
+;;   RET on a project header runs `persp-switch' to that project; RET on a
+;;   buffer entry switches to the owning perspective *and* displays the
+;;   buffer.  Buffer lists (`C-v' helm-buffers-list, etc.) follow, because
+;;   the perspective really changed.  Navigating with n/p previews the
+;;   highlighted buffer in the main window without importing it into the
+;;   current perspective (`persp--inhibit-buffer-association').
+
+;; Two-way sync, one-way display
+;;   The sidebar drives the main window only from explicit navigation:
+;;   previews (n/p, mouse) apply exclusively while the sidebar window has
+;;   focus, so background refreshes (perspective switches, the polling
+;;   timer, labelling) never yank the main window back to a stale sidebar
+;;   selection.  In the other direction, the sidebar follows reality:
+;;   `window-buffer-change-functions' plus the poll move the selection to
+;;   the entry matching the main window's buffer (or the current
+;;   perspective's header), expanding collapsed groups as needed — never
+;;   changing what any window displays.
+
+;; Tab-bar note
+;;   This sidebar is intended to replace the perspective listing in the
+;;   header line (`persp-show-modestring' 'header'), which agent-shell
+;;   buffers hide by installing their own `header-line-format'.  If you want
+;;   the top bar back for agent shells, see `agent-shell-header-style'
+;;   (set to `text' or nil) — or just keep this sidebar open.
+
+;; Sidebar keys:
+;;   n/p, j/k  navigate and preview
+;;   RET       switch to project / show buffer (wholesale perspective switch)
+;;   TAB       collapse / expand project group
+;;   s         new agent-shell in that project
+;;   r / R     label current / all agent sessions
+;;   K         kill highlighted buffer (agent session + viewport)
+;;   g         refresh
+;;   q, C-g    hide sidebar
+;; `M-a h' cycles: hidden -> shown+focused -> focused -> hidden.
+
+;;; Code:
+
+(require 'cl-lib)
+(require 'seq)
+(require 'agent-shell)
+(require 'agent-shell-viewport)
+(require 'perspective)
+(require 'posframe)
+(require 'jg-project-sidebar-label)
+
+;;;; Customization
+
+(defgroup jg-project-sidebar nil
+  "Global project sidebar over perspective-el."
+  :group 'convenience
+  :prefix "jg-project-sidebar-")
+
+(defcustom jg-project-sidebar-width 50
+  "Width of the project sidebar in columns."
+  :type 'integer
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-side 'left
+  "Edge of the frame for the sidebar side window."
+  :type '(choice (const left) (const right))
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-refresh-interval 2
+  "Seconds between sidebar refresh polls.
+The poll re-renders only when the sidebar's structural signature
+\(projects, buffers, states) changed."
+  :type 'number
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-excluded-persps nil
+  "Perspective names never listed in the sidebar.
+The internal frame-global perspective is always excluded."
+  :type '(repeat string)
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-shell-modes
+  '(shell-mode eshell-mode eat-mode mistty-mode term-mode vterm-mode)
+  "Major modes (checked with `derived-mode-p') listed as regular shells.
+Projects opened via `C-x p' auto-start a `shell-mode' buffer
+\(`projectile-switch-project-action' is `projectile-run-shell')."
+  :type '(repeat symbol)
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-peek-position 'right
+  "Edge of the frame where the peek posframe is anchored.
+One of `top', `bottom', `left', `right'."
+  :type '(choice (const top) (const bottom) (const left) (const right))
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-peek-width 52
+  "Width of the peek posframe in columns."
+  :type 'integer
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-peek-height 60
+  "Maximum height of the peek posframe in rows."
+  :type 'integer
+  :group 'jg-project-sidebar)
+
+(defcustom jg-project-sidebar-fallback-icons
+  '((idle . ("✓" . success))
+    (busy . ("◔" . warning))
+    (blocked . ("⯄" . error))
+    (dead . ("✗" . error)))
+  "Fallback Unicode characters for TUI Emacs.
+Each entry is (STATE . (CHAR . FACE)), used when image display is
+unavailable (e.g. terminal Emacs).  Uses `font-lock-face' so the
+color survives outer `face' text properties in the render code."
+  :type '(alist :key-type (choice (const idle) (const busy) (const blocked) (const dead))
+                :value-type (cons string face))
+  :group 'jg-project-sidebar)
+
+;;;; Faces
+
+(defface jg-project-sidebar-project
+  '((t :inherit font-lock-keyword-face :weight bold))
+  "Face for project (perspective) headers in the sidebar.")
+
+(defface jg-project-sidebar-project-current
+  '((t :inherit font-lock-function-name-face :weight bold))
+  "Face for the header of the current perspective in the sidebar.")
+
+(defface jg-project-sidebar-loose
+  '((t :inherit font-lock-comment-face :weight bold))
+  "Face for loose groups (agent shells with no matching perspective).")
+
+(defface jg-project-sidebar-selection
+  '((((class color) (background dark))
+     :background "#2d3b2d" :extend t)
+    (((class color) (background light))
+     :background "#d4e4d4" :extend t))
+  "Face for the selected entry in the sidebar.
+Intentionally dim — just enough to show position without glare.")
+
+(defface jg-project-sidebar-hint-key
+  '((t :inherit font-lock-constant-face))
+  "Face for key names in the sidebar's bottom hint footer.")
+
+(defface jg-project-sidebar-hint-desc
+  '((t :inherit shadow))
+  "Face for descriptions in the sidebar's bottom hint footer.")
+
+;;;; Constants and internal state
+
+(defconst jg-project-sidebar--buffer-name " *jg-project-sidebar*")
+(defconst jg-project-sidebar-peek--buffer-name " *jg-project-sidebar-peek*")
+
+(defconst jg-project-sidebar--hints
+  '(((jg-project-sidebar-next jg-project-sidebar-prev) . "navigate")
+    (jg-project-sidebar-select                              . "switch")
+    (jg-project-sidebar-collapse                            . "collapse")
+    (jg-project-sidebar-new-shell                           . "new shell")
+    (jg-project-sidebar-label-current                       . "label")
+    (jg-project-sidebar-label-all                           . "label all")
+    (jg-project-sidebar-kill-current                        . "kill")
+    (jg-project-sidebar-refresh                             . "refresh")
+    (jg-project-sidebar-toggle                              . "quit"))
+  "Command/description pairs shown in the sidebar's bottom hint footer.")
+
+;; Sidebar entries: plist with :type ('project or 'buffer), :persp NAME,
+;; :loose-p BOOL, and for project entries :root ROOT; for buffer entries
+;; :buffer BUF and :kind ('agent or 'shell).
+(defvar jg-project-sidebar--entries nil
+  "Flat navigable entries including project headers and buffer lines.")
+
+(defvar jg-project-sidebar--current-idx 0
+  "Index of the highlighted entry.")
+
+(defvar jg-project-sidebar--collapsed nil
+  "List of perspective names currently collapsed.")
+
+(defvar jg-project-sidebar--main-window nil
+  "Window that receives previews and focus on select.
+Captured when the sidebar is shown or jumped into; always validated
+before use.")
+
+(defvar jg-project-sidebar--refresh-timer nil
+  "Repeating timer that refreshes the sidebar when its content changes.")
+
+(defvar jg-project-sidebar--last-signature nil
+  "Serialized model at last render, compared by the refresh poll.")
+
+(defvar jg-project-sidebar--last-main-state nil
+  "Last synced \(PERSP-NAME . MAIN-BUFFER-NAME) of the main window.
+Compared by `jg-project-sidebar--sync-from-main-window' so the
+main-window -> sidebar sync only acts when reality actually changed
+\(compare-before-act; O(1) on every hook firing).")
+
+(defvar jg-project-sidebar--highlight-overlay nil
+  "Overlay used to highlight the selected entry in the sidebar.")
+
+;; Peek state.
+(defvar jg-project-sidebar-peek--entries nil
+  "Flat list of selectable peek entries.  Each element: plist (:buffer BUF).")
+
+(defvar jg-project-sidebar-peek--current-idx 0
+  "Index into `jg-project-sidebar-peek--entries' of the highlighted entry.")
+
+(defvar jg-project-sidebar-peek--origin-window nil
+  "Window that was selected when peek was invoked.")
+
+(defvar jg-project-sidebar-peek--origin-buffer nil
+  "Buffer displayed in the origin window when peek was invoked (restored on quit).")
+
+(defvar jg-project-sidebar-peek--saved-terminal-map nil
+  "Saved `overriding-terminal-local-map' value, restored when peek is dismissed.")
+
+;; Minimal override map — only C-g, so normal editing is unaffected in the
+;; parent frame.  `overriding-terminal-local-map' has the highest priority and
+;; fires before the child-frame keymap lookup, making C-g reliable regardless
+;; of which frame currently has focus.
+(defvar jg-project-sidebar-peek--quit-override-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-g") #'jg-project-sidebar-peek-quit)
+    map)
+  "Terminal-wide override map active while the peek posframe is shown.")
+
+;;;; Shared helpers (sidebar + peek)
+
+(defun jg-project-sidebar--buffer-state (buf)
+  "Return `busy', `blocked', `idle', or `dead' for BUF.
+Tolerates buffers that are not live agent-shell sessions (every probe
+is guarded); those classify as `idle'."
+  (if (buffer-live-p buf)
+      (with-current-buffer buf
+        (cond
+         ((and (fboundp 'agent-shell-status)
+               (eq (ignore-errors (agent-shell-status :shell-buffer buf)) 'blocked))
+          'blocked)
+         ((and (fboundp 'agent-shell--permission-pending-p)
+               (ignore-errors (agent-shell--permission-pending-p :shell-buffer buf)))
+          'blocked)
+         ((and (fboundp 'shell-maker-busy)
+               (ignore-errors (shell-maker-busy)))
+          'busy)
+         (t 'idle)))
+    'dead))
+
+(defvar jg-project-sidebar--icon-cache nil
+  "Alist of (STATE . IMAGE) for buffer status icons.")
+
+(defconst jg-project-sidebar--icon-svgs
+  '((idle . "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\">
+  <circle cx=\"10\" cy=\"10\" r=\"8.5\" fill=\"#4E9A72\"/>
+  <polyline points=\"4.5,10.5 8.5,14.5 16,5.5\"
+            stroke=\"white\" stroke-width=\"2.5\" fill=\"none\"
+            stroke-linecap=\"round\" stroke-linejoin=\"round\"/>
+</svg>")
+    (busy . "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\">
+  <polygon points=\"10,2 18.5,17.5 1.5,17.5\" fill=\"#C9922A\"/>
+</svg>")
+    (blocked . "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\">
+  <polygon points=\"18.5,6.5 13.5,1.5 6.5,1.5 1.5,6.5 1.5,13.5 6.5,18.5 13.5,18.5 18.5,13.5\" fill=\"#D32F2F\"/>
+  <polygon points=\"16.5,7.0 13.0,3.5 7.0,3.5 3.5,7.0 3.5,13.0 7.0,16.5 13.0,16.5 16.5,13.0\" fill=\"none\" stroke=\"white\" stroke-width=\"1.2\"/>
+</svg>")
+    (dead . "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\">
+  <circle cx=\"10\" cy=\"10\" r=\"8.5\" fill=\"#C0392B\"/>
+  <line x1=\"6.5\" y1=\"6.5\" x2=\"13.5\" y2=\"13.5\" stroke=\"white\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>
+  <line x1=\"13.5\" y1=\"6.5\" x2=\"6.5\" y2=\"13.5\" stroke=\"white\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>
+</svg>"))
+  "Inline SVG strings for each buffer state.")
+
+(defun jg-project-sidebar--svg-icon (state)
+  "Return the cached SVG image for STATE (`busy', `blocked', `idle', or `dead')."
+  (unless jg-project-sidebar--icon-cache
+    (setq jg-project-sidebar--icon-cache
+          (mapcar (lambda (pair)
+                    (cons (car pair)
+                          (create-image (cdr pair) 'svg t :ascent 'center)))
+                  jg-project-sidebar--icon-svgs)))
+  (alist-get state jg-project-sidebar--icon-cache))
+
+(defun jg-project-sidebar--icon (state)
+  "Return a propertized string displaying the icon for STATE.
+In GUI Emacs with SVG support, this is a space with a `display' SVG
+image property.  Otherwise, this is a Unicode character with a face."
+  (if (and (display-graphic-p) (image-type-available-p 'svg))
+      (propertize " " 'display (jg-project-sidebar--svg-icon state))
+    (let ((fallback (or (alist-get state jg-project-sidebar-fallback-icons)
+                        '("?" . default))))
+      (propertize (car fallback) 'face (cdr fallback) 'font-lock-face (cdr fallback)))))
+
+(defun jg-project-sidebar--preferred-buffer (shell-buf)
+  "Return the best buffer to display for SHELL-BUF.
+Uses the existing viewport buffer when one already exists, so its mode
+\(view or edit) is preserved.  Falls back to the shell buffer itself."
+  (or (ignore-errors
+        (agent-shell-viewport--buffer :shell-buffer shell-buf :existing-only t))
+      shell-buf))
+
+;;;; Perspective helpers
+;;
+;; Perspective buffer lists are read and mutated through the persp struct
+;; directly (`persp-buffers' / `perspectives-hash').  The public wrappers
+;; `persp-get-buffers' and `with-perspective' run full `persp-switch' round
+;; trips — each one restores window configurations twice — which is far too
+;; heavy (and surprising) for a sidebar that re-queries every few seconds.
+
+(defun jg-project-sidebar--listed-persp-names ()
+  "Names of perspectives the sidebar should list, in `persp-names' order."
+  (if (bound-and-true-p persp-mode)
+      (seq-remove (lambda (name)
+                    (or (equal name persp-frame-global-perspective-name)
+                        (member name jg-project-sidebar-excluded-persps)))
+                  (persp-names))
+    nil))
+
+(defun jg-project-sidebar--persp-buffers (name)
+  "Live buffers of perspective NAME, read without switching perspectives."
+  (when-let* ((persp (and (bound-and-true-p persp-mode)
+                         (gethash name (perspectives-hash)))))
+    (seq-filter #'buffer-live-p (persp-buffers persp))))
+
+(defun jg-project-sidebar--owning-persp (buf)
+  "Return the first listed perspective name containing BUF, or nil."
+  (cl-loop for name in (jg-project-sidebar--listed-persp-names)
+           when (memq buf (jg-project-sidebar--persp-buffers name))
+           return name))
+
+(defun jg-project-sidebar--persp-add-buffer (name buf)
+  "Associate BUF with perspective NAME by direct struct update.
+Idempotent; avoids `with-perspective' window-configuration round trips."
+  (when-let* ((persp (and (bound-and-true-p persp-mode)
+                         (gethash name (perspectives-hash)))))
+    (cl-pushnew buf (persp-buffers persp) :test #'eq)))
+
+(defun jg-project-sidebar--add-to-all-persps (buf)
+  "Make BUF a member of every perspective on every frame.
+Membership in multiple perspectives is what keeps `persp-kill' from
+killing BUF (it only forgets buffers that live in other perspectives)."
+  (dolist (frame (frame-list))
+    (with-selected-frame frame
+      (when (bound-and-true-p persp-mode)
+        (maphash (lambda (_name persp)
+                   (cl-pushnew buf (persp-buffers persp) :test #'eq))
+                 (perspectives-hash))))))
+
+(defun jg-project-sidebar--remove-from-all-persps (buf)
+  "Disassociate BUF from every perspective on every frame."
+  (dolist (frame (frame-list))
+    (with-selected-frame frame
+      (when (bound-and-true-p persp-mode)
+        (maphash (lambda (_name persp)
+                   (setf (persp-buffers persp) (remq buf (persp-buffers persp))))
+                 (perspectives-hash))))))
+
+;;;; Model
+
+(defun jg-project-sidebar--shell-buffer-p (buf agent-set)
+  "Return non-nil when BUF is a regular shell/terminal buffer.
+AGENT-SET is the list of known agent-shell buffers, which take
+precedence over mode-based classification."
+  (and (buffer-live-p buf)
+       (not (memq buf agent-set))
+       (not (string-prefix-p " " (buffer-name buf)))
+       (with-current-buffer buf
+         (apply #'derived-mode-p jg-project-sidebar-shell-modes))))
+
+(defun jg-project-sidebar--guess-root (bufs)
+  "Derive a project root directory for a group from BUFFERS.
+Uses the default-directory of its first shell-ish buffer, which for
+projectile-opened projects is the project root."
+  (cl-loop for buf in bufs
+           when (buffer-live-p buf)
+           return (buffer-local-value 'default-directory buf)))
+
+(defun jg-project-sidebar--sort-entries (entries)
+  "Sort ENTRIES: agent-shell buffers first, then by buffer name."
+  (sort entries
+        (lambda (a b)
+          (let ((ka (if (eq (plist-get a :kind) 'agent) 0 1))
+                (kb (if (eq (plist-get b :kind) 'agent) 0 1)))
+            (if (/= ka kb)
+                (< ka kb)
+              (string< (buffer-name (plist-get a :buffer))
+                       (buffer-name (plist-get b :buffer))))))))
+
+(defun jg-project-sidebar--model ()
+  "Build the live sidebar model (a pure query, no cached state).
+Return a list of group plists:
+  (:name PERSP-NAME :root ROOT :current-p BOOL :loose-p BOOL
+   :buffers ((:buffer BUF :kind agent|shell [:state STATE]) ...))
+Groups are the listed perspectives in `persp-names' order, followed by
+loose agent-shell groups (project name, no owning perspective)."
+  (if (not (bound-and-true-p persp-mode))
+      nil
+    (let* ((names (jg-project-sidebar--listed-persp-names))
+           (current (persp-current-name))
+           (agents (or (ignore-errors (agent-shell-buffers)) '()))
+           (persp-bufs (mapcar (lambda (name)
+                                 (cons name (jg-project-sidebar--persp-buffers name)))
+                               names))
+           (groups (mapcar (lambda (pair)
+                             (list :name (car pair)
+                                   :root nil
+                                   :current-p (equal (car pair) current)
+                                   :loose-p nil
+                                   :buffers nil))
+                           persp-bufs))
+           (group-for (lambda (name)
+                        (cl-loop for g in groups
+                                 when (equal (plist-get g :name) name)
+                                 return g)))
+           loose-agents)
+      ;; Regular shells: perspective membership is the truth.
+      (dolist (pair persp-bufs)
+        (dolist (buf (cdr pair))
+          (when (jg-project-sidebar--shell-buffer-p buf agents)
+            (let ((g (funcall group-for (car pair))))
+              (plist-put g :buffers
+                         (cons (list :buffer buf :kind 'shell)
+                               (plist-get g :buffers)))))))
+      ;; Agent shells: membership first, else project-name match, else loose.
+      (dolist (buf agents)
+        (let* ((owner (cl-loop for pair in persp-bufs
+                               when (memq buf (cdr pair))
+                               return (car pair)))
+               (name (or owner
+                         (let ((pname (ignore-errors
+                                        (with-current-buffer buf
+                                          (agent-shell--project-name)))))
+                           (and pname (member pname names) pname))))
+               (group (and name (funcall group-for name))))
+          (if group
+              (plist-put group :buffers
+                         (cons (list :buffer buf :kind 'agent
+                                     :state (jg-project-sidebar--buffer-state buf))
+                               (plist-get group :buffers)))
+            (push buf loose-agents))))
+      ;; Loose agent shells grouped by project name.
+      (dolist (pair (seq-group-by
+                     (lambda (buf)
+                       (or (ignore-errors
+                             (with-current-buffer buf (agent-shell--project-name)))
+                           "other"))
+                     (nreverse loose-agents)))
+        (push (list :name (car pair)
+                    :root nil :current-p nil :loose-p t
+                    :buffers (jg-project-sidebar--sort-entries
+                              (mapcar (lambda (buf)
+                                        (list :buffer buf :kind 'agent
+                                              :state (jg-project-sidebar--buffer-state buf)))
+                                      (cdr pair))))
+              groups))
+      ;; Sort each group's entries and derive roots (a group buffer's
+      ;; default-directory is the project root for projectile projects).
+      (dolist (g groups)
+        (let* ((bufs (plist-get g :buffers))
+               (root (jg-project-sidebar--guess-root
+                      (append (mapcar (lambda (e) (plist-get e :buffer)) bufs)
+                              (cdr (cl-loop for pair in persp-bufs
+                                            when (equal (car pair) (plist-get g :name))
+                                            return pair))))))
+          (plist-put g :buffers (jg-project-sidebar--sort-entries bufs))
+          (plist-put g :root root)))
+      (nreverse groups))))
+
+(defun jg-project-sidebar--signature (model)
+  "Serialize MODEL into an `equal'-comparable structure."
+  (mapcar (lambda (g)
+            (list (plist-get g :name)
+                  (plist-get g :current-p)
+                  (plist-get g :loose-p)
+                  (plist-get g :root)
+                  (mapcar (lambda (e)
+                            (list (buffer-name (plist-get e :buffer))
+                                  (plist-get e :kind)
+                                  (plist-get e :state)))
+                          (plist-get g :buffers))))
+          model))
+
+;;;; Sidebar keymap
+
+(defvar jg-project-sidebar-map
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map t)
+    (define-key map (kbd "j")             #'jg-project-sidebar-next)
+    (define-key map (kbd "n")             #'jg-project-sidebar-next)
+    (define-key map (kbd "k")             #'jg-project-sidebar-prev)
+    (define-key map (kbd "p")             #'jg-project-sidebar-prev)
+    (define-key map (kbd "RET")           #'jg-project-sidebar-select)
+    (define-key map (kbd "TAB")           #'jg-project-sidebar-collapse)
+    (define-key map (kbd "r")             #'jg-project-sidebar-label-current)
+    (define-key map (kbd "R")             #'jg-project-sidebar-label-all)
+    (define-key map (kbd "K")             #'jg-project-sidebar-kill-current)
+    (define-key map (kbd "g")             #'jg-project-sidebar-refresh)
+    (define-key map (kbd "s")             #'jg-project-sidebar-new-shell)
+    (define-key map (kbd "C-g")           #'jg-project-sidebar-toggle)
+    (define-key map (kbd "q")             #'jg-project-sidebar-toggle)
+    (define-key map (kbd "<mouse-1>")     #'jg-project-sidebar-mouse-select)
+    (define-key map (kbd "<double-mouse-1>") #'jg-project-sidebar-mouse-select-double)
+    map)
+  "Keymap for the project sidebar.")
+
+;;;; Rendering
+
+(defun jg-project-sidebar--format-hint-key (cmd-or-cmds)
+  "Return formatted key string for CMD-OR-CMDS in `jg-project-sidebar-map'.
+CMD-OR-CMDS can be a command symbol or a list of command symbols
+which will be formatted separated by slashes (e.g. \"n/p\")."
+  (let ((lookup (lambda (cmd)
+                  (when-let* ((keys (where-is-internal cmd jg-project-sidebar-map)))
+                    (when-let* ((key (seq-find (lambda (k)
+                                                (and (> (length k) 0)
+                                                     (not (mouse-event-p (aref k 0)))
+                                                     (not (memq (aref k 0)
+                                                                '(menu-bar header-line mode-line tab-line)))))
+                                              keys)))
+                      (key-description key))))))
+    (if (listp cmd-or-cmds)
+        (let ((keys (mapcar lookup cmd-or-cmds)))
+          (if (seq-every-p #'identity keys)
+              (string-join keys "/")
+            (or (seq-find #'identity keys) "-")))
+      (or (funcall lookup cmd-or-cmds) "-"))))
+
+(defun jg-project-sidebar--insert-hint-footer ()
+  "Insert the key/hint footer, padded with blank lines so it sits flush
+against the bottom of the sidebar window regardless of session count."
+  (let* ((win        (get-buffer-window (current-buffer)))
+         (used-lines (line-number-at-pos (point)))
+         (hint-lines (length jg-project-sidebar--hints))
+         (avail      (and win (window-body-height win))))
+    (when avail
+      (insert (make-string (max 0 (- avail used-lines hint-lines)) ?\n)))
+    (dolist (hint jg-project-sidebar--hints)
+      (insert " "
+              (propertize (jg-project-sidebar--format-hint-key (car hint))
+                          'face 'jg-project-sidebar-hint-key)
+              " "
+              (propertize (cdr hint) 'face 'jg-project-sidebar-hint-desc)
+              "\n"))))
+
+(defun jg-project-sidebar--render ()
+  "Render the sidebar buffer and rebuild the entries list."
+  (let ((model (jg-project-sidebar--model)))
+    (with-current-buffer (get-buffer-create jg-project-sidebar--buffer-name)
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (setq jg-project-sidebar--entries nil)
+        ;; Top heading
+        (insert (propertize (format " Projects (%d)\n" (length model))
+                            'face '(:inherit font-lock-function-name-face :weight bold)))
+        (insert "\n")
+        (dolist (group model)
+          (let* ((name      (plist-get group :name))
+                 (root      (plist-get group :root))
+                 (loose     (plist-get group :loose-p))
+                 (current   (plist-get group :current-p))
+                 (collapsed (member name jg-project-sidebar--collapsed)))
+            ;; Project header — always a navigable entry
+            (push (list :type 'project :persp name :root root :loose-p loose)
+                  jg-project-sidebar--entries)
+            (insert (propertize
+                     (concat (if current "● " "  ")
+                             (if collapsed "▸ " "▾ ")
+                             name
+                             (if loose "  (loose)" "")
+                             "\n")
+                     'face (cond (current 'jg-project-sidebar-project-current)
+                                 (loose   'jg-project-sidebar-loose)
+                                 (t       'jg-project-sidebar-project))
+                     'jg-project-sidebar-persp name))
+            (unless collapsed
+              (let ((bufs (plist-get group :buffers)))
+                (if (null bufs)
+                    (insert (propertize "      – no shells –\n" 'face 'shadow))
+                  (dolist (entry bufs)
+                    (let* ((buf  (plist-get entry :buffer))
+                           (kind (plist-get entry :kind))
+                           (bname (buffer-name buf)))
+                      (push (list :type 'buffer :buffer buf :kind kind
+                                  :persp name :loose-p loose)
+                            jg-project-sidebar--entries)
+                      (insert (propertize
+                               (concat "    "
+                                       (if (eq kind 'agent)
+                                           (concat (jg-project-sidebar--icon
+                                                    (or (plist-get entry :state)
+                                                        (jg-project-sidebar--buffer-state buf)))
+                                                   " ")
+                                         "$ ")
+                                       bname
+                                       "\n")
+                               'jg-project-sidebar-buffer buf)))))))
+            (insert "\n")))
+        (jg-project-sidebar--insert-hint-footer)
+        (setq jg-project-sidebar--entries
+              (nreverse jg-project-sidebar--entries))
+        (setq buffer-read-only t)
+        (setq-local cursor-type nil))
+      (use-local-map jg-project-sidebar-map))
+    (setq jg-project-sidebar--last-signature
+          (jg-project-sidebar--signature model))))
+
+;;;; Highlight + point sync
+
+(defun jg-project-sidebar--highlight (idx)
+  "Highlight entry at IDX and sync point to that line in the sidebar window."
+  (with-current-buffer (get-buffer-create jg-project-sidebar--buffer-name)
+    (let ((inhibit-read-only t))
+      (unless (overlayp jg-project-sidebar--highlight-overlay)
+        (setq jg-project-sidebar--highlight-overlay
+              (make-overlay (point-min) (point-min))))
+      (let ((ov jg-project-sidebar--highlight-overlay))
+        (move-overlay ov (point-min) (point-min))
+        (when-let* ((entry (nth idx jg-project-sidebar--entries))
+                    (type  (plist-get entry :type))
+                    (pos   (if (eq type 'project)
+                               (text-property-any (point-min) (point-max)
+                                                  'jg-project-sidebar-persp
+                                                  (plist-get entry :persp))
+                             (text-property-any (point-min) (point-max)
+                                                'jg-project-sidebar-buffer
+                                                (plist-get entry :buffer)))))
+          (move-overlay ov pos
+                        (min (1+ (save-excursion (goto-char pos) (line-end-position)))
+                             (point-max)))
+          (overlay-put ov 'face 'jg-project-sidebar-selection)
+          (goto-char pos)
+          (when-let* ((win (get-buffer-window (current-buffer))))
+            (set-window-point win pos)))))))
+
+;;;; Cursor helpers
+
+(defun jg-project-sidebar--current-buffer ()
+  "Return the buffer object for the currently highlighted entry, or nil."
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                         jg-project-sidebar--entries)))
+    (plist-get entry :buffer)))
+
+(defun jg-project-sidebar--restore-idx (buf)
+  "After a re-render, set `jg-project-sidebar--current-idx' to BUF.
+If BUF is live and still in the entries list, move to its new position.
+Otherwise clamp the old index to the new list length."
+  (setq jg-project-sidebar--current-idx
+        (or (and (buffer-live-p buf)
+                 (cl-position-if (lambda (e)
+                                   (and (eq (plist-get e :type) 'buffer)
+                                        (eq (plist-get e :buffer) buf)))
+                                 jg-project-sidebar--entries))
+            (min jg-project-sidebar--current-idx
+                 (max 0 (1- (length jg-project-sidebar--entries)))))))
+
+(defun jg-project-sidebar--navigable-p (entry)
+  "Return non-nil when ENTRY should be reachable via n/p navigation.
+Buffer entries are always navigable.  Project headers are navigable only
+while their group is collapsed, since collapsing removes every buffer
+entry underneath them, leaving the header as the sole (and only)
+keyboard-reachable way to expand the group again."
+  (or (eq (plist-get entry :type) 'buffer)
+      (member (plist-get entry :persp) jg-project-sidebar--collapsed)))
+
+;;;; Preview and window management
+
+(defun jg-project-sidebar--main-window ()
+  "Return the window that should receive previews and focus.
+Prefers the window captured when the sidebar was entered; falls back
+to the first regular (non-side) window of the selected frame."
+  (or (and (window-live-p jg-project-sidebar--main-window)
+           (eq (window-frame jg-project-sidebar--main-window) (selected-frame))
+           (not (window-parameter jg-project-sidebar--main-window 'window-side))
+           jg-project-sidebar--main-window)
+      (seq-find (lambda (w) (not (window-parameter w 'window-side)))
+                (window-list))
+      (selected-window)))
+
+(defun jg-project-sidebar--preview-current ()
+  "Show the highlighted buffer entry in the main window.
+Applies ONLY while the sidebar window has focus (n/p navigation, mouse
+clicks).  Background callers — the refresh poll, `persp-activated-hook',
+labelling — run while focus is elsewhere and must never force the main
+window back to a stale sidebar selection; the sidebar drives the main
+window one way only, from explicit navigation.  No-ops on project
+headers.  Buffer association is inhibited so previewing a buffer from
+another perspective does not import it into the current one."
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                          jg-project-sidebar--entries))
+              ((eq (plist-get entry :type) 'buffer))
+              (sidebar-win (get-buffer-window jg-project-sidebar--buffer-name))
+              ((eq (selected-window) sidebar-win))
+              (buf  (plist-get entry :buffer))
+              ((buffer-live-p buf))
+              (disp (if (eq (plist-get entry :kind) 'agent)
+                        (jg-project-sidebar--preferred-buffer buf)
+                      buf))
+              ((buffer-live-p disp))
+              (win  (jg-project-sidebar--main-window)))
+    (let ((persp--inhibit-buffer-association t))
+      (set-window-buffer win disp))))
+
+;;;; Main-window -> sidebar sync
+;;
+;; The other direction of the two-way sync: when the main window's buffer
+;; changes (C-x p / projectile, persp-switch by any means, manually popping
+;; a shell), the sidebar's selection/highlight moves to the matching entry.
+;; Display only — this never changes what any window shows.
+
+(defun jg-project-sidebar--entry-for-buffer (buf)
+  "Return the sidebar entry displaying BUF, or nil.
+Agent-shell entries match both their session buffer and its
+viewport-preferred display buffer, since the main window may show
+either."
+  (cl-loop for e in jg-project-sidebar--entries
+           when (and (eq (plist-get e :type) 'buffer)
+                     (if (eq (plist-get e :kind) 'agent)
+                         (or (eq (plist-get e :buffer) buf)
+                             (eq (ignore-errors
+                                   (jg-project-sidebar--preferred-buffer
+                                    (plist-get e :buffer)))
+                                 buf))
+                       (eq (plist-get e :buffer) buf)))
+           return e))
+
+(defun jg-project-sidebar--sync-selection ()
+  "Move the sidebar selection to the entry matching the main window.
+Prefers the buffer entry for the main window's buffer (shell, agent
+session, or agent viewport); falls back to the current perspective's
+project header.  Expands the target's group when collapsed.  Never
+changes what any window displays."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (let* ((main-win (jg-project-sidebar--main-window))
+           (main-buf (and (window-live-p main-win)
+                          (window-buffer main-win)))
+           (persp (and (bound-and-true-p persp-mode)
+                       (persp-current-name)))
+           (target (or (and main-buf
+                            (jg-project-sidebar--entry-for-buffer main-buf))
+                       (cl-loop for e in jg-project-sidebar--entries
+                                when (and (eq (plist-get e :type) 'project)
+                                          (equal (plist-get e :persp) persp)
+                                          (not (plist-get e :loose-p)))
+                                return e))))
+      (when target
+        ;; A collapsed group omits its buffer entries, so expand first and
+        ;; re-resolve — the buffer entry only exists once expanded.
+        (let ((name (plist-get target :persp)))
+          (when (and name (member name jg-project-sidebar--collapsed))
+            (setq jg-project-sidebar--collapsed
+                  (delete name jg-project-sidebar--collapsed))
+            (jg-project-sidebar--render)
+            (setq target (or (and main-buf
+                                  (jg-project-sidebar--entry-for-buffer main-buf))
+                             target))))
+        (when-let* ((idx (cl-position target jg-project-sidebar--entries
+                                      :test #'equal)))
+          (setq jg-project-sidebar--current-idx idx)
+          (jg-project-sidebar--highlight idx))))))
+
+(defun jg-project-sidebar--sync-from-main-window ()
+  "Sync the sidebar selection to the main window if reality changed.
+Computes the current (PERSP . MAIN-BUFFER) state and compares it with
+`jg-project-sidebar--last-main-state' — O(1), so it is safe to run from
+`window-buffer-change-functions' on every redisplay.  On change:
+refresh the structure if stale, then move the selection.  Never
+changes what any window displays."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (let* ((main-win (jg-project-sidebar--main-window))
+           (main-buf (and (window-live-p main-win)
+                          (window-buffer main-win)))
+           (persp (and (bound-and-true-p persp-mode)
+                       (persp-current-name)))
+           (state (cons persp (and main-buf (buffer-name main-buf)))))
+      (unless (equal state jg-project-sidebar--last-main-state)
+        (setq jg-project-sidebar--last-main-state state)
+        (jg-project-sidebar--refresh-if-stale)
+        (jg-project-sidebar--sync-selection)))))
+
+;;;; Commands
+
+(defun jg-project-sidebar--step (step)
+  "Move the selection by STEP entries, skipping expanded project headers."
+  (when jg-project-sidebar--entries
+    (let ((len (length jg-project-sidebar--entries))
+          (idx jg-project-sidebar--current-idx))
+      (catch 'found
+        (dotimes (_ len)
+          (setq idx (mod (+ idx step) len))
+          (when (jg-project-sidebar--navigable-p
+                 (nth idx jg-project-sidebar--entries))
+            (throw 'found idx))))
+      (setq jg-project-sidebar--current-idx idx)
+      (jg-project-sidebar--highlight jg-project-sidebar--current-idx)
+      (jg-project-sidebar--preview-current))))
+
+(defun jg-project-sidebar-next ()
+  "Move to the next entry and preview it."
+  (interactive)
+  (jg-project-sidebar--step 1))
+
+(defun jg-project-sidebar-prev ()
+  "Move to the previous entry and preview it."
+  (interactive)
+  (jg-project-sidebar--step -1))
+
+(defun jg-project-sidebar-select ()
+  "On a project header: switch to that project's perspective.
+On a buffer entry: switch to the owning perspective and display the
+buffer.  Loose entries display the buffer in the current perspective
+\(standard perspective-el import semantics)."
+  (interactive)
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                         jg-project-sidebar--entries)))
+    (if (eq (plist-get entry :type) 'project)
+        (if (plist-get entry :loose-p)
+            (jg-project-sidebar-collapse)
+          (persp-switch (plist-get entry :persp))
+          (select-window (jg-project-sidebar--main-window)))
+      (let* ((buf   (plist-get entry :buffer))
+             (persp (plist-get entry :persp))
+             (loose (plist-get entry :loose-p))
+             (disp  (if (eq (plist-get entry :kind) 'agent)
+                        (jg-project-sidebar--preferred-buffer buf)
+                      buf)))
+        (when (buffer-live-p disp)
+          (unless (or loose (not (bound-and-true-p persp-mode)))
+            (persp-switch persp))
+          (select-window (jg-project-sidebar--main-window))
+          (switch-to-buffer disp))))))
+
+(defun jg-project-sidebar-collapse ()
+  "Toggle collapse of the current entry's project group."
+  (interactive)
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                          jg-project-sidebar--entries))
+              (name  (plist-get entry :persp)))
+    (if (member name jg-project-sidebar--collapsed)
+        (setq jg-project-sidebar--collapsed
+              (delete name jg-project-sidebar--collapsed))
+      (push name jg-project-sidebar--collapsed))
+    ;; Preserve position on the same project header after re-render
+    (jg-project-sidebar--render)
+    (let ((new-idx (or (cl-position-if
+                        (lambda (e)
+                          (and (eq (plist-get e :type) 'project)
+                               (equal (plist-get e :persp) name)))
+                        jg-project-sidebar--entries)
+                       0)))
+      (setq jg-project-sidebar--current-idx new-idx)
+      (jg-project-sidebar--highlight new-idx))))
+
+(defun jg-project-sidebar-label-current ()
+  "Send a rename prompt for the highlighted agent-shell entry."
+  (interactive)
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                          jg-project-sidebar--entries))
+              ((eq (plist-get entry :type) 'buffer))
+              ((eq (plist-get entry :kind) 'agent))
+              (buf (plist-get entry :buffer)))
+    (jg-project-sidebar-label buf)))
+
+(defun jg-project-sidebar-label-all ()
+  "Sequentially prompt to rename every agent-shell session."
+  (interactive)
+  (dolist (buf (or (ignore-errors (agent-shell-buffers)) '()))
+    (jg-project-sidebar-label buf)))
+
+(defun jg-project-sidebar-kill-current ()
+  "Kill the highlighted buffer entry.
+Agent entries kill the session's viewport buffer too, when present."
+  (interactive)
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                          jg-project-sidebar--entries))
+              ((eq (plist-get entry :type) 'buffer))
+              (buf (plist-get entry :buffer)))
+    (when (eq (plist-get entry :kind) 'agent)
+      (let ((viewport (jg-project-sidebar--preferred-buffer buf)))
+        (when (and (buffer-live-p viewport)
+                   (not (eq viewport buf)))
+          (kill-buffer viewport))))
+    (when (buffer-live-p buf)
+      (kill-buffer buf))
+    (jg-project-sidebar-refresh)))
+
+(defun jg-project-sidebar-new-shell ()
+  "Start a new agent-shell in the highlighted (or current) project.
+Switches to that project's perspective first, so the agent shell is
+created in the project root and joins the project workspace."
+  (interactive)
+  (when-let* ((entry (nth jg-project-sidebar--current-idx
+                          jg-project-sidebar--entries))
+              (name (plist-get entry :persp))
+              ((not (plist-get entry :loose-p))))
+    (persp-switch name)
+    (select-window (jg-project-sidebar--main-window))
+    (let* ((root (plist-get entry :root))
+           (default-directory (or (and root (file-directory-p root) root)
+                                  default-directory)))
+      (agent-shell-new-shell))
+    (jg-project-sidebar-refresh)))
+
+;;;###autoload
+(defun jg-project-sidebar-refresh ()
+  "Re-render the sidebar to pick up project, buffer, and state changes.
+No-ops when the sidebar is not open."
+  (interactive)
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (let ((buf (jg-project-sidebar--current-buffer)))
+      (jg-project-sidebar--render)
+      (jg-project-sidebar--restore-idx buf)
+      (jg-project-sidebar--highlight jg-project-sidebar--current-idx)
+      (jg-project-sidebar--preview-current))))
+
+;;;; Mouse commands
+
+(defun jg-project-sidebar-mouse-select (event)
+  "Move sidebar selection to the entry clicked by mouse EVENT and preview it."
+  (interactive "e")
+  (with-current-buffer (get-buffer jg-project-sidebar--buffer-name)
+    (let* ((pos       (posn-point (event-start event)))
+           (buf-prop  (when pos (get-text-property pos 'jg-project-sidebar-buffer)))
+           (persp-prop (when pos (get-text-property pos 'jg-project-sidebar-persp))))
+      (cond
+       (buf-prop
+        (when-let* ((idx (cl-position-if
+                         (lambda (e)
+                           (and (eq (plist-get e :type) 'buffer)
+                                (eq (plist-get e :buffer) buf-prop)))
+                         jg-project-sidebar--entries)))
+          (setq jg-project-sidebar--current-idx idx)
+          (jg-project-sidebar--highlight idx)
+          (jg-project-sidebar--preview-current)))
+       (persp-prop
+        (when-let* ((idx (cl-position-if
+                         (lambda (e)
+                           (and (eq (plist-get e :type) 'project)
+                                (equal (plist-get e :persp) persp-prop)))
+                         jg-project-sidebar--entries)))
+          (setq jg-project-sidebar--current-idx idx)
+          (jg-project-sidebar--highlight idx)))))))
+
+(defun jg-project-sidebar-mouse-select-double (event)
+  "Select and focus the sidebar entry double-clicked by mouse EVENT."
+  (interactive "e")
+  (jg-project-sidebar-mouse-select event)
+  (jg-project-sidebar-select))
+
+;;;; Show / hide / toggle
+
+(defun jg-project-sidebar--display-alist ()
+  "Display-buffer alist for the sidebar side window."
+  `((side          . ,jg-project-sidebar-side)
+    (window-width  . ,jg-project-sidebar-width)
+    (window-parameters . ((no-delete-other-windows . t)
+                          (no-other-window . t)))))
+
+(defun jg-project-sidebar--ensure-window ()
+  "Display the sidebar side window if it is missing."
+  (when (and (get-buffer jg-project-sidebar--buffer-name)
+             (not (get-buffer-window jg-project-sidebar--buffer-name)))
+    (display-buffer-in-side-window
+     (get-buffer jg-project-sidebar--buffer-name)
+     (jg-project-sidebar--display-alist))))
+
+(defun jg-project-sidebar--install-hooks ()
+  "Install the perspective/window hooks and refresh poll that keep the
+sidebar global and in sync.  Idempotent: an already-running poll timer
+is cancelled first."
+  (add-hook 'persp-activated-hook #'jg-project-sidebar--on-persp-activated)
+  (add-hook 'persp-created-hook  #'jg-project-sidebar--on-persp-created)
+  ;; Main-window -> sidebar sync: fires during redisplay whenever any
+  ;; window's buffer changed.  The handler is O(1) unless the tracked
+  ;; main window / current perspective actually changed.
+  (add-hook 'window-buffer-change-functions
+            #'jg-project-sidebar--on-window-buffer-change)
+  (when jg-project-sidebar--refresh-timer
+    (cancel-timer jg-project-sidebar--refresh-timer))
+  (setq jg-project-sidebar--refresh-timer
+        (run-with-timer jg-project-sidebar-refresh-interval
+                        jg-project-sidebar-refresh-interval
+                        #'jg-project-sidebar--poll)))
+
+(defun jg-project-sidebar--teardown ()
+  "Cancel hooks and timer; delete the window; kill the sidebar buffer."
+  (when jg-project-sidebar--refresh-timer
+    (cancel-timer jg-project-sidebar--refresh-timer)
+    (setq jg-project-sidebar--refresh-timer nil))
+  (remove-hook 'persp-activated-hook #'jg-project-sidebar--on-persp-activated)
+  (remove-hook 'persp-created-hook  #'jg-project-sidebar--on-persp-created)
+  (remove-hook 'window-buffer-change-functions
+               #'jg-project-sidebar--on-window-buffer-change)
+  (when-let* ((win (get-buffer-window jg-project-sidebar--buffer-name)))
+    (delete-window win))
+  (when-let* ((buf (get-buffer jg-project-sidebar--buffer-name)))
+    (jg-project-sidebar--remove-from-all-persps buf)
+    (kill-buffer buf))
+  (setq jg-project-sidebar--entries          nil
+        jg-project-sidebar--current-idx      0
+        jg-project-sidebar--collapsed        nil
+        jg-project-sidebar--main-window      nil
+        jg-project-sidebar--last-signature   nil
+        jg-project-sidebar--last-main-state  nil))
+
+(defun jg-project-sidebar--show ()
+  "Open the sidebar: side window over the current layout, global state."
+  (unless (bound-and-true-p persp-mode)
+    (persp-mode 1))
+  (unless (window-parameter (selected-window) 'window-side)
+    (setq jg-project-sidebar--main-window (selected-window)))
+  (let ((buf (get-buffer-create jg-project-sidebar--buffer-name)))
+    ;; Membership in every perspective keeps `persp-kill' (M-w) from
+    ;; killing the sidebar buffer when a project perspective dies.
+    (jg-project-sidebar--add-to-all-persps buf)
+    (display-buffer-in-side-window buf (jg-project-sidebar--display-alist)))
+  (setq jg-project-sidebar--current-idx 0
+        jg-project-sidebar--collapsed   nil
+        jg-project-sidebar--last-main-state nil)
+  (jg-project-sidebar--render)
+  (jg-project-sidebar--install-hooks)
+  (jg-project-sidebar--highlight 0)
+  ;; Land the selection on the current project/buffer and prime the
+  ;; main-window state tracker.
+  (jg-project-sidebar--sync-from-main-window)
+  (select-window (get-buffer-window jg-project-sidebar--buffer-name)))
+
+;;;###autoload
+(defun jg-project-sidebar-toggle ()
+  "Toggle the global project sidebar.
+
+The sidebar lists every perspective (project) with its agent-shell and
+regular shell buffers, and is never scoped to a single perspective.
+`M-a h' cycles: hidden -> shown and focused -> already focused -> hidden
+\(i.e. pressing it again while the sidebar has focus hides it)."
+  (interactive)
+  (let ((win (get-buffer-window jg-project-sidebar--buffer-name)))
+    (cond
+     ((and (get-buffer jg-project-sidebar--buffer-name) win)
+      (if (eq (selected-window) win)
+          (jg-project-sidebar--teardown)
+        (select-window win)))
+     ((get-buffer jg-project-sidebar--buffer-name)
+      (jg-project-sidebar--ensure-window)
+      (jg-project-sidebar--install-hooks)
+      (jg-project-sidebar-refresh)
+      (select-window (get-buffer-window jg-project-sidebar--buffer-name)))
+     (t (jg-project-sidebar--show)))))
+
+;;;###autoload
+(defun jg-project-sidebar-jump-to-sidebar ()
+  "Jump to the sidebar window if it exists, otherwise open the sidebar."
+  (interactive)
+  (if (get-buffer-window jg-project-sidebar--buffer-name)
+      (select-window (get-buffer-window jg-project-sidebar--buffer-name))
+    (jg-project-sidebar-toggle)))
+
+;;;; Perspective/window hooks and refresh poll
+
+(defun jg-project-sidebar--on-persp-activated ()
+  "After any perspective activation: restore the sidebar window if the
+restored window configuration dropped it, then poll (refresh + sync)."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (jg-project-sidebar--ensure-window)
+    (jg-project-sidebar--poll)))
+
+(defun jg-project-sidebar--on-persp-created ()
+  "After any perspective is created: make the sidebar buffer a member
+\(runs with the new perspective current) and poll (refresh + sync)."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (persp-add-buffer (get-buffer jg-project-sidebar--buffer-name))
+    (jg-project-sidebar--poll)))
+
+(defun jg-project-sidebar--on-window-buffer-change (_frame)
+  "Main-window -> sidebar sync trigger.
+`window-buffer-change-functions' calls this during redisplay whenever
+any window's buffer changed (C-x p / projectile flows, `persp-switch'
+restoring window configurations, manually popping a shell).  Delegates
+to `jg-project-sidebar--sync-from-main-window', whose compare-before-
+act gate makes this O(1) for unrelated changes."
+  (jg-project-sidebar--sync-from-main-window))
+
+(defun jg-project-sidebar--refresh-if-stale ()
+  "Re-render the sidebar when its structural signature changed.
+Re-rendering never changes what any window displays — previews are
+focus-gated (see `jg-project-sidebar--preview-current')."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (let ((signature (jg-project-sidebar--signature
+                      (jg-project-sidebar--model))))
+      (unless (equal signature jg-project-sidebar--last-signature)
+        (jg-project-sidebar-refresh)))))
+
+(defun jg-project-sidebar--poll ()
+  "Periodic safety net (timer entry): refresh the render when the
+structural signature changed, then sync the selection to the main
+window.  Never changes what any window displays."
+  (when (get-buffer jg-project-sidebar--buffer-name)
+    (jg-project-sidebar--refresh-if-stale)
+    (jg-project-sidebar--sync-from-main-window)))
+
+;;;; Peek: transient posframe switcher for agent-shell buffers
+;;
+;; Ported from the fork's agent-shell-hq-peek.  Groups agent-shell buffers by
+;; project root (not by perspective) and previews behind the posframe; RET now
+;; also switches to the perspective owning the selected buffer.
+
+(defvar jg-project-sidebar-peek-map
+  (let ((map (make-sparse-keymap)))
+    (suppress-keymap map t)
+    (define-key map (kbd "n")   #'jg-project-sidebar-peek-next)
+    (define-key map (kbd "j")   #'jg-project-sidebar-peek-next)
+    (define-key map (kbd "p")   #'jg-project-sidebar-peek-prev)
+    (define-key map (kbd "k")   #'jg-project-sidebar-peek-prev)
+    (define-key map (kbd "RET") #'jg-project-sidebar-peek-select)
+    (define-key map (kbd "g")   #'jg-project-sidebar-peek-quit)
+    (define-key map (kbd "q")   #'jg-project-sidebar-peek-quit)
+    (define-key map (kbd "C-g") #'jg-project-sidebar-peek-quit)
+    (define-key map (kbd "s")   #'jg-project-sidebar-peek-new-shell)
+    map)
+  "Keymap active inside the project-sidebar peek posframe.")
+
+(defun jg-project-sidebar-peek--clear-override ()
+  "Restore `overriding-terminal-local-map' to its pre-peek value."
+  (when (eq overriding-terminal-local-map
+            jg-project-sidebar-peek--quit-override-map)
+    (setq overriding-terminal-local-map
+          jg-project-sidebar-peek--saved-terminal-map))
+  (setq jg-project-sidebar-peek--saved-terminal-map nil))
+
+(defun jg-project-sidebar-peek--preview-current ()
+  "Show the highlighted buffer in the origin window (behind the posframe)."
+  (when-let* ((entry      (nth jg-project-sidebar-peek--current-idx
+                               jg-project-sidebar-peek--entries))
+              (shell-buf  (plist-get entry :buffer))
+              (disp-buf   (jg-project-sidebar--preferred-buffer shell-buf)))
+    (when (and (window-live-p jg-project-sidebar-peek--origin-window)
+               (buffer-live-p disp-buf))
+      (let ((persp--inhibit-buffer-association t))
+        (set-window-buffer jg-project-sidebar-peek--origin-window disp-buf)))))
+
+(defun jg-project-sidebar--grouped-buffers ()
+  "Return list of (root project-name buffers) groups, sorted alphabetically."
+  (let ((table (make-hash-table :test 'equal))
+        (order nil))
+    (dolist (buf (or (ignore-errors (agent-shell-buffers)) '()))
+      (let* ((root  (ignore-errors (with-current-buffer buf (agent-shell-cwd))))
+             (pname (ignore-errors (with-current-buffer buf (agent-shell--project-name)))))
+        (unless (gethash root table)
+          (puthash root (list pname nil) table)
+          (push root order))
+        (let ((entry (gethash root table)))
+          (setcar (cdr entry) (append (cadr entry) (list buf))))))
+    (let ((groups (mapcar (lambda (root)
+                            (let ((e (gethash root table)))
+                              (list root (car e)
+                                    (sort (copy-sequence (cadr e))
+                                          (lambda (a b)
+                                            (string< (buffer-name a)
+                                                     (buffer-name b)))))))
+                          (nreverse order))))
+      (sort groups (lambda (a b) (string< (cadr a) (cadr b)))))))
+
+(defun jg-project-sidebar-peek--render (groups)
+  "Render GROUPS into the peek buffer."
+  (with-current-buffer (get-buffer-create jg-project-sidebar-peek--buffer-name)
+    (let ((inhibit-read-only t))
+      (erase-buffer)
+      (setq jg-project-sidebar-peek--entries nil)
+      (insert "\n")
+      (dolist (group groups)
+        (let ((pname (cadr  group))
+              (bufs  (caddr group)))
+          (insert (propertize (concat "    " pname "\n")
+                              'face 'jg-project-sidebar-project
+                              'jg-project-sidebar-peek-header t))
+          (dolist (buf bufs)
+            (let* ((state (jg-project-sidebar--buffer-state buf))
+                   (icon  (jg-project-sidebar--icon state))
+                   (bname (buffer-name buf)))
+              (push (list :buffer buf) jg-project-sidebar-peek--entries)
+              (insert (propertize
+                       (concat "      "
+                               icon
+                               " "
+                               bname
+                               "\n")
+                       'jg-project-sidebar-peek-buffer buf))))
+          (insert "\n")))
+      (insert (propertize "    n/p navigate   RET select   q quit\n" 'face 'shadow))
+      (insert "\n")
+      (setq jg-project-sidebar-peek--entries
+            (nreverse jg-project-sidebar-peek--entries))
+      (setq buffer-read-only t))
+    (goto-char (point-min))))
+
+(defvar jg-project-sidebar-peek--highlight-overlay nil
+  "Overlay used to highlight the selected line in the peek buffer.")
+
+(defun jg-project-sidebar-peek--highlight-line (idx)
+  "Highlight the entry at IDX, clearing all others."
+  (with-current-buffer (get-buffer-create jg-project-sidebar-peek--buffer-name)
+    (let ((inhibit-read-only t))
+      (unless (overlayp jg-project-sidebar-peek--highlight-overlay)
+        (setq jg-project-sidebar-peek--highlight-overlay
+              (make-overlay (point-min) (point-min))))
+      (let ((ov jg-project-sidebar-peek--highlight-overlay))
+        (move-overlay ov (point-min) (point-min))
+        (when-let* ((entry (nth idx jg-project-sidebar-peek--entries))
+                    (buf   (plist-get entry :buffer))
+                    (pos   (text-property-any (point-min) (point-max)
+                                              'jg-project-sidebar-peek-buffer buf)))
+          (move-overlay ov pos
+                        (min (1+ (save-excursion
+                                   (goto-char pos)
+                                   (line-end-position)))
+                             (point-max)))
+        (overlay-put ov 'face 'highlight))))))
+
+(defun jg-project-sidebar-peek--poshandler (info)
+  "Anchor the posframe to `jg-project-sidebar-peek-position'."
+  (let* ((fw  (plist-get info :parent-frame-width))
+         (fh  (plist-get info :parent-frame-height))
+         (pw  (plist-get info :posframe-width))
+         (ph  (plist-get info :posframe-height))
+         (pad 8))
+    (pcase jg-project-sidebar-peek-position
+      ('right  (cons (- fw pw pad) pad))
+      ('left   (cons pad pad))
+      ('top    (cons (/ (- fw pw) 2) pad))
+      ('bottom (cons (/ (- fw pw) 2) (- fh ph pad))))))
+
+(defun jg-project-sidebar-peek-next ()
+  "Move highlight to the next entry and preview that buffer."
+  (interactive)
+  (when jg-project-sidebar-peek--entries
+    (setq jg-project-sidebar-peek--current-idx
+          (mod (1+ jg-project-sidebar-peek--current-idx)
+               (length jg-project-sidebar-peek--entries)))
+    (jg-project-sidebar-peek--highlight-line jg-project-sidebar-peek--current-idx)
+    (jg-project-sidebar-peek--preview-current)))
+
+(defun jg-project-sidebar-peek-prev ()
+  "Move highlight to the previous entry and preview that buffer."
+  (interactive)
+  (when jg-project-sidebar-peek--entries
+    (setq jg-project-sidebar-peek--current-idx
+          (mod (1- jg-project-sidebar-peek--current-idx)
+               (length jg-project-sidebar-peek--entries)))
+    (jg-project-sidebar-peek--highlight-line jg-project-sidebar-peek--current-idx)
+    (jg-project-sidebar-peek--preview-current)))
+
+(defun jg-project-sidebar-peek-select ()
+  "Confirm the highlighted buffer, switch to it, and dismiss the posframe.
+Switches to the perspective that owns the buffer first, so buffer
+lists follow (mirrors the sidebar's select behavior)."
+  (interactive)
+  (when-let* ((entry     (nth jg-project-sidebar-peek--current-idx
+                              jg-project-sidebar-peek--entries))
+              (shell-buf (plist-get entry :buffer))
+              (disp-buf  (jg-project-sidebar--preferred-buffer shell-buf)))
+    (let ((win jg-project-sidebar-peek--origin-window))
+      (jg-project-sidebar-peek--clear-override)
+      (posframe-delete jg-project-sidebar-peek--buffer-name)
+      (when-let* ((pb (get-buffer jg-project-sidebar-peek--buffer-name)))
+        (kill-buffer pb))
+      (setq jg-project-sidebar-peek--entries    nil
+            jg-project-sidebar-peek--current-idx 0)
+      (when (buffer-live-p disp-buf)
+        (when-let* ((owning (and (bound-and-true-p persp-mode)
+                                (jg-project-sidebar--owning-persp disp-buf))))
+          (unless (equal owning (persp-current-name))
+            (persp-switch owning)))
+        (when (window-live-p win)
+          (select-window win))
+        (switch-to-buffer disp-buf)))))
+
+(defun jg-project-sidebar-peek-quit ()
+  "Dismiss the peek posframe and restore the original buffer."
+  (interactive)
+  (jg-project-sidebar-peek--clear-override)
+  (let ((win      jg-project-sidebar-peek--origin-window)
+        (orig-buf jg-project-sidebar-peek--origin-buffer))
+    (posframe-delete jg-project-sidebar-peek--buffer-name)
+    (when-let* ((buf (get-buffer jg-project-sidebar-peek--buffer-name)))
+      (kill-buffer buf))
+    (setq jg-project-sidebar-peek--entries      nil
+          jg-project-sidebar-peek--current-idx  0
+          jg-project-sidebar-peek--origin-buffer nil)
+    (when (window-live-p win)
+      (select-window win)
+      (when (and (buffer-live-p orig-buf)
+                 (not (eq (window-buffer win) orig-buf)))
+        (set-window-buffer win orig-buf)))))
+
+(defun jg-project-sidebar-peek-new-shell ()
+  "Launch a new agent-shell in the current project and dismiss peek."
+  (interactive)
+  (let ((win jg-project-sidebar-peek--origin-window))
+    (jg-project-sidebar-peek-quit)
+    (when (window-live-p win)
+      (select-window win)
+      (agent-shell-new-shell))))
+
+;;;###autoload
+(defun jg-project-sidebar-peek ()
+  "Show a posframe listing all agent-shell buffers grouped by project.
+
+n/p navigates, RET selects (switching to the owning perspective),
+g/q/C-g quits."
+  (interactive)
+  (let* ((origin-win (selected-window))
+         (groups     (jg-project-sidebar--grouped-buffers)))
+    (unless groups
+      (user-error "No agent-shell buffers found"))
+    (setq jg-project-sidebar-peek--origin-window origin-win
+          jg-project-sidebar-peek--origin-buffer  (window-buffer origin-win)
+          jg-project-sidebar-peek--current-idx   0)
+    (jg-project-sidebar-peek--render groups)
+    (jg-project-sidebar-peek--highlight-line 0)
+    (with-current-buffer jg-project-sidebar-peek--buffer-name
+      (use-local-map jg-project-sidebar-peek-map))
+    (setq jg-project-sidebar-peek--saved-terminal-map overriding-terminal-local-map
+          overriding-terminal-local-map
+          jg-project-sidebar-peek--quit-override-map)
+    (posframe-show jg-project-sidebar-peek--buffer-name
+                   :poshandler            #'jg-project-sidebar-peek--poshandler
+                   :width                 jg-project-sidebar-peek-width
+                   :max-height            jg-project-sidebar-peek-height
+                   :internal-border-width 4
+                   :border-color          (face-foreground 'shadow nil t)
+                   :accept-focus          t)
+    (jg-project-sidebar-peek--preview-current)
+    (let ((pf-frame (buffer-local-value 'posframe--frame
+                                        (get-buffer jg-project-sidebar-peek--buffer-name))))
+      (when (framep pf-frame)
+        (select-frame-set-input-focus pf-frame)
+        (select-window (frame-selected-window pf-frame) t)))))
+
+(provide 'jg-project-sidebar)
+;;; jg-project-sidebar.el ends here

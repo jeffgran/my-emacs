@@ -118,11 +118,14 @@
 
   "C-s s" 'jg-open-ssh
 
-  ;; agent-shell prefix
+  ;; agent-shell / project sidebar prefix
   "M-a" nil
   "M-a s" 'agent-shell
   "M-a o" 'agent-shell-opencode-start-agent
   "M-a m" 'agent-shell-manager-toggle
+  ;; global project sidebar (lists projects + shells, switches perspectives;
+  ;; cycles hidden -> shown+focused -> focused -> hidden)
+  "M-a h" 'jg-project-sidebar-toggle
 
   "M-x" 'kill-region
 
