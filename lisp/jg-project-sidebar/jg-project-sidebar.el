@@ -3,7 +3,7 @@
 ;; Copyright (C) 2026
 
 ;; Author: jgran
-;; Package-Requires: ((emacs "29.1") (agent-shell "0.66.1") (posframe "1.4") (perspective "2.22"))
+;; Package-Requires: ((emacs "29.1") (agent-shell "0.66.1") (posframe "1.4") (perspective "2.22") (projectile))
 
 ;; The user's own project-management sidebar.  It usurps the local
 ;; agent-shell-hq fork (lisp/agent-shell-hq-perspective/, itself a fork of
@@ -59,12 +59,44 @@
 ;;   perspective's header), expanding collapsed groups as needed — never
 ;;   changing what any window displays.
 
+;; Shells land in their project perspective
+;;   perspective-el scopes `C-v' (helm-buffers-list) to the current
+;;   perspective (its hard-wired helm advice; C-u C-v bypasses it) — which
+;;   is the point — but shells started from a stray context used to join
+;;   whatever perspective was current (the catch-all "main" perspective is
+;;   seeded with the whole buffer list at startup), so `C-v' from a
+;;   project showed files OR shells, never both.  `jg-project-sidebar-setup'
+;;   (called from jg-straight.el once agent-shell loads) fixes this three
+;;   ways: :before advice on agent-shell's entry points `persp-switch'es to
+;;   the project's perspective before any shell is created (the same switch
+;;   `projectile-persp-switch-project' performs for C-x p); a mode-hook
+;;   backstop gives freshly created shell buffers membership in their
+;;   project perspective when they sneak in through another path
+;;   (membership only — never display changes, so it cannot fight
+;;   perspective-el's display advice); and `jg-project-sidebar-adopt-shells'
+;;   repairs existing strays one-shot.  A `persp-add-buffer' guard keeps
+;;   shells OUT of foreign perspectives when accidental displays (agent
+;;   toggles, helm actions, stale restores) would otherwise leak them in.
+;;
+;; Post-switch sanity
+;;   `persp-activate' restores the perspective's saved window
+;;   configuration; when that configuration recorded a buffer that has
+;;   since been killed, `set-window-configuration' silently leaves the
+;;   PRE-switch buffer visible ("stale buffer after cycling").  After every
+;;   activation, `jg-project-sidebar--sanity-after-activation' re-points
+;;   windows that clearly show foreign buffers to the perspective's own
+;;   best buffer — display-only, so nothing is killed and no memberships
+;;   change.  The stale configuration then re-saves clean on the next
+;;   switch away.
+
 ;; Tab-bar note
-;;   This sidebar is intended to replace the perspective listing in the
-;;   header line (`persp-show-modestring' 'header'), which agent-shell
-;;   buffers hide by installing their own `header-line-format'.  If you want
-;;   the top bar back for agent shells, see `agent-shell-header-style'
-;;   (set to `text' or nil) — or just keep this sidebar open.
+;;   This sidebar replaces the perspective listing in the header line —
+;;   perspective-el's `persp-show-modestring' is set to nil in jg-straight.el
+;;   so the header-line "tab bar" is gone entirely (agent-shell buffers used
+;;   to hide it anyway by installing their own `header-line-format').  If you
+;;   ever want it back, set `persp-show-modestring' to 'header before
+;;   `persp-mode' runs — or see `agent-shell-header-style' (nil / text) for
+;;   agent shells' own top bar.
 
 ;; Sidebar keys:
 ;;   n/p, j/k  navigate and preview
@@ -76,6 +108,17 @@
 ;;   g         refresh
 ;;   q, C-g    hide sidebar
 ;; `M-a h' cycles: hidden -> shown+focused -> focused -> hidden.
+;;
+;; Global bindings (see jg-navigation-mode.el):
+;;   M-{ / M-}  cycle projects in the sidebar's rendered top-to-bottom
+;;              order — M-} moves one line DOWN the visible list (wrapping
+;;              from bottom to top), M-{ one line UP (top to bottom wrap).
+;;              A wholesale `persp-switch' (project switcher replacement
+;;              for `persp-prev'/`persp-next' and the removed header "tab
+;;              bar"); the cycle order is derived from the same model the
+;;              renderer draws, so it cannot drift from the display.
+;;              Works with the sidebar hidden, and a visible sidebar's
+;;              selection follows via the main-window sync.
 
 ;;; Code:
 
@@ -84,6 +127,7 @@
 (require 'agent-shell)
 (require 'agent-shell-viewport)
 (require 'perspective)
+(require 'projectile)
 (require 'posframe)
 (require 'jg-project-sidebar-label)
 
@@ -424,8 +468,14 @@ projectile-opened projects is the project root."
 Return a list of group plists:
   (:name PERSP-NAME :root ROOT :current-p BOOL :loose-p BOOL
    :buffers ((:buffer BUF :kind agent|shell [:state STATE]) ...))
-Groups are the listed perspectives in `persp-names' order, followed by
-loose agent-shell groups (project name, no owning perspective)."
+ORDER (load-bearing): groups are returned in the order the sidebar
+RENDERS them — real perspectives in REVERSE `persp-names' order (the
+final `nreverse', there to keep loose groups last, flips them),
+followed by loose agent-shell groups.  The renderer draws groups
+top-to-bottom in this order, and project cycling
+\(`jg-project-sidebar--rendered-project-names') derives its cycle
+order from this same model — do not \"fix\" the reversal on one side
+without the other, or cycling and display will drift apart."
   (if (not (bound-and-true-p persp-mode))
       nil
     (let* ((names (jg-project-sidebar--listed-persp-names))
@@ -944,6 +994,302 @@ No-ops when the sidebar is not open."
       (jg-project-sidebar--restore-idx buf)
       (jg-project-sidebar--highlight jg-project-sidebar--current-idx)
       (jg-project-sidebar--preview-current))))
+
+;;;; Project cycling (M-{ / M-})
+
+(defun jg-project-sidebar--rendered-project-names ()
+  "Return perspective names in the sidebar's top-to-bottom order.
+Derived from `jg-project-sidebar--model' — the exact order the
+renderer draws — so cycling can never drift from the displayed list
+\(the model's group order is deliberately NOT `persp-names' order:
+loose groups are kept last, which reverses the real-perspective
+section; see the model's commentary).  Loose groups are not
+perspectives and are excluded."
+  (cl-loop for g in (jg-project-sidebar--model)
+           unless (plist-get g :loose-p)
+           collect (plist-get g :name)))
+
+(defun jg-project-sidebar--cycle-project (step)
+  "Switch to the project STEP lines away in the sidebar's display.
+STEP is +1 for next (M-}, one line DOWN the rendered sidebar) or -1
+for previous (M-{, one line UP).  The cycle list comes from
+`jg-project-sidebar--rendered-project-names' — the same model the
+renderer draws from — so cycling always matches the visible order,
+wrapping around.  This is a wholesale `persp-switch', not a display
+change.  When the sidebar is visible its selection follows via the
+main-window -> sidebar sync; when hidden, nothing is displayed.  No-op
+\(with a message) when there are fewer than two projects."
+  (let* ((names (jg-project-sidebar--rendered-project-names))
+         (count (length names)))
+    (if (< count 2)
+        (message "jg-project-sidebar: %s"
+                 (if (zerop count)
+                     "no projects to cycle"
+                   (format "only one project (%s)" (car names))))
+      (let* ((current (and (bound-and-true-p persp-mode)
+                           (persp-current-name)))
+             (pos (cl-position current names :test #'equal))
+             (target (if pos
+                         (nth (mod (+ pos step) count) names)
+                       ;; Current perspective is not listed (excluded or
+                       ;; GLOBAL): step into the list from the nearest end.
+                       (nth (if (> step 0) 0 (1- count)) names))))
+        (when (and target (not (equal target current)))
+          (persp-switch target))))))
+
+;;;###autoload
+(defun jg-project-sidebar-next-project ()
+  "Switch to the next project, down the sidebar's listing (wraps around).
+Bound to `M-}'.  Moves one project DOWN the rendered sidebar — the
+project on the next line below the current one — wrapping from the
+bottom back to the top.  Works whether or not the sidebar is visible."
+  (interactive)
+  (jg-project-sidebar--cycle-project 1))
+
+;;;###autoload
+(defun jg-project-sidebar-previous-project ()
+  "Switch to the previous project, up the sidebar's listing (wraps around).
+Bound to `M-{'.  Moves one project UP the rendered sidebar — the
+project on the line above the current one — wrapping from the top
+back to the bottom.  See `jg-project-sidebar-next-project'."
+  (interactive)
+  (jg-project-sidebar--cycle-project -1))
+
+;;;; Shells land in their project perspective
+;;
+;; `C-v' (helm-buffers-list) is perspective-scoped by perspective-el's
+;; hard-wired helm advice — desired.  The pieces below make sure shells and
+;; agent shells are MEMBERS of their project's perspective, so that filter
+;; shows files + shells + agents together when called from anywhere in the
+;; project, including from a shell.
+
+(defun jg-project-sidebar--project-persp-name ()
+  "Return the perspective name for the current buffer's project.
+Computed exactly the way `projectile-persp-switch-project' names the
+perspective it creates for `C-x p': `projectile-project-name-function'
+applied to `projectile-project-root' (by default, the basename of the
+project root).  Nil when projectile is unavailable, the current
+directory is remote, or it is not inside a project."
+  (when (and (fboundp 'projectile-project-root)
+             (boundp 'projectile-project-name-function)
+             (not (file-remote-p default-directory)))
+    (when-let* ((root (ignore-errors (projectile-project-root))))
+      (funcall projectile-project-name-function root))))
+
+(defun jg-project-sidebar--ensure-project-persp (&rest _)
+  "Before a shell is created: switch to its project's perspective.
+Attached as :before advice to agent-shell's entry points (see
+`jg-project-sidebar-setup').  Switching first — the same `persp-switch'
+`projectile-persp-switch-project' performs — makes perspective-el's
+display advice associate the new shell buffer with the project
+perspective instead of with whatever perspective happens to be current
+\(e.g. the catch-all \"main\" when browsing from a stray shell).
+Creates the perspective when the project has none yet.  No-op outside
+a project or when already in the project's perspective."
+  (when (bound-and-true-p persp-mode)
+    (when-let* ((name (jg-project-sidebar--project-persp-name)))
+      (unless (equal name (persp-current-name))
+        (persp-switch name)))))
+
+(defun jg-project-sidebar--adopt-on-shell-mode ()
+  "Backstop from `shell-mode-hook'/`agent-shell-mode-hook':
+give a freshly created shell buffer membership in its project
+perspective.  Runs in the new buffer, whose `default-directory' is the
+project root at mode-init time (shell-maker inherits it before calling
+the mode).  Membership only — no display changes, no disassociation —
+so it cannot fight perspective-el's display advice (at worst the
+buffer is a member of both its project's perspective and the one it
+was displayed in).  Only adopts into perspectives that already exist;
+paths that need a brand-new perspective are handled by the advice."
+  (when (and (bound-and-true-p persp-mode)
+             (not (string-prefix-p " " (buffer-name))))
+    (when-let* ((name (jg-project-sidebar--project-persp-name))
+                ((not (equal name (persp-current-name)))))
+      (jg-project-sidebar--persp-add-buffer name (current-buffer)))))
+
+(defun jg-project-sidebar--shell-kind (buf agent-set)
+  "Return `agent' or `shell' when BUF is an agent-shell or shell buffer.
+AGENT-SET is the list of known agent-shell buffers."
+  (cond ((memq buf agent-set) 'agent)
+        ((jg-project-sidebar--shell-buffer-p buf agent-set) 'shell)))
+
+(defconst jg-project-sidebar--shell-entry-points
+  '(agent-shell agent-shell-new-shell agent-shell-opencode-start-agent)
+  "Agent-shell entry points advised by `jg-project-sidebar-setup'.
+`agent-shell-manager-new' and the sidebar/peek \"new shell\" commands
+route through these, so every creation path is covered.")
+
+(defun jg-project-sidebar-setup ()
+  "Install the shell -> project-perspective co-location.
+Adds `:before' advice on `jg-project-sidebar--shell-entry-points' so
+any path that creates an agent shell (M-a s, M-a o, `M-x agent-shell',
+the manager, the sidebar's `s') first switches to the shell's project
+perspective; installs the mode-hook backstop for regular shell
+buffers; and installs the `persp-add-buffer' guard that stops
+shell buffers from being adopted into a foreign perspective by
+accidental displays (agent-shell DWIM toggles, helm actions, stale
+window-configuration restores).  Idempotent.  Called from
+jg-straight.el's use-package :config, which runs as soon as
+agent-shell loads — i.e. before the first M-a s can execute."
+  (interactive)
+  (dolist (fn jg-project-sidebar--shell-entry-points)
+    (when (fboundp fn)
+      (advice-add fn :before #'jg-project-sidebar--ensure-project-persp)))
+  (advice-add 'persp-add-buffer
+              :around #'jg-project-sidebar--keep-shells-in-project-persp)
+  (add-hook 'shell-mode-hook #'jg-project-sidebar--adopt-on-shell-mode)
+  (add-hook 'agent-shell-mode-hook #'jg-project-sidebar--adopt-on-shell-mode)
+  (message "jg-project-sidebar: shells will land in their project perspectives"))
+
+(defun jg-project-sidebar--keep-shells-in-project-persp
+    (origfn buffer-or-name &rest args)
+  "Around advice for `persp-add-buffer': shells join only their project.
+`persp-add-buffer' is the single choke point of perspective-el's
+display advice — every `switch-to-buffer'/`display-buffer'/
+`set-window-buffer' lands here — so an accidental display of a shell
+while another perspective is current (agent-shell DWIM toggle, a helm
+action, a stale window-configuration restore) would otherwise leak the
+shell into that perspective's buffer list, and the leaked membership
+keeps re-infecting saved window configurations.  When BUFFER-OR-NAME
+is a shell/agent-shell buffer whose project perspective exists and is
+not the current perspective, skip the add and instead make it a member
+of its project perspective.  Everything else passes through
+untouched."
+  (if-let* (((bound-and-true-p persp-mode))
+            (buf (get-buffer buffer-or-name))
+            ((buffer-live-p buf))
+            ((jg-project-sidebar--shell-kind
+              buf (or (ignore-errors (agent-shell-buffers)) '())))
+            (name (with-current-buffer buf
+                    (jg-project-sidebar--project-persp-name)))
+            ((gethash name (perspectives-hash)))
+            ((not (equal name (persp-current-name)))))
+      (jg-project-sidebar--persp-add-buffer name buf)
+    (apply origfn buffer-or-name args)))
+
+;;;###autoload
+(defun jg-project-sidebar-adopt-shells ()
+  "Repair shell/agent-shell buffer memberships: exactly one project each.
+For every live buffer that is an agent-shell session or a regular
+shell buffer (`jg-project-sidebar-shell-modes'), derive its project
+from the buffer's `default-directory' and make it a member of that
+project's perspective — and ONLY that perspective: membership is
+removed from every other perspective, including foreign project
+perspectives and the catch-all \"main\" and GLOBAL perspectives (a
+shell in GLOBAL would show in every perspective's `C-v').  All edits
+are direct membership changes — no window displays change, no buffers
+are killed.  Buffers outside any project are left alone; shells whose
+project has no perspective yet are reported (open that project via
+C-x p to create one).  Diagnostic: \\[universal-argument] C-v lists
+all buffers, bypassing the perspective filter."
+  (interactive)
+  (unless (bound-and-true-p persp-mode)
+    (user-error "persp-mode is not active"))
+  (let ((agents (or (ignore-errors (agent-shell-buffers)) '()))
+        (adopted 0) (nopersp 0) (noproj 0))
+    (dolist (buf (buffer-list))
+      (when (and (buffer-live-p buf)
+                 (not (string-prefix-p " " (buffer-name buf)))
+                 (jg-project-sidebar--shell-kind buf agents))
+        (if-let* ((name (with-current-buffer buf
+                          (jg-project-sidebar--project-persp-name))))
+            (if (gethash name (perspectives-hash))
+                (progn
+                  (jg-project-sidebar--persp-add-buffer name buf)
+                  ;; Exclusive membership: out of every OTHER perspective
+                  ;; (foreign projects, catch-alls, GLOBAL).
+                  (dolist (other (persp-names))
+                    (unless (equal other name)
+                      (when-let* ((persp (gethash other (perspectives-hash))))
+                        (setf (persp-buffers persp)
+                              (remq buf (persp-buffers persp))))))
+                  (setq adopted (1+ adopted)))
+              (setq nopersp (1+ nopersp)))
+          (setq noproj (1+ noproj)))))
+    (message "jg-project-sidebar-adopt-shells: %d adopted, %d without a project perspective, %d outside projects"
+             adopted nopersp noproj)
+    adopted))
+
+;;;; Post-switch sanity: re-point foreign windows
+;;
+;; `set-window-configuration' (the heart of `persp-activate') leaves a
+;; window showing the PRE-switch buffer when the saved configuration
+;; recorded a dead buffer — the "stale buffer after cycling" bug — and
+;; restores foreign buffers recorded by earlier membership
+;; contamination.  After every perspective activation, re-point any
+;; window that is clearly showing a foreign buffer to the perspective's
+;; own most appropriate buffer.  Display-only; kills nothing, edits no
+;; memberships, and cannot fight perspective-el's display advice.
+
+(defun jg-project-sidebar--sanity-candidate ()
+  "Return the best buffer to display for the current perspective.
+Prefers the most-recently-used member that is a real working buffer
+\(visiting a file, or a shell/agent shell); falls back to any live
+non-internal member, then to the perspective's scratch buffer."
+  (when (bound-and-true-p persp-mode)
+    (let* ((members (seq-filter #'buffer-live-p (persp-current-buffers)))
+           (agents (or (ignore-errors (agent-shell-buffers)) '()))
+           (own-bufs (list (get-buffer jg-project-sidebar--buffer-name)
+                           (get-buffer jg-project-sidebar-peek--buffer-name)))
+           (real-p (lambda (buf)
+                     (and (not (string-prefix-p " " (buffer-name buf)))
+                          (not (string-match-p "\\`\\*\\(helm\\|Minibuf\\|Echo\\)"
+                                              (buffer-name buf)))
+                          (not (memq buf own-bufs))
+                          (or (buffer-file-name buf)
+                              (jg-project-sidebar--shell-kind buf agents)))))
+           (any-p (lambda (buf)
+                    (not (string-prefix-p " " (buffer-name buf))))))
+      (or (seq-find real-p members)
+          (seq-find any-p members)
+          (and (fboundp 'persp-get-scratch-buffer)
+               (persp-get-scratch-buffer (persp-current-name)))))))
+
+(defun jg-project-sidebar--sanity-after-activation ()
+  "Re-point windows that show foreign buffers after a persp switch.
+Runs from `persp-activated-hook' (every `persp-switch' path).  For each
+non-side window of the selected frame whose buffer is clearly foreign
+to the now-current perspective — not a member, not in the GLOBAL
+perspective, not the perspective's own scratch, not an internal/helm/
+minibuffer buffer, not this package's buffers — display the
+perspective's `jg-project-sidebar--sanity-candidate' instead.
+Display-only: no buffers are killed and no memberships change (buffer
+association is inhibited around the re-point).  Skipped during
+recursive perspective switches and while the minibuffer is active
+\(helm sessions)."
+  (when (and (bound-and-true-p persp-mode)
+             (not (frame-parameter nil 'persp--recursive))
+             (not (active-minibuffer-window))
+             (persp-curr))
+    (when-let* ((candidate (jg-project-sidebar--sanity-candidate)))
+      (let* ((members (persp-current-buffers))
+             (global-bufs (when (gethash persp-frame-global-perspective-name
+                                         (perspectives-hash))
+                            (persp-buffers
+                             (gethash persp-frame-global-perspective-name
+                                      (perspectives-hash)))))
+             (own-scratch (persp-scratch-buffer (persp-current-name)))
+             (own-bufs (list (get-buffer jg-project-sidebar--buffer-name)
+                             (get-buffer jg-project-sidebar-peek--buffer-name)))
+             (foreign-p (lambda (buf)
+                          (and (buffer-live-p buf)
+                               (not (memq buf members))
+                               (not (memq buf global-bufs))
+                               (not (equal (buffer-name buf) own-scratch))
+                               (not (memq buf own-bufs))
+                               (not (string-prefix-p " " (buffer-name buf)))
+                               (not (string-match-p "\\`\\*\\(helm\\|Minibuf\\|Echo\\)"
+                                                   (buffer-name buf)))))))
+        (dolist (win (window-list (selected-frame)))
+          (unless (window-parameter win 'window-side)
+            (when-let* ((buf (window-buffer win))
+                        ((funcall foreign-p buf)))
+              (let ((persp--inhibit-buffer-association t))
+                (set-window-buffer win candidate)))))))))
+
+;; Independent of the sidebar's visibility: installed as soon as the
+;; package loads (first M-a h / M-{ / M-} press or agent-shell loading).
+(add-hook 'persp-activated-hook #'jg-project-sidebar--sanity-after-activation)
 
 ;;;; Mouse commands
 

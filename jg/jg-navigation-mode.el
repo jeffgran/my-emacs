@@ -43,8 +43,11 @@
 
   ;;screens (tabs)
   "M-w" #'(lambda () (interactive) (persp-kill (persp-current-name)))
-  "M-{" 'persp-prev
-  "M-}" 'persp-next
+  ;; project cycling in the jg-project-sidebar's displayed order (wholesale
+  ;; persp-switch; autoloaded, works with the sidebar hidden).  Replaces
+  ;; persp-prev/persp-next, which the sidebar + M-{/M-} now supersede.
+  "M-{" 'jg-project-sidebar-previous-project
+  "M-}" 'jg-project-sidebar-next-project
 
   ;;buffers
   "C-w" #'(lambda () (interactive) (kill-buffer (current-buffer)))

@@ -44,14 +44,20 @@
   ;; `persp-activated-hook' after perspective switches — instead of living in
   ;; a dedicated "*agent-shell*" perspective like the fork did.
   ;; Source of truth lives in lisp/jg-project-sidebar/, symlinked into
-  ;; straight/repos/jg-project-sidebar for straight to build.  Entry point
-  ;; `jg-project-sidebar-toggle' is bound to "M-a h" in jg-navigation-mode.el
-  ;; (autoloaded, so the binding works before agent-shell loads).
-  ;; :defer t keeps agent-shell out of startup — straight still activates the
-  ;; package (build + autoloads) immediately, and the first "M-a h" press
-  ;; loads everything on demand.
+  ;; straight/repos/jg-project-sidebar for straight to build.  Entry points
+  ;; (`jg-project-sidebar-toggle' etc.) are bound to "M-a h", "M-{" and
+  ;; "M-}" in jg-navigation-mode.el — straight activates the package
+  ;; (build + autoloads) at startup, so those bindings work before the
+  ;; package body ever loads.
+  ;; :after agent-shell + setup: the moment agent-shell loads (i.e. before
+  ;; the first "M-a s" / "M-a o" executes), `jg-project-sidebar-setup'
+  ;; advises agent-shell's entry points so new shells always land in their
+  ;; project's perspective — keeping the perspective-scoped C-v
+  ;; (helm-buffers-list) complete per project (files + shells + agents).
   :straight (jg-project-sidebar :type nil :local-repo "jg-project-sidebar")
-  :defer t
+  :after agent-shell
+  :config
+  (jg-project-sidebar-setup)
   )
 
 (use-package agent-recall
@@ -121,6 +127,9 @@
   ;; perspective-el provides the `persp-mode-line' function (and the
   ;; feature is named `perspective', not `persp-mode' -- that name is
   ;; Bad-ptr's incompatible package, which we no longer install).
+  ;; With `persp-show-modestring' nil (perspective block below) nothing is
+  ;; ever added to `global-mode-string', so this delete is defensive only —
+  ;; it strips the modeline modestring if that setting is ever re-enabled.
   (with-eval-after-load 'perspective
     (setq global-mode-string (delete '(:eval (persp-mode-line)) global-mode-string)))
   )
@@ -483,9 +492,15 @@
   :straight t
   :init
   (setq persp-suppress-no-prefix-key-warning t)
+  ;; Turn perspective-el's own perspective-name display off entirely (the
+  ;; header-line "tab bar" it used to show via `persp-show-modestring'
+  ;; 'header').  jg-project-sidebar (M-a h; M-{/M-} project cycling) now
+  ;; owns that role.  nil is the defcustom's documented "Off" value; it must
+  ;; be set before `persp-mode' runs so `persp-init-frame' never installs
+  ;; the header-line or modeline entry in the first place.
+  (setq persp-show-modestring nil)
   (persp-mode)
   :custom
-  (persp-show-modestring 'header)
   (persp-mode-prefix-key nil)
   :config
   (setq persp-modestring-short nil)
