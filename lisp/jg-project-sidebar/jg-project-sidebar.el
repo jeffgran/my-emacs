@@ -50,7 +50,7 @@
 
 ;; Two-way sync, one-way display
 ;;   The sidebar drives the main window only from explicit navigation:
-;;   previews (n/p, mouse) apply exclusively while the sidebar window has
+;;   previews (n/p) apply exclusively while the sidebar window has
 ;;   focus, so background refreshes (perspective switches, the polling
 ;;   timer, labelling) never yank the main window back to a stale sidebar
 ;;   selection.  In the other direction, the sidebar follows reality:
@@ -761,13 +761,15 @@ to the first regular (non-side) window of the selected frame."
 
 (defun jg-project-sidebar--preview-current ()
   "Show the highlighted buffer entry in the main window.
-Applies ONLY while the sidebar window has focus (n/p navigation, mouse
-clicks).  Background callers — the refresh poll, `persp-activated-hook',
+Applies ONLY while the sidebar window has focus (n/p navigation).
+Background callers — the refresh poll, `persp-activated-hook',
 labelling — run while focus is elsewhere and must never force the main
 window back to a stale sidebar selection; the sidebar drives the main
-window one way only, from explicit navigation.  No-ops on project
-headers.  Buffer association is inhibited so previewing a buffer from
-another perspective does not import it into the current one."
+window one way only, from explicit navigation.  (Mouse clicks are a
+full select, not a preview — see `jg-project-sidebar-mouse-select'.)
+No-ops on project headers.  Buffer association is inhibited so
+previewing a buffer from another perspective does not import it into
+the current one."
   (when-let* ((entry (nth jg-project-sidebar--current-idx
                           jg-project-sidebar--entries))
               ((eq (plist-get entry :type) 'buffer))
@@ -891,10 +893,22 @@ changes what any window displays."
   "On a project header: switch to that project's perspective.
 On a buffer entry: switch to the owning perspective and display the
 buffer.  Loose entries display the buffer in the current perspective
-\(standard perspective-el import semantics)."
+\(standard perspective-el import semantics).
+
+Focus hygiene: the main window is selected BEFORE any `persp-switch'
+runs.  `persp-switch' saves the SOURCE perspective's window
+configuration as the frame stands at that moment — with the sidebar
+window selected (RET and mouse clicks both run from the sidebar),
+that configuration would record the sidebar as the selected window
+and restore focus there on every later switch to the source project,
+sending the next helm action into the sidebar window."
   (interactive)
   (when-let* ((entry (nth jg-project-sidebar--current-idx
                          jg-project-sidebar--entries)))
+    ;; Belt 1: leave the sidebar window before switching perspective, so
+    ;; the source perspective's saved configuration has a main window
+    ;; selected.
+    (select-window (jg-project-sidebar--main-window))
     (if (eq (plist-get entry :type) 'project)
         (if (plist-get entry :loose-p)
             (jg-project-sidebar-collapse)
@@ -1254,13 +1268,21 @@ perspective, not the perspective's own scratch, not an internal/helm/
 minibuffer buffer, not this package's buffers — display the
 perspective's `jg-project-sidebar--sanity-candidate' instead.
 Display-only: no buffers are killed and no memberships change (buffer
-association is inhibited around the re-point).  Skipped during
-recursive perspective switches and while the minibuffer is active
-\(helm sessions)."
+association is inhibited around the re-point).  Also heals focus: if
+the restored window configuration has a SIDE window selected (a
+configuration saved while focus was in the sidebar — the \"taint\"),
+select a main window instead, so the next helm action cannot replace
+the sidebar window.  Skipped during recursive perspective switches
+and while the minibuffer is active (helm sessions)."
   (when (and (bound-and-true-p persp-mode)
              (not (frame-parameter nil 'persp--recursive))
              (not (active-minibuffer-window))
              (persp-curr))
+    ;; Belt 2: focus must never rest on a side window after a switch —
+    ;; display-only, safe inside this hook, and heals every path (M-x
+    ;; persp-switch, cycling, clicks, stale saved configurations).
+    (when (window-parameter (selected-window) 'window-side)
+      (select-window (jg-project-sidebar--main-window)))
     (when-let* ((candidate (jg-project-sidebar--sanity-candidate)))
       (let* ((members (persp-current-buffers))
              (global-bufs (when (gethash persp-frame-global-perspective-name
@@ -1294,36 +1316,47 @@ recursive perspective switches and while the minibuffer is active
 ;;;; Mouse commands
 
 (defun jg-project-sidebar-mouse-select (event)
-  "Move sidebar selection to the entry clicked by mouse EVENT and preview it."
+  "Select the sidebar entry clicked by mouse EVENT — same as RET.
+Moves the selection/highlight to the clicked entry and runs the full
+select: on a buffer entry, `persp-switch' to the owning perspective
+and display the buffer in the main window; on a project header,
+wholesale `persp-switch' to that project.  Clicking updates the state
+exactly like pressing RET in the sidebar (a plain preview is what n/p
+navigation is for).  Works whether or not the sidebar window had
+focus: the click's position is resolved in the sidebar buffer, and the
+select itself is context-independent.  No-op on empty space."
   (interactive "e")
   (with-current-buffer (get-buffer jg-project-sidebar--buffer-name)
-    (let* ((pos       (posn-point (event-start event)))
-           (buf-prop  (when pos (get-text-property pos 'jg-project-sidebar-buffer)))
+    (let* ((pos        (posn-point (event-start event)))
+           (buf-prop   (when pos (get-text-property pos 'jg-project-sidebar-buffer)))
            (persp-prop (when pos (get-text-property pos 'jg-project-sidebar-persp))))
       (cond
        (buf-prop
         (when-let* ((idx (cl-position-if
-                         (lambda (e)
-                           (and (eq (plist-get e :type) 'buffer)
-                                (eq (plist-get e :buffer) buf-prop)))
-                         jg-project-sidebar--entries)))
+                          (lambda (e)
+                            (and (eq (plist-get e :type) 'buffer)
+                                 (eq (plist-get e :buffer) buf-prop)))
+                          jg-project-sidebar--entries)))
           (setq jg-project-sidebar--current-idx idx)
           (jg-project-sidebar--highlight idx)
-          (jg-project-sidebar--preview-current)))
+          (jg-project-sidebar-select)))
        (persp-prop
         (when-let* ((idx (cl-position-if
-                         (lambda (e)
-                           (and (eq (plist-get e :type) 'project)
-                                (equal (plist-get e :persp) persp-prop)))
-                         jg-project-sidebar--entries)))
+                          (lambda (e)
+                            (and (eq (plist-get e :type) 'project)
+                                 (equal (plist-get e :persp) persp-prop)))
+                          jg-project-sidebar--entries)))
           (setq jg-project-sidebar--current-idx idx)
-          (jg-project-sidebar--highlight idx)))))))
+          (jg-project-sidebar--highlight idx)
+          (jg-project-sidebar-select)))))))
 
 (defun jg-project-sidebar-mouse-select-double (event)
-  "Select and focus the sidebar entry double-clicked by mouse EVENT."
+  "Select the sidebar entry double-clicked by mouse EVENT.
+Single click already performs the full select (see
+`jg-project-sidebar-mouse-select'); the double-click event just
+repeats it, which is idempotent."
   (interactive "e")
-  (jg-project-sidebar-mouse-select event)
-  (jg-project-sidebar-select))
+  (jg-project-sidebar-mouse-select event))
 
 ;;;; Show / hide / toggle
 

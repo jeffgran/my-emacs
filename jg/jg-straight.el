@@ -29,11 +29,6 @@
          )
   )
 
-(use-package agent-shell-manager
-  :straight (:type git :host github :repo "jethrokuan/agent-shell-manager")
-  :after agent-shell
-  )
-
 (use-package jg-project-sidebar
   ;; The user's own global project-management sidebar, usurping the local
   ;; agent-shell-hq fork (lisp/agent-shell-hq-perspective/, no longer wired
