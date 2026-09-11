@@ -31,6 +31,10 @@
 ;;   agent-shell buffers (state icons) and regular shell/terminal buffers
 ;;   (`$'; see `jg-project-sidebar-shell-modes').  agent-shell buffers whose
 ;;   project has no perspective are shown in trailing dimmed "(loose)" groups.
+;;   Agent entries also show agent-shell's own session title — `(:session
+;;   :title)' state, seeded with the session's first prompt and refined by
+;;   the agent — as a dimmed sub-line under the buffer name (the r/R label
+;;   commands rename the buffer itself and remain the user's override layer).
 
 ;; Global by construction
 ;;   The sidebar is never trapped in a perspective.  Perspective switches
@@ -198,6 +202,14 @@ color survives outer `face' text properties in the render code."
                 :value-type (cons string face))
   :group 'jg-project-sidebar)
 
+(defcustom jg-project-sidebar-session-title-max 40
+  "Maximum displayed characters of an agent session title.
+Titles come from agent-shell's `(:session :title)' state (seeded with
+the session's first prompt, refined by the agent); longer titles are
+truncated with an ellipsis on the entry's title sub-line."
+  :type 'integer
+  :group 'jg-project-sidebar)
+
 ;;;; Faces
 
 (defface jg-project-sidebar-project
@@ -211,6 +223,13 @@ color survives outer `face' text properties in the render code."
 (defface jg-project-sidebar-loose
   '((t :inherit font-lock-comment-face :weight bold))
   "Face for loose groups (agent shells with no matching perspective).")
+
+(defface jg-project-sidebar-session-title
+  '((t :inherit shadow :slant italic))
+  "Face for the agent session-title sub-line in the sidebar.
+Mirrors agent-shell's own `agent-shell-session-title' treatment: the
+title is metadata about the session, visually dimmer than the entry
+name.")
 
 (defface jg-project-sidebar-selection
   '((((class color) (background dark))
@@ -323,6 +342,29 @@ is guarded); those classify as `idle'."
           'busy)
          (t 'idle)))
     'dead))
+
+(defun jg-project-sidebar--session-title (buf)
+  "Return BUF's agent-shell session title, or nil.
+The title is agent-shell's `(:session :title)' state — seeded with the
+session's first prompt and refined by agent notifications (see
+`agent-shell--set-session-title'); agent-shell's own session picker
+displays it next to the buffer name.  Only the first line is used,
+trimmed.  Nil for buffers without agent-shell state (regular shells,
+fake test buffers), which renders without a title sub-line."
+  (ignore-errors
+    (when-let* ((title (map-nested-elt
+                        (buffer-local-value 'agent-shell--state buf)
+                        '(:session :title))))
+      (string-trim (car (split-string (substring-no-properties title)
+                                      "\n"))))))
+
+(defun jg-project-sidebar--make-agent-entry (buf)
+  "Return the model entry for agent-shell buffer BUF.
+State for the icon, plus the session title for display and for the
+poll's structural signature (title changes re-render the sidebar)."
+  (list :buffer buf :kind 'agent
+        :state (jg-project-sidebar--buffer-state buf)
+        :title (jg-project-sidebar--session-title buf)))
 
 (defvar jg-project-sidebar--icon-cache nil
   "Alist of (STATE . IMAGE) for buffer status icons.")
@@ -515,12 +557,11 @@ without the other, or cycling and display will drift apart."
                                           (agent-shell--project-name)))))
                            (and pname (member pname names) pname))))
                (group (and name (funcall group-for name))))
-          (if group
-              (plist-put group :buffers
-                         (cons (list :buffer buf :kind 'agent
-                                     :state (jg-project-sidebar--buffer-state buf))
-                               (plist-get group :buffers)))
-            (push buf loose-agents))))
+           (if group
+               (plist-put group :buffers
+                          (cons (jg-project-sidebar--make-agent-entry buf)
+                                (plist-get group :buffers)))
+             (push buf loose-agents))))
       ;; Loose agent shells grouped by project name.
       (dolist (pair (seq-group-by
                      (lambda (buf)
@@ -528,14 +569,12 @@ without the other, or cycling and display will drift apart."
                              (with-current-buffer buf (agent-shell--project-name)))
                            "other"))
                      (nreverse loose-agents)))
-        (push (list :name (car pair)
-                    :root nil :current-p nil :loose-p t
-                    :buffers (jg-project-sidebar--sort-entries
-                              (mapcar (lambda (buf)
-                                        (list :buffer buf :kind 'agent
-                                              :state (jg-project-sidebar--buffer-state buf)))
-                                      (cdr pair))))
-              groups))
+         (push (list :name (car pair)
+                     :root nil :current-p nil :loose-p t
+                     :buffers (jg-project-sidebar--sort-entries
+                               (mapcar #'jg-project-sidebar--make-agent-entry
+                                       (cdr pair))))
+               groups))
       ;; Sort each group's entries and derive roots (a group buffer's
       ;; default-directory is the project root for projectile projects).
       (dolist (g groups)
@@ -559,7 +598,8 @@ without the other, or cycling and display will drift apart."
                   (mapcar (lambda (e)
                             (list (buffer-name (plist-get e :buffer))
                                   (plist-get e :kind)
-                                  (plist-get e :state)))
+                                  (plist-get e :state)
+                                  (plist-get e :title)))
                           (plist-get g :buffers))))
           model))
 
@@ -659,24 +699,38 @@ against the bottom of the sidebar window regardless of session count."
               (let ((bufs (plist-get group :buffers)))
                 (if (null bufs)
                     (insert (propertize "      – no shells –\n" 'face 'shadow))
-                  (dolist (entry bufs)
-                    (let* ((buf  (plist-get entry :buffer))
-                           (kind (plist-get entry :kind))
-                           (bname (buffer-name buf)))
-                      (push (list :type 'buffer :buffer buf :kind kind
-                                  :persp name :loose-p loose)
-                            jg-project-sidebar--entries)
-                      (insert (propertize
-                               (concat "    "
-                                       (if (eq kind 'agent)
-                                           (concat (jg-project-sidebar--icon
-                                                    (or (plist-get entry :state)
-                                                        (jg-project-sidebar--buffer-state buf)))
-                                                   " ")
-                                         "$ ")
-                                       bname
-                                       "\n")
-                               'jg-project-sidebar-buffer buf)))))))
+                   (dolist (entry bufs)
+                     (let* ((buf  (plist-get entry :buffer))
+                            (kind (plist-get entry :kind))
+                            (bname (buffer-name buf))
+                            (title (plist-get entry :title)))
+                       (push (list :type 'buffer :buffer buf :kind kind
+                                   :persp name :loose-p loose)
+                             jg-project-sidebar--entries)
+                       (insert (propertize
+                                (concat "    "
+                                        (if (eq kind 'agent)
+                                            (concat (jg-project-sidebar--icon
+                                                     (or (plist-get entry :state)
+                                                         (jg-project-sidebar--buffer-state buf)))
+                                                    " ")
+                                          "$ ")
+                                        bname
+                                        "\n")
+                                'jg-project-sidebar-buffer buf))
+                       ;; Agent session title sub-line (agent-shell's
+                       ;; `(:session :title)': first prompt, refined by the
+                       ;; agent).  Not an entry itself — navigation and the
+                       ;; highlight operate on the name line above it.
+                       (when (and (eq kind 'agent) title)
+                         (let* ((max jg-project-sidebar-session-title-max)
+                                (display (if (> (length title) max)
+                                             (concat (substring title 0 (1- max))
+                                                     "…")
+                                           title)))
+                           (insert (propertize
+                                    (concat "          " display "\n")
+                                    'face 'jg-project-sidebar-session-title)))))))))
             (insert "\n")))
         (jg-project-sidebar--insert-hint-footer)
         (setq jg-project-sidebar--entries
