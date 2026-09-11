@@ -436,8 +436,15 @@
   ;; JetBrains Mono :weight thin, so set family/weight explicitly here.
   ;; Segoe UI isn't installed on this machine; Trebuchet MS is the closest
   ;; humanist sans. Alternatives to try: "Verdana", "Avenir Next", "Georgia".
-  ;; The :height below is the size knob for prose.
-  (set-face-attribute 'variable-pitch nil :family "Trebuchet MS" :height 1.3 :weight 'normal))
+  ;; :height must be ABSOLUTE: mixed-pitch remaps default -> variable-pitch,
+  ;; and a relative float height then becomes a circular reference that Emacs
+  ;; silently drops (family still applies, height doesn't). The 1.3
+  ;; multiplier is the prose size knob.
+  (set-face-attribute 'variable-pitch nil
+                      :family "Trebuchet MS"
+                      :weight 'normal
+                      :height (let ((h (face-attribute 'default :height nil t)))
+                                (if (integerp h) (round (* 1.3 h)) 156))))
 
 (straight-use-package 'multiple-cursors)
 
