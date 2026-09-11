@@ -611,6 +611,7 @@ there's a region, all lines that region covers will be duplicated."
 (transient-define-prefix markdown-dispatch ()
   ["Markdown"
    ("t" "Toggle markup hiding" markdown-toggle-markup-hiding)
+   ("p" "Toggle pretty table" markdown-table-wrap-pretty-toggle)
    ]
   )
 

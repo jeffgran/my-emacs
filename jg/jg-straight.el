@@ -419,6 +419,18 @@
   (set-face-attribute 'markdown-header-face nil
                       :inherit '(variable-pitch font-lock-function-name-face)
                       :weight 'bold))
+
+;; Render GFM pipe tables as wrapped Unicode box-drawing views on top of the
+;; canonical raw source (org-latex-preview pattern: buffer text stays a real
+;; table; entering a table reveals source for editing). Cell content wraps to
+;; fit the text column, composing with visual-fill-column instead of fighting
+;; it. Replaces the old table-alignment package.
+(use-package markdown-table-wrap-pretty
+  :straight (:host github :repo "dnouri/markdown-table-wrap"
+             :files ("markdown-table-wrap.el" "markdown-table-wrap-pretty.el"))
+  :custom
+  (markdown-table-wrap-pretty-default-on-major-modes '(markdown-mode poly-markdown-mode)))
+
 (straight-use-package 'maxframe)
 (use-package mermaid-mode
   :straight t)
@@ -633,10 +645,6 @@
 (straight-use-package 'undo-tree)
 ;;(straight-use-package 'unicode-fonts)
 
-;; pixel-align org/markdown tables even in variable-pitch buffers
-(use-package valign
-  :straight t)
-
 (straight-use-package 'vimrc-mode)
 
 ;; Wrap visual-line-mode buffers at fill-column and center text (used for
@@ -650,10 +658,10 @@
     (setq-local visual-fill-column-center-text t)
     (visual-fill-column-mode 1)
     (visual-wrap-prefix-mode 1)
-    ;; pretty typography: variable-pitch prose, aligned tables,
+    ;; pretty typography: variable-pitch prose, wrapped box-drawing tables,
     ;; no line numbers, a little breathing room between lines
     (mixed-pitch-mode 1)
-    (valign-mode 1)
+    (markdown-table-wrap-pretty-mode 1)
     (display-line-numbers-mode -1)
     (setq-local line-spacing 0.1))
   :custom
