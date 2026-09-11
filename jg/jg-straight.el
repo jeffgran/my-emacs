@@ -14,8 +14,6 @@
 
 ;;;-------------------------------------
 
-(straight-use-package 'adaptive-wrap)
-
 (use-package agent-shell
   :straight t
   :ensure t
@@ -401,7 +399,18 @@
                                  (jg-navigation-mode 1)))
   (transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
   )
-(straight-use-package 'markdown-mode)
+(use-package markdown-mode
+  :straight t
+  :custom
+  ;; scaled, bold headings (h1 > h2 > h3)
+  (markdown-header-scaling t)
+  ;; hide **, ##, link syntax etc. so formatting renders as formatting
+  ;; (toggle any time with M-j m t)
+  (markdown-hide-markup t)
+  ;; syntax-highlight fenced code blocks
+  (markdown-fontify-code-blocks-natively t)
+  ;; display -, +, * list markers as typographic bullets, cycling by depth
+  (markdown-list-item-bullets '("•" "◦" "▪")))
 (straight-use-package 'maxframe)
 (use-package mermaid-mode
   :straight t)
@@ -409,6 +418,17 @@
 
 (use-package mistty
   :straight t)
+
+;; variable-pitch prose in markdown buffers while keeping code, tables,
+;; and markup in the default monospace face.
+(use-package mixed-pitch
+  :straight t
+  :init
+  ;; variable-pitch face used for prose. Theme's default face forces
+  ;; JetBrains Mono :weight thin, so set family/weight explicitly here.
+  ;; Segoe UI isn't installed on this machine; Trebuchet MS is the closest
+  ;; humanist sans. Alternatives to try: "Verdana", "Avenir Next", "Georgia".
+  (set-face-attribute 'variable-pitch nil :family "Trebuchet MS" :height 1.1 :weight 'normal))
 
 (straight-use-package 'multiple-cursors)
 
@@ -596,7 +616,34 @@
 (straight-use-package 'ucs-utils)
 (straight-use-package 'undo-tree)
 ;;(straight-use-package 'unicode-fonts)
+
+;; pixel-align org/markdown tables even in variable-pitch buffers
+(use-package valign
+  :straight t)
+
 (straight-use-package 'vimrc-mode)
+
+;; Wrap visual-line-mode buffers at fill-column and center text (used for
+;; markdown reading buffers). adaptive-wrap is no longer needed:
+;; visual-wrap-prefix-mode is built into Emacs 30+.
+(use-package visual-fill-column
+  :straight (:type git :host codeberg :repo "joostkremers/visual-fill-column")
+  :preface
+  (defun jg-visual-reading-mode ()
+    "Centered, soft-wrapped, prettified reading experience for prose buffers."
+    (setq-local visual-fill-column-center-text t)
+    (visual-fill-column-mode 1)
+    (visual-wrap-prefix-mode 1)
+    ;; pretty typography: variable-pitch prose, aligned tables,
+    ;; no line numbers, a little breathing room between lines
+    (mixed-pitch-mode 1)
+    (valign-mode 1)
+    (display-line-numbers-mode -1)
+    (setq-local line-spacing 0.1))
+  :custom
+  (visual-fill-column-enable-sensible-window-split t)
+  :hook (markdown-mode . jg-visual-reading-mode))
+
 ;;(straight-use-package 'vue-mode)
 (straight-use-package 'web-mode)
 

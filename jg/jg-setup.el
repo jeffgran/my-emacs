@@ -84,6 +84,9 @@
 (setq-default cursor-type 'bar)
 (global-auto-revert-mode t)
 (global-font-lock-mode 1)
+;; soft-wrap all buffers at the window edge so lines never run off screen;
+;; visual-fill-column handles the markdown narrowing/centering separately.
+(global-visual-line-mode 1)
 (tool-bar-mode 0)
 (setq scroll-bar-mode-explicit t)
                                         ;(cua-mode t)

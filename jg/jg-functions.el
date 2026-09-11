@@ -608,12 +608,19 @@ there's a region, all lines that region covers will be duplicated."
    ]
   )
 
+(transient-define-prefix markdown-dispatch ()
+  ["Markdown"
+   ("t" "Toggle markup hiding" markdown-toggle-markup-hiding)
+   ]
+  )
+
 (transient-define-prefix jg-dispatch ()
   ["JG"
    [
     ("b" "Browse" browse-dispatch)
     ("k" "Links" git-link-dispatch)
     ("h" "Help" describe-dispatch)
+    ("m" "Markdown" markdown-dispatch)
     ("p" "Project" project-dispatch)
     ]
    ]
