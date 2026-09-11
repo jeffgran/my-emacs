@@ -410,7 +410,15 @@
   ;; syntax-highlight fenced code blocks
   (markdown-fontify-code-blocks-natively t)
   ;; display -, +, * list markers as typographic bullets, cycling by depth
-  (markdown-list-item-bullets '("•" "◦" "▪")))
+  (markdown-list-item-bullets '("•" "◦" "▪"))
+  :config
+  ;; mixed-pitch keeps font-lock faces fixed-pitch, and markdown-header-face
+  ;; inherits font-lock-function-name-face — so headings would stay monospace.
+  ;; Inherit variable-pitch FIRST (family) then font-lock-function-name-face
+  ;; (color), keeping :weight bold from the original face.
+  (set-face-attribute 'markdown-header-face nil
+                      :inherit '(variable-pitch font-lock-function-name-face)
+                      :weight 'bold))
 (straight-use-package 'maxframe)
 (use-package mermaid-mode
   :straight t)
@@ -428,7 +436,8 @@
   ;; JetBrains Mono :weight thin, so set family/weight explicitly here.
   ;; Segoe UI isn't installed on this machine; Trebuchet MS is the closest
   ;; humanist sans. Alternatives to try: "Verdana", "Avenir Next", "Georgia".
-  (set-face-attribute 'variable-pitch nil :family "Trebuchet MS" :height 1.1 :weight 'normal))
+  ;; The :height below is the size knob for prose.
+  (set-face-attribute 'variable-pitch nil :family "Trebuchet MS" :height 1.3 :weight 'normal))
 
 (straight-use-package 'multiple-cursors)
 
