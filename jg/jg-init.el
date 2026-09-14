@@ -22,8 +22,8 @@
 (load custom-file)
 
 ;; color theme stuff.
-(add-to-list 'custom-theme-load-path (concat user-emacs-directory "jg/color-themes/jg-zenburn"))
-(load-theme 'jg-zenburn t)
+;; (add-to-list 'custom-theme-load-path (concat user-emacs-directory "jg/color-themes/jg-zenburn"))
+;; (load-theme 'jg-zenburn t)
 
 
 (load-library "jg-straight")        ; load packages via straight, and configuration per package with use-package

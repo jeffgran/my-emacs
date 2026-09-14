@@ -84,7 +84,7 @@
 (setq-default cursor-type 'bar)
 ;; wider default fill column (Emacs defaults to 70); also widens the
 ;; visual-fill-column text column in markdown reading buffers.
-(setq-default fill-column 80)
+(setq-default fill-column 100)
 (global-auto-revert-mode t)
 (global-font-lock-mode 1)
 ;; soft-wrap all buffers at the window edge so lines never run off screen;

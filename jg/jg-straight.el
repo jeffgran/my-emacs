@@ -14,6 +14,17 @@
 
 ;;;-------------------------------------
 
+(use-package tokyo-night
+  :straight t
+  :ensure t
+  :config
+  (load-theme 'tokyo-night t))
+
+(custom-theme-set-faces
+ 'user
+ '(variable-pitch ((t (:family "Avenir" :height 180 :weight normal))))
+ '(fixed-pitch ((t ( :family "Menlo" :height 160)))))
+
 (use-package agent-shell
   :straight t
   :ensure t
@@ -399,6 +410,7 @@
                                  (jg-navigation-mode 1)))
   (transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
   )
+
 (use-package markdown-mode
   :straight t
   :custom
@@ -427,7 +439,7 @@
 ;; it. Replaces the old table-alignment package.
 (use-package markdown-table-wrap-pretty
   :straight (:host github :repo "dnouri/markdown-table-wrap"
-             :files ("markdown-table-wrap.el" "markdown-table-wrap-pretty.el"))
+                   :files ("markdown-table-wrap.el" "markdown-table-wrap-pretty.el"))
   :custom
   (markdown-table-wrap-pretty-default-on-major-modes '(markdown-mode poly-markdown-mode)))
 
@@ -442,21 +454,7 @@
 ;; variable-pitch prose in markdown buffers while keeping code, tables,
 ;; and markup in the default monospace face.
 (use-package mixed-pitch
-  :straight t
-  :init
-  ;; variable-pitch face used for prose. Theme's default face forces
-  ;; JetBrains Mono :weight thin, so set family/weight explicitly here.
-  ;; Segoe UI isn't installed on this machine; Trebuchet MS is the closest
-  ;; humanist sans. Alternatives to try: "Verdana", "Avenir Next", "Georgia".
-  ;; :height must be ABSOLUTE: mixed-pitch remaps default -> variable-pitch,
-  ;; and a relative float height then becomes a circular reference that Emacs
-  ;; silently drops (family still applies, height doesn't). The 1.3
-  ;; multiplier is the prose size knob.
-  (set-face-attribute 'variable-pitch nil
-                      :family "Trebuchet MS"
-                      :weight 'normal
-                      :height (let ((h (face-attribute 'default :height nil t)))
-                                (if (integerp h) (round (* 1.3 h)) 156))))
+  :straight t)
 
 (straight-use-package 'multiple-cursors)
 
@@ -655,17 +653,18 @@
   :preface
   (defun jg-visual-reading-mode ()
     "Centered, soft-wrapped, prettified reading experience for prose buffers."
-    (setq-local visual-fill-column-center-text t)
+    ;;(setq-local visual-fill-column-center-text t)
     (visual-fill-column-mode 1)
     (visual-wrap-prefix-mode 1)
     ;; pretty typography: variable-pitch prose, wrapped box-drawing tables,
     ;; no line numbers, a little breathing room between lines
-    (mixed-pitch-mode 1)
+    (variable-pitch-mode 1)
     (markdown-table-wrap-pretty-mode 1)
-    (display-line-numbers-mode -1)
-    (setq-local line-spacing 0.1))
-  :custom
-  (visual-fill-column-enable-sensible-window-split t)
+    ;;(display-line-numbers-mode -1)
+    (setq-local line-spacing 0.1)
+    (mixed-pitch-mode 1))
+  ;;:custom
+  ;;(visual-fill-column-enable-sensible-window-split t)
   :hook (markdown-mode . jg-visual-reading-mode))
 
 ;;(straight-use-package 'vue-mode)
