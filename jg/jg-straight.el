@@ -17,8 +17,17 @@
 (use-package tokyo-night
   :straight t
   :ensure t
+  :init
+  ;; Must happen BEFORE `load-theme': the palette slot remaps in
+  ;; jg-tokyo-night.el are read at theme-application time, so requiring this
+  ;; file here is what makes the overrides land on the very first load.
+  (require 'jg-tokyo-night)
   :config
-  (load-theme 'tokyo-night t))
+  (load-theme 'tokyo-night t)
+  ;; Apply the helm/face fixes once the theme is active.  The same function is
+  ;; also on `tokyo-night-after-load-hook' (set up in jg-tokyo-night.el) so it
+  ;; re-runs after `tokyo-night-reload'.
+  (jg-tokyo-night-apply-face-tweaks))
 
 (custom-theme-set-faces
  'user
@@ -231,6 +240,7 @@
          )
   :config
   (setq helm-ag-fuzzy-match t)
+  (setq helm-ag-command-option "--hidden")
   (defun helm-ag-with-prefix ()
     (interactive)
     (let ((current-prefix-arg 4)) ;; emulate C-u / universal prefix arg
@@ -269,6 +279,23 @@
          ("C-," . 'helm-find-files-up-one-level)
          ("C-l" . nil)
          )
+  :init
+  ;; Push the "." and ".." entries to the end of the find-files candidate
+  ;; list so repeated TAB (helm-execute-persistent-action) walks down
+  ;; single-child directory trees without landing on them first.
+  (declare-function helm-basename "helm-lib")
+  (defun jg/helm-ff-move-dot-entries-last (candidates)
+    "Move the \".\" and \"..\" directory entries to the end of CANDIDATES."
+    (let* ((base (lambda (c) (helm-basename (if (consp c) (cdr c) c))))
+           (dotp (lambda (c) (member (funcall base c) '("." "..")))))
+      (append (cl-remove-if dotp candidates)
+              (cl-remove-if-not dotp candidates))))
+  :config
+  ;; `helm-ff-sort-candidates' is the last candidate transformer in the
+  ;; find-files source, so filtering its return value reorders the final list.
+  (declare-function jg/helm-ff-move-dot-entries-last "jg-straight")
+  (advice-add 'helm-ff-sort-candidates :filter-return
+              #'jg/helm-ff-move-dot-entries-last)
   )
 (use-package helm-buffers
   :bind (
