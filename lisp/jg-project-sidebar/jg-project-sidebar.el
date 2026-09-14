@@ -127,6 +127,11 @@
 (require 'agent-shell-viewport)
 (require 'perspective)
 (require 'projectile)
+;; Optional: used for the regular-shell entry bullet.  Already part of this
+;; config (see jg-straight.el); loaded opportunistically so the package keeps
+;; working with a plain `$' fallback when it is absent.
+(require 'nerd-icons nil t)
+(declare-function nerd-icons-octicon "nerd-icons")
 
 ;;;; Customization
 
@@ -177,14 +182,6 @@ unavailable (e.g. terminal Emacs).  Uses `font-lock-face' so the
 color survives outer `face' text properties in the render code."
   :type '(alist :key-type (choice (const idle) (const busy) (const blocked) (const dead))
                 :value-type (cons string face))
-  :group 'jg-project-sidebar)
-
-(defcustom jg-project-sidebar-session-title-max 40
-  "Maximum displayed characters of an agent session title.
-Titles come from agent-shell's `(:session :title)' state (seeded with
-the session's first prompt, refined by the agent); longer titles are
-truncated with an ellipsis on the entry's title sub-line."
-  :type 'integer
   :group 'jg-project-sidebar)
 
 ;;;; Faces
@@ -306,6 +303,17 @@ poll's structural signature (title changes re-render the sidebar)."
 (defvar jg-project-sidebar--icon-cache nil
   "Alist of (STATE . IMAGE) for buffer status icons.")
 
+(defconst jg-project-sidebar--shell-icon-name "nf-oct-terminal"
+  "Nerd Fonts glyph used as the bullet for regular shell/terminal entries.
+Octicon `terminal' (`nf-oct-terminal', U+F489) — a `>_' glyph whose
+stroke weight visually matches the agent status SVGs.")
+
+(defconst jg-project-sidebar--shell-icon-fallback "›"
+  "Single-column fallback bullet for shell entries without Nerd Fonts.
+A terminal-prompt chevron (U+203A); one column wide, so TUI/batch
+rendering keeps the same lead-in shape as the agent bullet and no
+longer uses the old literal `\"$ \"' prefix.")
+
 (defconst jg-project-sidebar--icon-svgs
   '((idle . "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\" viewBox=\"0 0 20 20\">
   <circle cx=\"10\" cy=\"10\" r=\"8.5\" fill=\"#4E9A72\"/>
@@ -346,6 +354,18 @@ image property.  Otherwise, this is a Unicode character with a face."
     (let ((fallback (or (alist-get state jg-project-sidebar-fallback-icons)
                         '("?" . default))))
       (propertize (car fallback) 'face (cdr fallback) 'font-lock-face (cdr fallback)))))
+
+(defun jg-project-sidebar--shell-icon ()
+  "Return a propertized bullet for a regular shell/terminal entry.
+Mirrors `jg-project-sidebar--icon': on a graphical frame with
+`nerd-icons' available, return the nerd-font terminal glyph (neutral
+`nerd-icons' face, inheriting the default foreground — shells have no
+status to colour).  Otherwise return the single-column `$' fallback.
+The result is always exactly one display column wide, so the entry
+lead-in keeps the same shape as the agent bullet."
+  (if (and (display-graphic-p) (fboundp 'nerd-icons-octicon))
+      (nerd-icons-octicon jg-project-sidebar--shell-icon-name)
+    (propertize jg-project-sidebar--shell-icon-fallback 'face 'default)))
 
 (defun jg-project-sidebar--preferred-buffer (shell-buf)
   "Return the best buffer to display for SHELL-BUF.
@@ -536,6 +556,21 @@ without the other, or cycling and display will drift apart."
 
 ;;;; Rendering
 
+(defun jg-project-sidebar--prefix-columns (prefix)
+  "Return the number of display columns PREFIX occupies.
+PREFIX is the literal lead-in rendered before an entry's buffer name
+\(indent, status icon or `$', and separator).  On a graphic display the
+status icon is an SVG `display' property, so measure with
+`string-pixel-width' and convert to columns via `frame-char-width';
+otherwise (TUI, batch) fall back to `string-width'.  Used to hang the
+session-title sub-line at the column where the buffer name starts."
+  (if (and (display-graphic-p) (fboundp 'string-pixel-width))
+      (let ((char-width (frame-char-width)))
+        (if (and (numberp char-width) (> char-width 0))
+            (max 1 (ceiling (string-pixel-width prefix) char-width))
+          (string-width prefix)))
+    (string-width prefix)))
+
 (defun jg-project-sidebar--render ()
   "Render the sidebar buffer and rebuild the entries list."
   (let ((model (jg-project-sidebar--model)))
@@ -574,39 +609,52 @@ without the other, or cycling and display will drift apart."
                      (let* ((buf  (plist-get entry :buffer))
                             (kind (plist-get entry :kind))
                             (bname (buffer-name buf))
-                            (title (plist-get entry :title)))
+                            (title (plist-get entry :title))
+                            ;; Literal lead-in before the buffer name: the
+                            ;; indent, the status icon (agent) or the shell
+                            ;; terminal glyph, and the separator space.  The
+                            ;; sub-line's hanging indent is derived from this,
+                            ;; so it tracks any change to the icon/indent
+                            ;; width.
+                            (prefix (concat "    "
+                                            (if (eq kind 'agent)
+                                                (concat (jg-project-sidebar--icon
+                                                         (or (plist-get entry :state)
+                                                             (jg-project-sidebar--buffer-state buf)))
+                                                        " ")
+                                              (concat (jg-project-sidebar--shell-icon)
+                                                      " ")))))
                        (push (list :type 'buffer :buffer buf :kind kind
                                    :persp name :loose-p loose)
                              jg-project-sidebar--entries)
                        (insert (propertize
-                                (concat "    "
-                                        (if (eq kind 'agent)
-                                            (concat (jg-project-sidebar--icon
-                                                     (or (plist-get entry :state)
-                                                         (jg-project-sidebar--buffer-state buf)))
-                                                    " ")
-                                          "$ ")
-                                        bname
-                                        "\n")
+                                (concat prefix bname "\n")
                                 'jg-project-sidebar-buffer buf))
                        ;; Agent session title sub-line (agent-shell's
                        ;; `(:session :title)': first prompt, refined by the
-                       ;; agent).  Not an entry itself — the highlight
-                       ;; operates on the name line above it.
+                       ;; agent).  The full title is shown — no truncation —
+                       ;; and wraps, with continuation lines hanging at the
+                       ;; title column via `wrap-prefix'.  It is part of the
+                       ;; same click target and highlight block as the name
+                       ;; line above it.
                        (when (and (eq kind 'agent) title)
-                         (let* ((max jg-project-sidebar-session-title-max)
-                                (display (if (> (length title) max)
-                                             (concat (substring title 0 (1- max))
-                                                     "…")
-                                           title)))
+                         (let ((hang (make-string
+                                      (jg-project-sidebar--prefix-columns prefix)
+                                      ?\s)))
                            (insert (propertize
-                                    (concat "          " display "\n")
-                                    'face 'jg-project-sidebar-session-title)))))))))
+                                    (concat hang title "\n")
+                                    'face 'jg-project-sidebar-session-title
+                                    'wrap-prefix hang
+                                    'jg-project-sidebar-buffer buf
+                                    'jg-project-sidebar-subheading buf)))))))))
             (insert "\n")))
         (setq jg-project-sidebar--entries
               (nreverse jg-project-sidebar--entries))
         (setq buffer-read-only t)
-        (setq-local cursor-type nil))
+        (setq-local cursor-type nil)
+        ;; Long session titles must wrap (hanging-indented by `wrap-prefix')
+        ;; rather than be truncated at the right edge.
+        (setq-local truncate-lines nil))
       (use-local-map jg-project-sidebar--mouse-map))
     (setq jg-project-sidebar--last-signature
           (jg-project-sidebar--signature model))))
@@ -614,7 +662,11 @@ without the other, or cycling and display will drift apart."
 ;;;; Highlight + point sync
 
 (defun jg-project-sidebar--highlight (idx)
-  "Highlight entry at IDX and sync point to that line in the sidebar window."
+  "Highlight entry at IDX and sync point to that line in the sidebar window.
+The highlight overlay spans the buffer-name line and, when the entry
+has one, its session-title sub-line, so the two read as a single
+highlighted block (including the sub-line's wrapped continuation
+lines, which are the same buffer positions)."
   (with-current-buffer (get-buffer-create jg-project-sidebar--buffer-name)
     (let ((inhibit-read-only t))
       (unless (overlayp jg-project-sidebar--highlight-overlay)
@@ -631,9 +683,20 @@ without the other, or cycling and display will drift apart."
                              (text-property-any (point-min) (point-max)
                                                 'jg-project-sidebar-buffer
                                                 (plist-get entry :buffer)))))
-          (move-overlay ov pos
-                        (min (1+ (save-excursion (goto-char pos) (line-end-position)))
-                             (point-max)))
+          (let ((end (save-excursion
+                       (goto-char pos)
+                       (let ((name-end (line-end-position))
+                             (entry-buf (plist-get entry :buffer)))
+                         (forward-line 1)
+                         ;; A sub-heading is the immediately following line
+                         ;; and belongs to the same (non-nil) buffer.
+                         (if (and entry-buf
+                                  (eq (get-text-property
+                                       (point) 'jg-project-sidebar-subheading)
+                                      entry-buf))
+                             (1+ (line-end-position))
+                           (1+ name-end))))))
+            (move-overlay ov pos (min end (point-max))))
           (overlay-put ov 'face 'jg-project-sidebar-selection)
           (goto-char pos)
           (when-let* ((win (get-buffer-window (current-buffer))))
