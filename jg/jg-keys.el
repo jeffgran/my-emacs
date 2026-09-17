@@ -7,6 +7,7 @@
   `((jg-navigation-mode . ,jg-navigation-mode-map)
     (jg-code-mode . ,jg-code-mode-map)
     (jg-comint-mode . ,jg-comint-mode-map)
+    (jg-dired-mode . ,jg-dired-mode-map)
     (jg-minibuffer-mode . ,jg-minibuffer-mode-map)
     ))
 
@@ -97,12 +98,8 @@
 (define-key dired-jump-map (kbd "e") 'dired-subtree-end)
 (define-key dired-jump-map (kbd "s") 'dired-subtree-beginning)
 
-(define-key dired-mode-map (kbd "C-o") 'helm-find-files)
-;; (define-key dired-mode-map (kbd "C-o") 'dired-display-file)
-
-
-
 (add-hook 'dired-mode-hook 'disable-jg-code-mode)
 (add-hook 'dired-mode-hook #'(lambda () (jg-navigation-mode -1)))
+(add-hook 'dired-mode-hook #'(lambda () (jg-dired-mode 1)))
 
 

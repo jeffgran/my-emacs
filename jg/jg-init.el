@@ -31,6 +31,7 @@
 (load-library "jg-minibuffer-mode") ; minimal navigation keys specifically for minibuffer
 (load-library "jg-code-mode")       ; text/code editing keys
 (load-library "jg-comint-mode")     ; keys for shell mode and other comint-derived repl modes
+(load-library "jg-dired-mode")      ; keys for dired
 (load-library "jg-modes")           ; my various major/minor modes and their setups
 (load-library "jg-functions")       ; custom functions I've written to make me faster :) also useful stuff I found on the internet
 (load-library "jg-setup")           ; basic stock on/off switches and stuff.

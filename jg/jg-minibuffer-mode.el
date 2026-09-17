@@ -20,7 +20,7 @@
 
 (define-minor-mode jg-minibuffer-mode
   "JG Minibuffer Keys"
-  :init-value t
+  :init-value nil ;; minibuffer-only; enabled via minibuffer-setup-hook
   :lighter " [JGm]"
   :keymap jg-minibuffer-mode-map)
 
