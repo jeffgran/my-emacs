@@ -39,7 +39,7 @@
   :ensure t
   :config
   ;;(setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/glm-5p2")
-  (setq agent-shell-opencode-default-model-id "fireworks-ai/accounts/fireworks/models/kimi-k3")
+  ;;(setq agent-shell-opencode-default-model-id nil)
 
   :bind (
          :map agent-shell-mode-map
@@ -437,6 +437,10 @@
                                  (jg-navigation-mode 1)))
   (transient-append-suffix 'magit-dispatch "r" '("s" "Status" magit-status))
   )
+
+(use-package magit-review
+  :straight (:host github :repo "ragone/magit-review")
+  :after magit)
 
 (use-package markdown-mode
   :straight t
