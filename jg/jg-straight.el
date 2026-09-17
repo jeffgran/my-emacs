@@ -31,8 +31,9 @@
 
 (custom-theme-set-faces
  'user
- '(variable-pitch ((t (:family "Avenir" :height 180 :weight normal))))
- '(fixed-pitch ((t ( :family "Menlo" :height 160)))))
+ '(default ((t (:family "Fira Code" :height 140))))
+ '(variable-pitch ((t (:family "Fira Sans" :height 180 :weight normal))))
+ '(fixed-pitch ((t ( :family "Fira Code" :height 140)))))
 
 (use-package agent-shell
   :straight t
