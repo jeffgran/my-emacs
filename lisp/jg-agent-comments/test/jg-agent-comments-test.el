@@ -15,6 +15,17 @@
     (should (equal (plist-get (car jg-agent-comments--comments) :snippet)
                    "visible\nhidden-under-fold\nvisible-after\n"))))
 
+(ert-deftest jg-agent-comments-add-captures-property-free-snippet ()
+  (with-temp-buffer
+    (insert "alphabravocharliedelta")
+    (put-text-property 6 11 'invisible t)
+    (put-text-property 11 18 'field 'output)
+    (jg-agent-comments--add 1 (point-max) "why?")
+    (let ((snippet (plist-get (car jg-agent-comments--comments) :snippet)))
+      (should (equal snippet "alphabravocharliedelta"))
+      (should-not (text-property-any 0 (length snippet) 'invisible t snippet))
+      (should-not (text-property-any 0 (length snippet) 'field 'output snippet)))))
+
 (ert-deftest jg-agent-comments-add-stores-comment-text ()
   (with-temp-buffer
     (insert "some agent prose")
@@ -30,10 +41,33 @@
       (should (member record jg-agent-comments--comments))
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
+(ert-deftest jg-agent-comments-covered-text-deletion-evaporates-anchor ()
+  (with-temp-buffer
+    (insert "prose line\nnext line\n")
+    (let ((record (jg-agent-comments--add 12 22 "note")))
+      (delete-region 12 21)
+      (should (member record jg-agent-comments--comments))
+      (should (null (overlay-buffer (plist-get record :overlay)))))))
+
 (ert-deftest jg-agent-comments-refuses-non-agent-text ()
   (with-temp-buffer
     (insert "user typed input")
     (should-error (jg-agent-comments--region-or-line))))
+
+(ert-deftest jg-agent-comments-refuses-live-prompt-input ()
+  (with-temp-buffer
+    (insert "Claude> hello")
+    (put-text-property 1 9 'field 'output)
+    (let ((prompt-start (copy-marker 1))
+          (prompt-end (copy-marker 8)))
+      (unwind-protect
+          (let ((comint-last-prompt (cons prompt-start prompt-end)))
+            (goto-char 9)
+            (should-error (jg-agent-comments--region-or-line))
+            (goto-char 8)
+            (should-error (jg-agent-comments--region-or-line)))
+        (set-marker prompt-start nil)
+        (set-marker prompt-end nil)))))
 
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
@@ -48,6 +82,26 @@
     (jg-agent-comments--commit-edit-from-string "" 1 (point-max))
     (should (null jg-agent-comments--comments))))
 
+(ert-deftest jg-agent-comments-commit-uses-captured-snippet ()
+  (with-temp-buffer
+    (insert "original anchor\nmore output\n")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (goto-char 1)
+    (let ((source (current-buffer)))
+      (jg-agent-comments-comment)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (with-current-buffer source
+        (delete-region 1 16)
+        (goto-char (point-min))
+        (insert "replaced text"))
+      (insert "late comment")
+      (jg-agent-comments--commit-edit)
+      (with-current-buffer source
+        (let ((record (car jg-agent-comments--comments)))
+          (should record)
+          (should (equal (plist-get record :snippet) "original anchor\n"))
+          (should (equal (plist-get record :text) "late comment")))))))
+
 (ert-deftest jg-agent-comments-inline-elides-multiline ()
   (should (equal (jg-agent-comments--inline-string "first\nsecond\nthird")
                  "first …"))
@@ -61,6 +115,23 @@
       (let ((ov (plist-get record :overlay)))
         (should (not (string-match-p "\n" (or (overlay-get ov 'before-string) ""))))
         (should (not (string-match-p "\n" (or (overlay-get ov 'after-string) ""))))))))
+
+(ert-deftest jg-agent-comments-add-renders-single-live-overlay ()
+  (with-temp-buffer
+    (insert "agent prose\n")
+    (let* ((record (jg-agent-comments--add 1 (point-max)
+                                           "first line\nsecond line"))
+           (ov (plist-get record :overlay))
+           (after (overlay-get ov 'after-string)))
+      (should (overlayp ov))
+      (should (overlay-buffer ov))
+      (should (overlay-get ov 'before-string))
+      (should after)
+      (should (string-match-p "first line" after))
+      (should (not (string-match-p "\n" after)))
+      (should (eq (get-text-property 0 'face after)
+                  'jg-agent-comments-inline))
+      (should-not (memq :display-overlay record)))))
 
 (ert-deftest jg-agent-comments-mode-line-empty-when-none ()
   (with-temp-buffer

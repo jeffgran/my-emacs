@@ -28,26 +28,26 @@
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
 Each record is a plist with the shape (:snippet :text :beg :end
-:overlay :display-overlay): :beg and :end are the buffer positions the
-comment refers to, :snippet is the captured buffer text, :text is the
-comment body, :overlay is the overlay anchoring the record (nil until
-rendered), and :display-overlay is the zero-length overlay showing the
-comment inline at the end of the anchor's last line (nil until
+:overlay): :beg and :end are the buffer positions the comment refers
+to, :snippet is the captured buffer text, :text is the comment body,
+and :overlay is the overlay anchoring the record (nil until
 rendered).")
 
-(defun jg-agent-comments--add (beg end text)
+(defun jg-agent-comments--add (beg end text &optional snippet)
   "Record a comment about buffer text between BEG and END.
-Capture the covered text (including invisible parts) as the record's
-:snippet, store TEXT as the comment body, render the record's overlays,
-and push the record onto `jg-agent-comments--comments'.  Return the
-record, a plist with the shape (:snippet :text :beg :end :overlay
-:display-overlay)."
-  (let ((record (list :snippet (filter-buffer-substring beg end)
+Capture the covered text (including invisible parts, without text
+properties) as the record's :snippet.  Use SNIPPET as the :snippet when
+SNIPPET is non-nil.  The caller captured that text earlier.  Store TEXT
+as the comment body.  Render the record's overlay.  Push the record
+onto `jg-agent-comments--comments'.  Return the record, a plist with
+the shape (:snippet :text :beg :end :overlay)."
+  (let ((record (list :snippet (or snippet
+                                   (substring-no-properties
+                                    (filter-buffer-substring beg end)))
                       :text text
                       :beg beg
                       :end end
-                      :overlay nil
-                      :display-overlay nil)))
+                      :overlay nil)))
     (jg-agent-comments--render record)
     (push record jg-agent-comments--comments)
     record))
@@ -61,9 +61,10 @@ lines."
     text))
 
 (defun jg-agent-comments--display-position (record)
-  "Return the buffer position at which RECORD's inline text is shown.
-That is the end of the last line covered by the record's anchor, so
-the inline text never starts on a line of its own."
+  "Return the buffer position where RECORD's anchor overlay ends.
+That is the end of the last line covered by the record's anchor.  The
+inline text shows at that position, so it never starts on a line of
+its own."
   (let ((end (plist-get record :end)))
     (if (and (> end (plist-get record :beg))
              (save-excursion (goto-char end) (bolp)))
@@ -71,40 +72,40 @@ the inline text never starts on a line of its own."
       end)))
 
 (defun jg-agent-comments--render (record)
-  "Give RECORD its anchoring and display overlays if it has none yet.
-The anchor overlay spans the positions captured at add time (:beg and
-:end), carries the `jg-agent-comments' property and the snippet face,
-shows the marker gutter as its before-string, and evaporates when its
-buffer text is deleted.  A zero-length display overlay at the end of
-the anchor's last line shows the comment inline, two-space padded and
-in the inline face, so the text never spans lines; it carries the
-`jg-agent-comments' property, evaporates, and is stored under
-:display-overlay.  Both overlays are stored back into the record."
+  "Give RECORD its anchor overlay if it has none yet.
+The overlay spans the anchor text from :beg through the display
+position.  It carries the `jg-agent-comments' property and the snippet
+face.  It shows the marker gutter as its before-string.  It shows the
+comment inline as its after-string: two-space padded, in the inline
+face, and elided to one line.  It evaporates when a buffer change
+empties it.  The overlay is stored back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
-                                 (plist-get record :end)
+                                 (jg-agent-comments--display-position record)
                                  nil t nil)))
       (overlay-put overlay 'jg-agent-comments t)
       (overlay-put overlay 'face 'jg-agent-comments-snippet)
       (overlay-put overlay 'before-string
                    (propertize "▐ " 'face 'jg-agent-comments-marker))
+      (overlay-put overlay 'after-string
+                   (propertize (concat "  "
+                                       (jg-agent-comments--inline-string
+                                        (plist-get record :text)))
+                               'face 'jg-agent-comments-inline))
       (overlay-put overlay 'evaporate t)
-      (plist-put record :overlay overlay)
-      (let* ((pos (jg-agent-comments--display-position record))
-             (display (make-overlay pos pos nil t nil)))
-        (overlay-put display 'jg-agent-comments t)
-        (overlay-put display 'after-string
-                     (propertize (concat "  "
-                                         (jg-agent-comments--inline-string
-                                          (plist-get record :text)))
-                                 'face 'jg-agent-comments-inline))
-        (overlay-put display 'evaporate t)
-        (plist-put record :display-overlay display)))))
+      (plist-put record :overlay overlay))))
+
+(require 'comint)
 
 (defun jg-agent-comments--agent-text-at-point-p ()
-  "Return non-nil when point is on agent output text."
-  (or (eq (get-char-property (point) 'field) 'output)
-      (eq (get-char-property (max (point-min) (1- (point))) 'field) 'output)))
+  "Return non-nil when point is on agent output text.
+The live input area after the last prompt is not agent output.  When
+`comint-last-prompt' is non-nil, refuse point at or after its end
+marker.  Otherwise apply only the field check."
+  (and (or (not (bound-and-true-p comint-last-prompt))
+           (< (point) (marker-position (cdr comint-last-prompt))))
+       (or (eq (get-char-property (point) 'field) 'output)
+           (eq (get-char-property (max (point-min) (1- (point))) 'field) 'output))))
 
 (defun jg-agent-comments--region-or-line ()
   "Return the bounds (BEG . END) of the agent text to comment on.
@@ -115,44 +116,64 @@ Signal `user-error' when point is not on agent output."
       (cons (region-beginning) (region-end))
     (cons (pos-bol) (min (point-max) (1+ (pos-eol))))))
 
-(defun jg-agent-comments--commit-edit-from-string (text beg end)
+(defun jg-agent-comments--commit-edit-from-string (text beg end &optional snippet)
   "Commit comment TEXT about the text between BEG and END.
-Whitespace-only TEXT cancels the comment and records nothing."
+Pass SNIPPET through to `jg-agent-comments--add'.  Whitespace-only TEXT
+cancels the comment and records nothing."
   (unless (string-match-p "\\`[[:space:]]*\\'" (or text ""))
-    (jg-agent-comments--add beg end text)))
+    (jg-agent-comments--add beg end text snippet)))
 
 (defvar-local jg-agent-comments--edit-source nil
   "Buffer whose text the edit buffer's comment refers to.")
 
 (defvar-local jg-agent-comments--edit-bounds nil
-  "Cons of buffer positions the comment refers to in the source buffer.")
+  "Cons of markers that delimit the anchor text in the source buffer.
+The comment command placed the markers before it opened the edit
+buffer.")
+
+(defvar-local jg-agent-comments--edit-snippet nil
+  "Anchor text that the comment command captured at comment time.")
 
 (defvar-keymap jg-agent-comments-edit-mode-map
   "C-c C-c" #'jg-agent-comments--commit-edit
   "C-c C-k" #'kill-buffer)
 
 (defun jg-agent-comments--commit-edit ()
-  "Commit the comment being edited in the current edit buffer."
+  "Commit the comment that the current edit buffer holds.
+The record uses the snippet and the marker positions that the comment
+command captured.  Source buffer changes during editing do not change
+what the comment refers to."
   (interactive nil jg-agent-comments-edit-mode-map)
   (let ((text (buffer-string))
         (source jg-agent-comments--edit-source)
+        (snippet jg-agent-comments--edit-snippet)
         (bounds jg-agent-comments--edit-bounds))
     (kill-buffer)
     (when (buffer-live-p source)
       (with-current-buffer source
         (jg-agent-comments--commit-edit-from-string
-         text (car bounds) (cdr bounds))))))
+         text
+         (marker-position (car bounds))
+         (marker-position (cdr bounds))
+         snippet)))))
 
 (defun jg-agent-comments-comment ()
-  "Comment on the agent output at point in a dedicated edit buffer."
+  "Comment on the agent output at point in a dedicated edit buffer.
+Capture the anchor text and place its markers before the edit buffer
+opens.  A re-render during editing cannot change the captured text."
   (interactive)
   (let* ((bounds (jg-agent-comments--region-or-line))
-         (source (current-buffer)))
+         (source (current-buffer))
+         (snippet (substring-no-properties
+                   (filter-buffer-substring (car bounds) (cdr bounds))))
+         (beg (copy-marker (car bounds)))
+         (end (copy-marker (cdr bounds))))
     (pop-to-buffer (get-buffer-create "*jg-agent-comment*"))
     (erase-buffer)
     (text-mode)
     (setq-local jg-agent-comments--edit-source source)
-    (setq-local jg-agent-comments--edit-bounds bounds)
+    (setq-local jg-agent-comments--edit-bounds (cons beg end))
+    (setq-local jg-agent-comments--edit-snippet snippet)
     (use-local-map jg-agent-comments-edit-mode-map)))
 
 (defvar-keymap jg-agent-comments-prefix-map
@@ -231,8 +252,7 @@ keeping their relative order.  Entries are separated by a blank line."
 (defun jg-agent-comments--clear ()
   "Forget all pending comments and delete their overlays."
   (dolist (record jg-agent-comments--comments)
-    (dolist (overlay (list (plist-get record :overlay)
-                           (plist-get record :display-overlay)))
+    (let ((overlay (plist-get record :overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
         (delete-overlay overlay))))
   (setq jg-agent-comments--comments nil))
@@ -248,7 +268,7 @@ Say so and do nothing when there are no pending comments."
 
 (defun jg-agent-comments-delete-at-point ()
   "Delete the comment whose anchor overlay covers point.
-Delete the record's overlays when they are still live and remove the
+Delete the record's overlay when it is still live and remove the
 record from `jg-agent-comments--comments'.  Signal `user-error' when
 point is not on any comment."
   (interactive nil jg-agent-comments-mode-map)
@@ -263,8 +283,7 @@ point is not on any comment."
                  jg-agent-comments--comments)))
     (unless record
       (user-error "No comment at point"))
-    (dolist (overlay (list (plist-get record :overlay)
-                           (plist-get record :display-overlay)))
+    (let ((overlay (plist-get record :overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
         (delete-overlay overlay)))
     (setq jg-agent-comments--comments
