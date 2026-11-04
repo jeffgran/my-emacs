@@ -159,6 +159,73 @@ to the project root and the anchor line numbers."
       (should (plist-member record :line-end))
       (should (null (plist-get record :line-end))))))
 
+(ert-deftest jg-agent-comments-compose-file-entry-single-line ()
+  "A file comment composes with its location line, then the snippet
+and comment block."
+  (jg-agent-comments-test--with-file-buffer "alpha prose"
+    (jg-agent-comments--add 1 (point-max) "note")
+    (should (equal (jg-agent-comments--compose)
+                   (concat "Inline comments on files:\n\n"
+                           (file-name-nondirectory file)
+                           ":1\n> alpha prose\n  note")))))
+
+(ert-deftest jg-agent-comments-compose-file-entry-range ()
+  "A file comment spanning lines composes with a path:beg-end location."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (jg-agent-comments--add 1 (point-max) "note")
+    (should (equal (jg-agent-comments--compose)
+                   (concat "Inline comments on files:\n\n"
+                           (file-name-nondirectory file)
+                           ":1-3\n> one\n> two\n> three\n  note")))))
+
+(ert-deftest jg-agent-comments-compose-file-entries-group-by-path ()
+  "File comments group per file in ascending path order, regardless of
+the order the comments were added in."
+  (with-temp-buffer
+    (insert "prose one")
+    (let ((b (jg-agent-comments--add 1 (point-max) "note b")))
+      (plist-put b :file "lib/b.js")
+      (plist-put b :line-beg 7)
+      (plist-put b :line-end 7))
+    (let ((a (jg-agent-comments--add 1 (point-max) "note a")))
+      (plist-put a :file "lib/a.js")
+      (plist-put a :line-beg 3)
+      (plist-put a :line-end 5))
+    (should (equal (jg-agent-comments--compose)
+                   "Inline comments on files:\n\nlib/a.js:3-5\n> prose one\n  note a\n\nlib/b.js:7\n> prose one\n  note b"))))
+
+(ert-deftest jg-agent-comments-compose-mixes-chat-and-file-sections ()
+  "Chat comments compose first, then the file section follows."
+  (with-temp-buffer
+    (insert "chat prose")
+    (jg-agent-comments--add 1 (point-max) "chat note")
+    (let ((file-record (jg-agent-comments--add 1 (point-max) "file note")))
+      (plist-put file-record :file "lib/foo.js")
+      (plist-put file-record :line-beg 3)
+      (plist-put file-record :line-end 4)
+      (should (equal (jg-agent-comments--compose)
+                     "> chat prose\n  chat note\n\nInline comments on files:\n\nlib/foo.js:3-4\n> chat prose\n  file note")))))
+
+(ert-deftest jg-agent-comments-compose-file-only-has-no-chat-header ()
+  "A buffer holding only file comments composes without the chat
+block header."
+  (jg-agent-comments-test--with-file-buffer "file prose"
+    (jg-agent-comments--add 1 (point-max) "note")
+    (should (equal (jg-agent-comments--compose)
+                   (concat "Inline comments on files:\n\n"
+                           (file-name-nondirectory file)
+                           ":1\n> file prose\n  note")))))
+
+(ert-deftest jg-agent-comments-compose-file-dead-anchor-keeps-location ()
+  "A dead-anchor file comment composes with its stored location."
+  (jg-agent-comments-test--with-file-buffer "anchor text"
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (delete-overlay (plist-get record :overlay))
+      (should (equal (jg-agent-comments--compose)
+                     (concat "Inline comments on files:\n\n"
+                             (file-name-nondirectory file)
+                             ":1\n> anchor text\n  note"))))))
+
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
     (insert "agent said things")

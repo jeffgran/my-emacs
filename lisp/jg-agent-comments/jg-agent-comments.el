@@ -391,22 +391,86 @@ dropped."
                        (split-string text "\n")
                        "\n"))))
 
-(defun jg-agent-comments--compose ()
-  "Return all pending comments as one prompt string in buffer order.
-Records with a live anchor overlay sort by :beg; the rest come last,
-keeping their relative order.  Entries are separated by a blank line."
-  (let ((live '())
-        (dead '()))
-    (dolist (record jg-agent-comments--comments)
+(defconst jg-agent-comments--file-header
+  "Inline comments on files:\n\n"
+  "Header that opens the composed file comment section.
+The file entries follow after one blank line, grouped per file in
+ascending path order.")
+
+(defun jg-agent-comments--location-string (record)
+  "Return RECORD's anchor location, \"path:line\" or \"path:beg-end\"."
+  (let ((file (plist-get record :file))
+        (beg (plist-get record :line-beg))
+        (end (plist-get record :line-end)))
+    (if (and end (/= beg end))
+        (format "%s:%d-%d" file beg end)
+      (format "%s:%d" file beg))))
+
+(defun jg-agent-comments--file-entry-string (record)
+  "Return RECORD rendered as one entry of the file section.
+The entry opens with RECORD's location line, then the snippet and
+comment block from `jg-agent-comments--entry-string'."
+  (concat (jg-agent-comments--location-string record) "\n"
+          (jg-agent-comments--entry-string record)))
+
+(defun jg-agent-comments--file-entry-order-p (a b)
+  "Return non-nil when file record A sorts before file record B.
+Records group per file in ascending path order; within a file, by
+line number, then by anchor position."
+  (let ((path-a (plist-get a :file))
+        (path-b (plist-get b :file)))
+    (if (not (string= path-a path-b))
+        (string-lessp path-a path-b)
+      (let ((line-a (plist-get a :line-beg))
+            (line-b (plist-get b :line-beg)))
+        (if (= line-a line-b)
+            (< (plist-get a :beg) (plist-get b :beg))
+          (< line-a line-b))))))
+
+(defun jg-agent-comments--compose (&optional records)
+  "Return RECORDS as one prompt string in buffer order.
+RECORDS defaults to this buffer's pending comments.  Records without
+:file are chat comments: those with a live anchor overlay sort by
+:beg, the rest come last, keeping their relative order.  Records with
+:file are file comments: they follow in the file section, grouped per
+file in ascending path order.  Entries are separated by a blank line;
+the file section opens with `jg-agent-comments--file-header' only
+when file comments are among RECORDS."
+  (let ((records (or records jg-agent-comments--comments))
+        (chat '())
+        (files '())
+        (chat-live '())
+        (chat-dead '()))
+    (dolist (record records)
+      (if (plist-get record :file)
+          (push record files)
+        (push record chat)))
+    (dolist (record chat)
       (if (jg-agent-comments--anchor-live-p record)
-          (push record live)
-        (push record dead)))
-    (mapconcat #'jg-agent-comments--entry-string
-               (append (sort (nreverse live)
-                             (lambda (a b)
-                               (< (plist-get a :beg) (plist-get b :beg))))
-                       (nreverse dead))
-               "\n\n")))
+          (push record chat-live)
+        (push record chat-dead)))
+    (let* ((chat-entries
+            (and chat
+                 (mapconcat #'jg-agent-comments--entry-string
+                            (append (sort (nreverse chat-live)
+                                          (lambda (a b)
+                                            (< (plist-get a :beg)
+                                               (plist-get b :beg))))
+                                    (nreverse chat-dead))
+                            "\n\n")))
+           (file-entries
+            (and files
+                 (concat jg-agent-comments--file-header
+                         (mapconcat #'jg-agent-comments--file-entry-string
+                                    (sort files
+                                          #'jg-agent-comments--file-entry-order-p)
+                                    "\n\n")))))
+      (cond
+        ((and chat-entries file-entries)
+         (concat chat-entries "\n\n" file-entries))
+        (chat-entries chat-entries)
+        (file-entries file-entries)
+        (t "")))))
 
 (defconst jg-agent-comments--block-header
   "---\nInline comments replying to specific parts of your previous message:\n"
