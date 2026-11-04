@@ -245,6 +245,57 @@ The record's body still updates."
       (should (= (length (window-list)) windows-before))
       (should (eq (window-buffer (selected-window)) source)))))
 
+(ert-deftest jg-agent-comments-commit-deactivates-mark ()
+  "Committing a fresh comment deactivates the source buffer's mark.
+In transient-mark-mode the region would stay highlighted after the
+commit otherwise."
+  (with-temp-buffer
+    (insert "agent prose")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (goto-char 1)
+    (push-mark (point-max) nil t)
+    (let ((source (current-buffer))
+          (transient-mark-mode t))
+      (jg-agent-comments-comment)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (insert "late comment")
+      (jg-agent-comments--commit-edit)
+      (with-current-buffer source
+        (should (null mark-active))))))
+
+(ert-deftest jg-agent-comments-edit-commit-deactivates-mark ()
+  "Committing an edit in replace mode deactivates the source buffer's mark."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((source (current-buffer)))
+      (jg-agent-comments--add 1 (point-max) "old note")
+      (goto-char 1)
+      (push-mark (point-max) nil t)
+      (let ((transient-mark-mode t))
+        (jg-agent-comments-edit-at-point)
+        (should (equal (buffer-name) "*jg-agent-comment*"))
+        (erase-buffer)
+        (insert "new note")
+        (jg-agent-comments--commit-edit))
+      (with-current-buffer source
+        (should (null mark-active))))))
+
+(ert-deftest jg-agent-comments-cancel-preserves-mark ()
+  "Canceling the edit buffer leaves the source buffer's mark active."
+  (with-temp-buffer
+    (insert "agent prose")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (goto-char 1)
+    (push-mark (point-max) nil t)
+    (let ((source (current-buffer))
+          (transient-mark-mode t))
+      (jg-agent-comments-comment)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (insert "do not keep")
+      (jg-agent-comments-cancel-edit)
+      (with-current-buffer source
+        (should mark-active)))))
+
 (ert-deftest jg-agent-comments-edit-binding-e ()
   "The \"C-c ;\" prefix binds \"e\" to `jg-agent-comments-edit-at-point'."
   (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; e")

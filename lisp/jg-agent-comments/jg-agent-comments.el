@@ -231,7 +231,8 @@ instead, and the captured snippet and markers play no part."
            text
            (marker-position (car bounds))
            (marker-position (cdr bounds))
-           snippet))))
+           snippet))
+        (deactivate-mark)))
     (with-current-buffer edit
       (jg-agent-comments--finish-edit))))
 
