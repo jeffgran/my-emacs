@@ -48,13 +48,21 @@ the shape (:snippet :text :beg :end :overlay)."
     (push record jg-agent-comments--comments)
     record))
 
-(defun jg-agent-comments--inline-string (text)
-  "Return TEXT as a single-line string.
-Keep the first line of TEXT, appending \" …\" when TEXT has more
-lines."
-  (if (string-match "\n" text)
-      (concat (substring text 0 (match-beginning 0)) " …")
-    text))
+(defun jg-agent-comments--render-text (text)
+  "Return the propertized display body for the full comment TEXT.
+Prefix the first line with the \"▐ \" gutter in the marker face.
+Prefix every following line with two spaces.  Give each line's text
+the inline face; a blank line keeps just its two-space prefix."
+  (let* ((lines (split-string text "\n"))
+         (rest (cdr lines)))
+    (concat (propertize "▐ " 'face 'jg-agent-comments-marker)
+            (propertize (car lines) 'face 'jg-agent-comments-inline)
+            (mapconcat (lambda (line)
+                         (concat "\n"
+                                 (propertize (concat "  " line)
+                                             'face 'jg-agent-comments-inline)))
+                       rest
+                       ""))))
 
 (defun jg-agent-comments--display-position (record)
   "Return the buffer position where RECORD's anchor overlay ends.
@@ -71,9 +79,9 @@ comment shows on a new line after that position."
 The overlay spans the anchor text from :beg through the display
 position.  It carries the `jg-agent-comments' property.  It shows the
 comment on its own line below the anchor as its after-string: a
-newline, then the marker gutter in the marker face, then the comment
-text in the inline face, elided to one line.  It evaporates when a
-buffer change empties it.  The overlay is stored back into the record."
+newline, then the full comment body rendered by
+`jg-agent-comments--render-text'.  It evaporates when a buffer change
+empties it.  The overlay is stored back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (jg-agent-comments--display-position record)
@@ -81,10 +89,8 @@ buffer change empties it.  The overlay is stored back into the record."
       (overlay-put overlay 'jg-agent-comments t)
       (overlay-put overlay 'after-string
                    (concat "\n"
-                           (propertize "▐ " 'face 'jg-agent-comments-marker)
-                           (propertize (jg-agent-comments--inline-string
-                                        (plist-get record :text))
-                                       'face 'jg-agent-comments-inline)))
+                           (jg-agent-comments--render-text
+                            (plist-get record :text))))
       (overlay-put overlay 'evaporate t)
       (plist-put record :overlay overlay))))
 

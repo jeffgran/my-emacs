@@ -102,12 +102,6 @@
           (should (equal (plist-get record :snippet) "original anchor\n"))
           (should (equal (plist-get record :text) "late comment")))))))
 
-(ert-deftest jg-agent-comments-inline-elides-multiline ()
-  (should (equal (jg-agent-comments--inline-string "first\nsecond\nthird")
-                 "first …"))
-  (should (equal (jg-agent-comments--inline-string "only")
-                 "only")))
-
 (ert-deftest jg-agent-comments-render-shows-comment-below-anchor ()
   (with-temp-buffer
     (insert "anchor")
@@ -122,21 +116,39 @@
       (should (null (overlay-get ov 'before-string)))
       (should (null (overlay-get ov 'display))))))
 
-(ert-deftest jg-agent-comments-render-elides-multiline-comment ()
+(ert-deftest jg-agent-comments-render-shows-full-multiline-comment ()
   (with-temp-buffer
     (insert "anchor")
-    (let* ((record (jg-agent-comments--add 1 (point-max) "first\nsecond"))
+    (let* ((record (jg-agent-comments--add 1 (point-max) "para one\n\npara two"))
            (after (overlay-get (plist-get record :overlay) 'after-string)))
-      (should (equal after "\n▐ first …")))))
+      (should (string-match-p "para one" after))
+      (should (string-match-p "para two" after))
+      (should-not (string-match-p " …" after))
+      (should (equal after "\n▐ para one\n  \n  para two")))))
+
+(ert-deftest jg-agent-comments-render-shows-every-line ()
+  (with-temp-buffer
+    (insert "anchor")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "one\ntwo\nthree"))
+           (after (overlay-get (plist-get record :overlay) 'after-string)))
+      (should (equal after "\n▐ one\n  two\n  three")))))
+
+(ert-deftest jg-agent-comments-render-text-renders-full-comment ()
+  (let ((body (jg-agent-comments--render-text "one\ntwo\nthree")))
+    (should (string-prefix-p "▐ one" body))
+    (should (string-match-p "\n  two\n  three\\'" body))
+    (should-not (string-match-p " …" body))))
 
 (ert-deftest jg-agent-comments-render-after-string-faces ()
   (with-temp-buffer
     (insert "anchor")
-    (let* ((record (jg-agent-comments--add 1 (point-max) "first line"))
+    (let* ((record (jg-agent-comments--add 1 (point-max) "first line\nsecond line"))
            (after (overlay-get (plist-get record :overlay) 'after-string)))
       (should (eq (get-text-property 1 'face after)
                   'jg-agent-comments-marker))
       (should (eq (get-text-property (length "\n▐ ") 'face after)
+                  'jg-agent-comments-inline))
+      (should (eq (get-text-property (length "\n▐ first line\n") 'face after)
                   'jg-agent-comments-inline)))))
 
 (ert-deftest jg-agent-comments-add-renders-single-live-overlay ()
