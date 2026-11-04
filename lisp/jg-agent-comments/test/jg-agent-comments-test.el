@@ -386,6 +386,42 @@ empty input area, and the comments wait for the next submission."
       (should (null jg-agent-comments--comments))
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
+(ert-deftest jg-agent-comments-matcher-finds-comment ()
+  "The shared matcher returns the record whose anchor covers point."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (goto-char 1)
+      (should (eq (jg-agent-comments--comment-at-point) record))
+      (goto-char 6)
+      (should (eq (jg-agent-comments--comment-at-point) record)))))
+
+(ert-deftest jg-agent-comments-matcher-end-of-line-inclusive ()
+  "The matcher includes the newline position of a whole-line anchor."
+  (with-temp-buffer
+    (insert "first line\nsecond line\n")
+    (let ((record (jg-agent-comments--add 1 12 "note")))
+      (goto-char 11)
+      (should (eq (jg-agent-comments--comment-at-point) record)))))
+
+(ert-deftest jg-agent-comments-matcher-next-line-exclusive ()
+  "The matcher excludes the start of the line after a whole-line anchor."
+  (with-temp-buffer
+    (insert "first line\nsecond line\n")
+    (let ((record (jg-agent-comments--add 1 12 "note")))
+      (goto-char 12)
+      (should (null (jg-agent-comments--comment-at-point))))))
+
+(ert-deftest jg-agent-comments-matcher-last-line-of-buffer ()
+  "The matcher finds a comment anchored on the final line, newline absent."
+  (with-temp-buffer
+    (insert "first line\nlast line")
+    (let ((record (jg-agent-comments--add 12 (point-max) "note")))
+      (goto-char 16)
+      (should (eq (jg-agent-comments--comment-at-point) record))
+      (goto-char (point-max))
+      (should (eq (jg-agent-comments--comment-at-point) record)))))
+
 (ert-deftest jg-agent-comments-delete-binding-d ()
   "The \"C-c ;\" prefix binds \"d\" to `jg-agent-comments-delete-at-point'."
   (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; d")

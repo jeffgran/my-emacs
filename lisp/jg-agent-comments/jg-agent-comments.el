@@ -349,21 +349,28 @@ comments."
     (agent-shell-prompt-queue (jg-agent-comments--augment-prompt nil))
     (jg-agent-comments--clear)))
 
+(defun jg-agent-comments--comment-at-point ()
+  "Return the record whose live anchor overlay covers point.
+A record matches when its anchor overlay is live, carries the
+`jg-agent-comments' property, and spans point.  Return nil when no
+record matches."
+  (seq-find
+   (lambda (record)
+     (let ((overlay (plist-get record :overlay)))
+       (and (overlayp overlay)
+            (overlay-buffer overlay)
+            (overlay-get overlay 'jg-agent-comments)
+            (>= (point) (overlay-start overlay))
+            (<= (point) (overlay-end overlay)))))
+   jg-agent-comments--comments))
+
 (defun jg-agent-comments-delete-at-point ()
   "Delete the comment whose anchor overlay covers point.
 Delete the record's overlay when it is still live and remove the
 record from `jg-agent-comments--comments'.  Signal `user-error' when
 point is not on any comment."
   (interactive nil jg-agent-comments-mode-map)
-  (let ((record (seq-find
-                 (lambda (record)
-                   (let ((overlay (plist-get record :overlay)))
-                     (and (overlayp overlay)
-                          (overlay-buffer overlay)
-                          (overlay-get overlay 'jg-agent-comments)
-                          (>= (point) (overlay-start overlay))
-                          (<= (point) (overlay-end overlay)))))
-                 jg-agent-comments--comments)))
+  (let ((record (jg-agent-comments--comment-at-point)))
     (unless record
       (user-error "No comment at point"))
     (let ((overlay (plist-get record :overlay)))
