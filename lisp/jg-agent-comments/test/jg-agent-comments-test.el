@@ -62,5 +62,16 @@
         (should (not (string-match-p "\n" (or (overlay-get ov 'before-string) ""))))
         (should (not (string-match-p "\n" (or (overlay-get ov 'after-string) ""))))))))
 
+(ert-deftest jg-agent-comments-mode-line-empty-when-none ()
+  (with-temp-buffer
+    (should (equal (jg-agent-comments--mode-line-string) ""))))
+
+(ert-deftest jg-agent-comments-mode-line-counts ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (jg-agent-comments--add 1 (point-max) "one")
+    (jg-agent-comments--add 1 (point-max) "two")
+    (should (equal (jg-agent-comments--mode-line-string) " [2 comments]"))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

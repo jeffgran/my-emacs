@@ -162,6 +162,24 @@ Whitespace-only TEXT cancels the comment and records nothing."
   :init-value nil
   :lighter nil)
 
+(defvar jg-agent-comments--mode-line-registered nil
+  "Non-nil once the mode-line entry has been added to `global-mode-string'.")
+
+(defun jg-agent-comments--mode-line-string ()
+  "Return the mode-line fragment showing this buffer's comment count.
+An empty string when the buffer has no comments; otherwise \" [N
+comments]\" (singular for one)."
+  (if (null jg-agent-comments--comments)
+      ""
+    (let ((count (length jg-agent-comments--comments)))
+      (format " [%d comment%s]" count (if (= count 1) "" "s")))))
+
+(unless jg-agent-comments--mode-line-registered
+  (setq jg-agent-comments--mode-line-registered t)
+  (add-to-list 'global-mode-string
+               '(:eval (jg-agent-comments--mode-line-string))
+               'append))
+
 (declare-function agent-shell-prompt-queue "agent-shell" (prompt))
 (require 'agent-shell nil t)
 
