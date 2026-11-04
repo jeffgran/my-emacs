@@ -300,5 +300,8 @@
       (should (null (overlay-buffer (plist-get record :highlight-overlay))))
       (should (overlay-buffer (plist-get record :overlay))))))
 
+(ert-deftest jg-agent-comments-highlight-has-amber-background ()
+  (should (equal (face-background 'jg-agent-comments-highlight) "#5a4210")))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

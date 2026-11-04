@@ -22,8 +22,9 @@
   "Face for inline comment text.")
 
 (defface jg-agent-comments-highlight
-  '((t :inherit 'highlight))
-  "Face for the tint over a partial-line comment selection.")
+  '((t :background "#5a4210"))
+  "Face for the tint over a partial-line comment selection.
+A dim amber, matching the gutter marker's warning hue.")
 
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
