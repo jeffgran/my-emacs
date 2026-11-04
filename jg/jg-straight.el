@@ -414,6 +414,8 @@
          :map jest-minor-mode-map
          ("C-c ," . jest-popup)
          )
+  :config
+  (define-key jest-minor-mode-map (kbd "C-c ;") nil)
   )
 (straight-use-package 'js2-mode)
 (straight-use-package 'json-mode)
