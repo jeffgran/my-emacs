@@ -351,8 +351,9 @@ when this returns non-nil."
   :init-value nil
   :lighter nil
   (if jg-agent-comments-mode
-      (add-hook 'kill-buffer-query-functions
-                #'jg-agent-comments--kill-query nil t)
+      (when buffer-file-name
+        (add-hook 'kill-buffer-query-functions
+                  #'jg-agent-comments--kill-query nil t))
     (remove-hook 'kill-buffer-query-functions
                  #'jg-agent-comments--kill-query t)))
 

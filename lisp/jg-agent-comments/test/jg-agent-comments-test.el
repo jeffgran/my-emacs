@@ -1168,9 +1168,10 @@ user pressing the return key produces."
   (should (equal (face-background 'jg-agent-comments-highlight) "#5a4210")))
 
 (ert-deftest jg-agent-comments-kill-query-hook-follows-mode ()
-  "The kill query joins `kill-buffer-query-functions' while the mode
-is on and leaves with it."
-  (with-temp-buffer
+  "In a file-visiting buffer the kill query joins
+`kill-buffer-query-functions' while the mode is on and leaves with
+it."
+  (jg-agent-comments-test--with-file-buffer "prose"
     (should-not (memq #'jg-agent-comments--kill-query
                       kill-buffer-query-functions))
     (jg-agent-comments-mode 1)
@@ -1179,6 +1180,21 @@ is on and leaves with it."
     (jg-agent-comments-mode -1)
     (should-not (memq #'jg-agent-comments--kill-query
                       kill-buffer-query-functions))))
+
+(ert-deftest jg-agent-comments-kill-chat-buffer-does-not-prompt ()
+  "Killing a buffer without a file never prompts, even with pending
+comments: the kill query only guards file-visiting buffers."
+  (let ((buffer (generate-new-buffer " *jg-agent-comments kill*")))
+    (with-current-buffer buffer
+      (jg-agent-comments-mode 1)
+      (insert "prose")
+      (jg-agent-comments--add 1 (point-max) "note")
+      (should-not (memq #'jg-agent-comments--kill-query
+                        kill-buffer-query-functions))
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _) (error "prompted"))))
+        (kill-buffer buffer))
+      (should-not (buffer-live-p buffer)))))
 
 (ert-deftest jg-agent-comments-kill-query-returns ()
   "The query returns nil when the user keeps the buffer, t when the
@@ -1197,36 +1213,34 @@ user releases it, and t without prompting when nothing is pending."
       (should (jg-agent-comments--kill-query)))))
 
 (ert-deftest jg-agent-comments-kill-buffer-asks-and-blocks ()
-  "Killing a buffer with pending comments asks first and can refuse;
-answering yes lets the kill proceed."
-  (let ((buffer (generate-new-buffer " *jg-agent-comments kill*")))
-    (with-current-buffer buffer
-      (jg-agent-comments-mode 1)
-      (insert "prose")
-      (jg-agent-comments--add 1 (point-max) "note")
-      (set-buffer-modified-p nil)
+  "Killing a file-visiting buffer with pending comments asks first
+and can refuse; answering yes lets the kill proceed."
+  (jg-agent-comments-test--with-file-buffer "prose"
+    (jg-agent-comments-mode 1)
+    (jg-agent-comments--add 1 (point-max) "note")
+    (set-buffer-modified-p nil)
+    (let ((buffer (current-buffer)))
       (let ((asked nil))
         (cl-letf (((symbol-function 'y-or-n-p)
                    (lambda (&rest _) (setq asked t) nil)))
           (kill-buffer buffer)
           (should asked)
-          (should (buffer-live-p buffer)))
-        (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
-          (kill-buffer buffer))
-        (should-not (buffer-live-p buffer))))))
-
-(ert-deftest jg-agent-comments-kill-after-clear-does-not-prompt ()
-  "Killing after the comments cleared does not prompt."
-  (let ((buffer (generate-new-buffer " *jg-agent-comments kill*")))
-    (with-current-buffer buffer
-      (jg-agent-comments-mode 1)
-      (insert "prose")
-      (jg-agent-comments--add 1 (point-max) "note")
-      (jg-agent-comments--clear)
-      (cl-letf (((symbol-function 'y-or-n-p)
-                 (lambda (&rest _) (error "prompted"))))
+          (should (buffer-live-p buffer))))
+      (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
         (kill-buffer buffer))
       (should-not (buffer-live-p buffer)))))
+
+(ert-deftest jg-agent-comments-kill-after-clear-does-not-prompt ()
+  "Killing a file-visiting buffer after the comments cleared does not
+prompt."
+  (jg-agent-comments-test--with-file-buffer "prose"
+    (jg-agent-comments-mode 1)
+    (jg-agent-comments--add 1 (point-max) "note")
+    (jg-agent-comments--clear)
+    (set-buffer-modified-p nil)
+    (cl-letf (((symbol-function 'y-or-n-p)
+               (lambda (&rest _) (error "prompted"))))
+      (kill-buffer (current-buffer)))))
 
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here
