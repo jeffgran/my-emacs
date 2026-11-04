@@ -273,9 +273,9 @@ file buffers into the prompt, and clearing reaches into those buffers."
                        (expand-file-name name project-dir))))
           (when buffer
             (with-current-buffer buffer
-              (set-buffer-modified-p nil))
-            (let (kill-buffer-query-functions)
-              (kill-buffer buffer)))))
+              (set-buffer-modified-p nil)
+              (let (kill-buffer-query-functions)
+                (kill-buffer buffer))))))
       (ignore-errors (delete-directory project-dir 'recursive)))))
 
 (ert-deftest jg-agent-comments-ride-along-ignores-other-projects ()
@@ -310,9 +310,9 @@ keeps its comments when the chat clears."
                      (expand-file-name "outsider.js" other-dir))))
         (when buffer
           (with-current-buffer buffer
-            (set-buffer-modified-p nil))
-          (let (kill-buffer-query-functions)
-            (kill-buffer buffer))))
+            (set-buffer-modified-p nil)
+            (let (kill-buffer-query-functions)
+              (kill-buffer buffer)))))
       (ignore-errors (delete-directory project-dir 'recursive))
       (ignore-errors (delete-directory other-dir 'recursive)))))
 
@@ -344,9 +344,9 @@ comments pending in their home buffers."
                      (expand-file-name "alpha.js" project-dir))))
         (when buffer
           (with-current-buffer buffer
-            (set-buffer-modified-p nil))
-          (let (kill-buffer-query-functions)
-            (kill-buffer buffer))))
+            (set-buffer-modified-p nil)
+            (let (kill-buffer-query-functions)
+              (kill-buffer buffer)))))
       (ignore-errors (delete-directory project-dir 'recursive)))))
 
 (ert-deftest jg-agent-comments-ride-along-alone-skips-chat-header ()
@@ -368,9 +368,9 @@ chat block header."
                      (expand-file-name "alpha.js" project-dir))))
         (when buffer
           (with-current-buffer buffer
-            (set-buffer-modified-p nil))
-          (let (kill-buffer-query-functions)
-            (kill-buffer buffer))))
+            (set-buffer-modified-p nil)
+            (let (kill-buffer-query-functions)
+              (kill-buffer buffer)))))
       (ignore-errors (delete-directory project-dir 'recursive)))))
 
 (ert-deftest jg-agent-comments-send-refuses-outside-chat ()
@@ -819,9 +819,9 @@ the file after BODY, without any kill prompting."
        (let ((buffer (find-buffer-visiting file)))
          (when buffer
            (with-current-buffer buffer
-             (set-buffer-modified-p nil))
-           (let (kill-buffer-query-functions)
-             (kill-buffer buffer)))
+             (set-buffer-modified-p nil)
+             (let (kill-buffer-query-functions)
+               (kill-buffer buffer))))
          (ignore-errors (delete-file file))))))
 
 (ert-deftest jg-agent-comments-submit-advice-augments-typed-input ()
@@ -854,7 +854,8 @@ leaves the comments pending for the next submission."
                   :type 'user-error)
     (should (equal (buffer-substring-no-properties pmark (point-max))
                    "my question"))
-    (should jg-agent-comments--comments)))
+    (should jg-agent-comments--comments)
+    (jg-agent-comments--clear)))
 
 (ert-deftest jg-agent-comments-submit-advice-passes-through-without-comments ()
   "Without pending comments the submit function receives the typed input as-is."
@@ -881,7 +882,8 @@ empty input area, and the comments wait for the next submission."
          (setq sent (buffer-substring-no-properties pmark (point-max)))))
       (should (equal sent ""))
       (should (equal (buffer-substring-no-properties pmark (point-max)) ""))
-      (should jg-agent-comments--comments))))
+      (should jg-agent-comments--comments)
+      (jg-agent-comments--clear))))
 
 (ert-deftest jg-agent-comments-submit-advice-passes-through-mode-off ()
   "The advice does not act in buffers where the mode is off."
@@ -1030,6 +1032,67 @@ user pressing the return key produces."
 
 (ert-deftest jg-agent-comments-highlight-has-amber-background ()
   (should (equal (face-background 'jg-agent-comments-highlight) "#5a4210")))
+
+(ert-deftest jg-agent-comments-kill-query-hook-follows-mode ()
+  "The kill query joins `kill-buffer-query-functions' while the mode
+is on and leaves with it."
+  (with-temp-buffer
+    (should-not (memq #'jg-agent-comments--kill-query
+                      kill-buffer-query-functions))
+    (jg-agent-comments-mode 1)
+    (should (memq #'jg-agent-comments--kill-query
+                  kill-buffer-query-functions))
+    (jg-agent-comments-mode -1)
+    (should-not (memq #'jg-agent-comments--kill-query
+                      kill-buffer-query-functions))))
+
+(ert-deftest jg-agent-comments-kill-query-returns ()
+  "The query returns nil when the user keeps the buffer, t when the
+user releases it, and t without prompting when nothing is pending."
+  (with-temp-buffer
+    (jg-agent-comments-mode 1)
+    (insert "prose")
+    (jg-agent-comments--add 1 (point-max) "note")
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) nil)))
+      (should (null (jg-agent-comments--kill-query))))
+    (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (should (jg-agent-comments--kill-query)))
+    (jg-agent-comments--clear)
+    (cl-letf (((symbol-function 'y-or-n-p)
+               (lambda (&rest _) (error "prompted"))))
+      (should (jg-agent-comments--kill-query)))))
+
+(ert-deftest jg-agent-comments-kill-buffer-asks-and-blocks ()
+  "Killing a buffer with pending comments asks first and can refuse;
+answering yes lets the kill proceed."
+  (let ((buffer (generate-new-buffer " *jg-agent-comments kill*")))
+    (with-current-buffer buffer
+      (jg-agent-comments-mode 1)
+      (insert "prose")
+      (jg-agent-comments--add 1 (point-max) "note")
+      (set-buffer-modified-p nil)
+      (let ((asked nil))
+        (cl-letf (((symbol-function 'y-or-n-p)
+                   (lambda (&rest _) (setq asked t) nil)))
+          (kill-buffer buffer)
+          (should asked)
+          (should (buffer-live-p buffer)))
+        (cl-letf (((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+          (kill-buffer buffer))
+        (should-not (buffer-live-p buffer))))))
+
+(ert-deftest jg-agent-comments-kill-after-clear-does-not-prompt ()
+  "Killing after the comments cleared does not prompt."
+  (let ((buffer (generate-new-buffer " *jg-agent-comments kill*")))
+    (with-current-buffer buffer
+      (jg-agent-comments-mode 1)
+      (insert "prose")
+      (jg-agent-comments--add 1 (point-max) "note")
+      (jg-agent-comments--clear)
+      (cl-letf (((symbol-function 'y-or-n-p)
+                 (lambda (&rest _) (error "prompted"))))
+        (kill-buffer buffer))
+      (should-not (buffer-live-p buffer)))))
 
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

@@ -330,10 +330,24 @@ on any comment."
 (defvar-keymap jg-agent-comments-mode-map
   "C-c ;" jg-agent-comments-prefix-map)
 
+(defun jg-agent-comments--kill-query ()
+  "Ask before a kill loses this buffer's pending comments.
+Return nil when pending comments exist and the user keeps the buffer;
+return t otherwise, so a buffer without pending comments kills without
+prompting.  On `kill-buffer-query-functions', the kill proceeds only
+when this returns non-nil."
+  (or (null jg-agent-comments--comments)
+      (y-or-n-p "Kill buffer with pending comments? ")))
+
 (define-minor-mode jg-agent-comments-mode
   "Inline comments for agent-shell buffers and file-visiting buffers."
   :init-value nil
-  :lighter nil)
+  :lighter nil
+  (if jg-agent-comments-mode
+      (add-hook 'kill-buffer-query-functions
+                #'jg-agent-comments--kill-query nil t)
+    (remove-hook 'kill-buffer-query-functions
+                 #'jg-agent-comments--kill-query t)))
 
 (defun jg-agent-comments--global-enable ()
   "Turn `jg-agent-comments-mode' on in this buffer when it visits a file.
