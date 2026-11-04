@@ -259,6 +259,11 @@
       (should (null jg-agent-comments--comments))
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
+(ert-deftest jg-agent-comments-delete-binding-d ()
+  "The \"C-c ;\" prefix binds \"d\" to `jg-agent-comments-delete-at-point'."
+  (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; d")
+              #'jg-agent-comments-delete-at-point)))
+
 (ert-deftest jg-agent-comments-highlight-covers-partial-line-selection ()
   (with-temp-buffer
     (insert "hello world")
