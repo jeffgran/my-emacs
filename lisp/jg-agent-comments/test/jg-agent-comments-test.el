@@ -259,5 +259,46 @@
       (should (null jg-agent-comments--comments))
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
+(ert-deftest jg-agent-comments-highlight-covers-partial-line-selection ()
+  (with-temp-buffer
+    (insert "hello world")
+    (let* ((record (jg-agent-comments--add 1 6 "note"))
+           (overlay (plist-get record :highlight-overlay)))
+      (should (overlayp overlay))
+      (should (overlay-buffer overlay))
+      (should (= (overlay-start overlay) 1))
+      (should (= (overlay-end overlay) 6))
+      (should (eq (overlay-get overlay 'face)
+                  'jg-agent-comments-highlight)))))
+
+(ert-deftest jg-agent-comments-no-highlight-for-whole-line-selection ()
+  (with-temp-buffer
+    (insert "hello world\n")
+    (let ((record (jg-agent-comments--add 1 12 "note")))
+      (should (null (plist-get record :highlight-overlay))))))
+
+(ert-deftest jg-agent-comments-cleanup-removes-highlight-overlay ()
+  (with-temp-buffer
+    (insert "hello world")
+    (let ((record (jg-agent-comments--add 1 6 "note")))
+      (jg-agent-comments--clear)
+      (should (null (overlay-buffer (plist-get record :highlight-overlay))))))
+  (with-temp-buffer
+    (insert "hello world")
+    (let ((record (jg-agent-comments--add 1 6 "note")))
+      (goto-char 1)
+      (jg-agent-comments-delete-at-point)
+      (should (null (overlay-buffer
+                     (plist-get record :highlight-overlay)))))))
+
+(ert-deftest jg-agent-comments-highlight-evaporates-with-covered-text ()
+  (with-temp-buffer
+    (insert "hello world")
+    (let ((record (jg-agent-comments--add 1 6 "note")))
+      (delete-region 1 6)
+      (should (member record jg-agent-comments--comments))
+      (should (null (overlay-buffer (plist-get record :highlight-overlay))))
+      (should (overlay-buffer (plist-get record :overlay))))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

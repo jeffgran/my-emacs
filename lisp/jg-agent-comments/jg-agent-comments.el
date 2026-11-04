@@ -21,13 +21,18 @@
   '((t :inherit 'font-lock-comment-face))
   "Face for inline comment text.")
 
+(defface jg-agent-comments-highlight
+  '((t :inherit 'highlight))
+  "Face for the tint over a partial-line comment selection.")
+
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
 Each record is a plist with the shape (:snippet :text :beg :end
-:overlay): :beg and :end are the buffer positions the comment refers
-to, :snippet is the captured buffer text, :text is the comment body,
-and :overlay is the overlay anchoring the record (nil until
-rendered).")
+:overlay :highlight-overlay): :beg and :end are the buffer positions
+the comment refers to, :snippet is the captured buffer text, :text is
+the comment body, :overlay is the overlay anchoring the record (nil
+until rendered), and :highlight-overlay is the overlay tinting a
+partial-line selection (nil when the selection covers whole lines).")
 
 (defun jg-agent-comments--add (beg end text &optional snippet)
   "Record a comment about buffer text between BEG and END.
@@ -36,7 +41,8 @@ properties) as the record's :snippet.  Use SNIPPET as the :snippet when
 SNIPPET is non-nil.  The caller captured that text earlier.  Store TEXT
 as the comment body.  Render the record's overlay.  Push the record
 onto `jg-agent-comments--comments'.  Return the record, a plist with
-the shape (:snippet :text :beg :end :overlay)."
+the shape (:snippet :text :beg :end :overlay
+:highlight-overlay)."
   (let ((record (list :snippet (or snippet
                                    (substring-no-properties
                                     (filter-buffer-substring beg end)))
@@ -66,7 +72,32 @@ comment shows on a new line after that position."
     (if (and (> end (plist-get record :beg))
              (save-excursion (goto-char end) (bolp)))
         (1- end)
-      end)))
+      (save-excursion (goto-char end) (pos-eol)))))
+
+(defun jg-agent-comments--covers-whole-lines-p (record)
+  "Return non-nil when RECORD's selection covers whole lines.
+The selection starts at the beginning of its line and ends at the end
+of its line or at the beginning of the next line, newline included."
+  (and (save-excursion (goto-char (plist-get record :beg)) (bolp))
+       (let ((end (plist-get record :end)))
+         (or (save-excursion (goto-char end) (eolp))
+             (save-excursion (goto-char end) (bolp))))))
+
+(defun jg-agent-comments--render-highlight (record)
+  "Give RECORD its highlight overlay when its selection is partial.
+A selection that does not cover whole lines gets an overlay spanning
+exactly :beg to :end with the `jg-agent-comments-highlight' face; it
+evaporates when its text goes away.  A whole-line selection gets nil,
+leaving the line untouched.  The overlay is stored back into the
+record under :highlight-overlay."
+  (if (jg-agent-comments--covers-whole-lines-p record)
+      (plist-put record :highlight-overlay nil)
+    (let ((overlay (make-overlay (plist-get record :beg)
+                                 (plist-get record :end)
+                                 nil t nil)))
+      (overlay-put overlay 'face 'jg-agent-comments-highlight)
+      (overlay-put overlay 'evaporate t)
+      (plist-put record :highlight-overlay overlay))))
 
 (defun jg-agent-comments--render (record)
   "Give RECORD its anchor overlay if it has none yet.
@@ -75,7 +106,9 @@ position.  It carries the `jg-agent-comments' property.  It shows the
 comment on its own line below the anchor as its after-string: a
 newline, then the full comment body rendered by
 `jg-agent-comments--render-text'.  It evaporates when a buffer change
-empties it.  The overlay is stored back into the record."
+empties it.  A partial-line selection also gets a highlight overlay
+tinting exactly the selected text.  Both overlays are stored back
+into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (jg-agent-comments--display-position record)
@@ -86,7 +119,8 @@ empties it.  The overlay is stored back into the record."
                            (jg-agent-comments--render-text
                             (plist-get record :text))))
       (overlay-put overlay 'evaporate t)
-      (plist-put record :overlay overlay))))
+      (plist-put record :overlay overlay))
+    (jg-agent-comments--render-highlight record)))
 
 (require 'comint)
 
@@ -274,6 +308,9 @@ keeping their relative order.  Entries are separated by a blank line."
   (dolist (record jg-agent-comments--comments)
     (let ((overlay (plist-get record :overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
+        (delete-overlay overlay)))
+    (let ((overlay (plist-get record :highlight-overlay)))
+      (when (and (overlayp overlay) (overlay-buffer overlay))
         (delete-overlay overlay))))
   (setq jg-agent-comments--comments nil))
 
@@ -304,6 +341,9 @@ point is not on any comment."
     (unless record
       (user-error "No comment at point"))
     (let ((overlay (plist-get record :overlay)))
+      (when (and (overlayp overlay) (overlay-buffer overlay))
+        (delete-overlay overlay)))
+    (let ((overlay (plist-get record :highlight-overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
         (delete-overlay overlay)))
     (setq jg-agent-comments--comments
