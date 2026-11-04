@@ -48,6 +48,17 @@
          )
   )
 
+(use-package jg-agent-comments
+  ;; Inline comments for agent-shell buffers.  Source of truth lives in
+  ;; lisp/jg-agent-comments/, symlinked into straight/repos/jg-agent-comments
+  ;; for straight to build.  The package must load eagerly here (no :after):
+  ;; jg-keys.el registers jg-agent-comments-mode-map in the emulation alist
+  ;; at load time, and jg-straight.el loads first.  The mode attaches to
+  ;; agent-shell buffers via the hook below.
+  :straight (jg-agent-comments :type nil :local-repo "jg-agent-comments")
+  :config
+  (add-hook 'agent-shell-mode-hook #'jg-agent-comments-mode))
+
 (use-package jg-project-sidebar
   ;; The user's own global project-management sidebar, usurping the local
   ;; agent-shell-hq fork (lisp/agent-shell-hq-perspective/, no longer wired

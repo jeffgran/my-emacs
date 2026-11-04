@@ -97,5 +97,14 @@
   (with-temp-buffer
     (should (progn (jg-agent-comments-send) t))))
 
+(ert-deftest jg-agent-comments-delete-at-point-removes-record ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (goto-char 1)
+      (jg-agent-comments-delete-at-point)
+      (should (null jg-agent-comments--comments))
+      (should (null (overlay-buffer (plist-get record :overlay)))))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

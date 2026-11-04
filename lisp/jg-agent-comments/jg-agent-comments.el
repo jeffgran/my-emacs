@@ -155,7 +155,13 @@ Whitespace-only TEXT cancels the comment and records nothing."
     (setq-local jg-agent-comments--edit-bounds bounds)
     (use-local-map jg-agent-comments-edit-mode-map)))
 
-(defvar-keymap jg-agent-comments-mode-map)
+(defvar-keymap jg-agent-comments-prefix-map
+  ";" #'jg-agent-comments-comment
+  "s" #'jg-agent-comments-send
+  "k" #'jg-agent-comments-delete-at-point)
+
+(defvar-keymap jg-agent-comments-mode-map
+  "C-c ;" jg-agent-comments-prefix-map)
 
 (define-minor-mode jg-agent-comments-mode
   "Inline comments for agent-shell buffers."
@@ -239,6 +245,30 @@ Say so and do nothing when there are no pending comments."
       (message "No pending comments")
     (agent-shell-prompt-queue (jg-agent-comments--compose))
     (jg-agent-comments--clear)))
+
+(defun jg-agent-comments-delete-at-point ()
+  "Delete the comment whose anchor overlay covers point.
+Delete the record's overlays when they are still live and remove the
+record from `jg-agent-comments--comments'.  Signal `user-error' when
+point is not on any comment."
+  (interactive nil jg-agent-comments-mode-map)
+  (let ((record (seq-find
+                 (lambda (record)
+                   (let ((overlay (plist-get record :overlay)))
+                     (and (overlayp overlay)
+                          (overlay-buffer overlay)
+                          (overlay-get overlay 'jg-agent-comments)
+                          (>= (point) (overlay-start overlay))
+                          (<= (point) (overlay-end overlay)))))
+                 jg-agent-comments--comments)))
+    (unless record
+      (user-error "No comment at point"))
+    (dolist (overlay (list (plist-get record :overlay)
+                           (plist-get record :display-overlay)))
+      (when (and (overlayp overlay) (overlay-buffer overlay))
+        (delete-overlay overlay)))
+    (setq jg-agent-comments--comments
+          (delq record jg-agent-comments--comments))))
 
 (provide 'jg-agent-comments)
 ;;; jg-agent-comments.el ends here

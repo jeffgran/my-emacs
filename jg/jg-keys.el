@@ -9,6 +9,7 @@
     (jg-comint-mode . ,jg-comint-mode-map)
     (jg-dired-mode . ,jg-dired-mode-map)
     (jg-minibuffer-mode . ,jg-minibuffer-mode-map)
+    (jg-agent-comments-mode . ,jg-agent-comments-mode-map)
     ))
 
 (add-to-list 'emulation-mode-map-alists 'jg-mode-emulation-alist)
