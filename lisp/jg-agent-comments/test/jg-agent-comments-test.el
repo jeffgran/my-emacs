@@ -30,5 +30,23 @@
       (should (member record jg-agent-comments--comments))
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
+(ert-deftest jg-agent-comments-refuses-non-agent-text ()
+  (with-temp-buffer
+    (insert "user typed input")
+    (should-error (jg-agent-comments--region-or-line))))
+
+(ert-deftest jg-agent-comments-accepts-agent-output ()
+  (with-temp-buffer
+    (insert "agent said things")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (should (jg-agent-comments--agent-text-at-point-p))))
+
+(ert-deftest jg-agent-comments-empty-commit-cancels ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (jg-agent-comments--commit-edit-from-string "" 1 (point-max))
+    (should (null jg-agent-comments--comments))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

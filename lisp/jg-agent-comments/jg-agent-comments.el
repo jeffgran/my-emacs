@@ -62,6 +62,60 @@ back into the record's :overlay."
       (overlay-put overlay 'evaporate t)
       (plist-put record :overlay overlay))))
 
+(defun jg-agent-comments--agent-text-at-point-p ()
+  "Return non-nil when point is on agent output text."
+  (or (eq (get-char-property (point) 'field) 'output)
+      (eq (get-char-property (max (point-min) (1- (point))) 'field) 'output)))
+
+(defun jg-agent-comments--region-or-line ()
+  "Return the bounds (BEG . END) of the agent text to comment on.
+Signal `user-error' when point is not on agent output."
+  (unless (jg-agent-comments--agent-text-at-point-p)
+    (user-error "Not on agent output"))
+  (if (use-region-p)
+      (cons (region-beginning) (region-end))
+    (cons (pos-bol) (min (point-max) (1+ (pos-eol))))))
+
+(defun jg-agent-comments--commit-edit-from-string (text beg end)
+  "Commit comment TEXT about the text between BEG and END.
+Whitespace-only TEXT cancels the comment and records nothing."
+  (unless (string-match-p "\\`[[:space:]]*\\'" (or text ""))
+    (jg-agent-comments--add beg end text)))
+
+(defvar-local jg-agent-comments--edit-source nil
+  "Buffer whose text the edit buffer's comment refers to.")
+
+(defvar-local jg-agent-comments--edit-bounds nil
+  "Cons of buffer positions the comment refers to in the source buffer.")
+
+(defvar-keymap jg-agent-comments-edit-mode-map
+  "C-c C-c" #'jg-agent-comments--commit-edit
+  "C-c C-k" #'kill-buffer)
+
+(defun jg-agent-comments--commit-edit ()
+  "Commit the comment being edited in the current edit buffer."
+  (interactive nil jg-agent-comments-edit-mode-map)
+  (let ((text (buffer-string))
+        (source jg-agent-comments--edit-source)
+        (bounds jg-agent-comments--edit-bounds))
+    (kill-buffer)
+    (when (buffer-live-p source)
+      (with-current-buffer source
+        (jg-agent-comments--commit-edit-from-string
+         text (car bounds) (cdr bounds))))))
+
+(defun jg-agent-comments-comment ()
+  "Comment on the agent output at point in a dedicated edit buffer."
+  (interactive)
+  (let* ((bounds (jg-agent-comments--region-or-line))
+         (source (current-buffer)))
+    (pop-to-buffer (get-buffer-create "*jg-agent-comment*"))
+    (erase-buffer)
+    (text-mode)
+    (setq-local jg-agent-comments--edit-source source)
+    (setq-local jg-agent-comments--edit-bounds bounds)
+    (use-local-map jg-agent-comments-edit-mode-map)))
+
 (defvar-keymap jg-agent-comments-mode-map)
 
 (define-minor-mode jg-agent-comments-mode
