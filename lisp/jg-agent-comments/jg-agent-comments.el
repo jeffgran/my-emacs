@@ -27,40 +27,79 @@
 
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
-Each record is a plist with the shape (:snippet :text :beg :end :overlay):
-:beg and :end are the buffer positions the comment refers to, :snippet
-is the captured buffer text, :text is the comment body, and :overlay is
-the overlay anchoring the record (nil until rendered).")
+Each record is a plist with the shape (:snippet :text :beg :end
+:overlay :display-overlay): :beg and :end are the buffer positions the
+comment refers to, :snippet is the captured buffer text, :text is the
+comment body, :overlay is the overlay anchoring the record (nil until
+rendered), and :display-overlay is the zero-length overlay showing the
+comment inline at the end of the anchor's last line (nil until
+rendered).")
 
 (defun jg-agent-comments--add (beg end text)
   "Record a comment about buffer text between BEG and END.
 Capture the covered text (including invisible parts) as the record's
-:snippet, store TEXT as the comment body, render the record's overlay,
+:snippet, store TEXT as the comment body, render the record's overlays,
 and push the record onto `jg-agent-comments--comments'.  Return the
-record, a plist with the shape (:snippet :text :beg :end :overlay)."
+record, a plist with the shape (:snippet :text :beg :end :overlay
+:display-overlay)."
   (let ((record (list :snippet (filter-buffer-substring beg end)
                       :text text
                       :beg beg
                       :end end
-                      :overlay nil)))
+                      :overlay nil
+                      :display-overlay nil)))
     (jg-agent-comments--render record)
     (push record jg-agent-comments--comments)
     record))
 
+(defun jg-agent-comments--inline-string (text)
+  "Return TEXT as a single-line string.
+Keep the first line of TEXT, appending \" …\" when TEXT has more
+lines."
+  (if (string-match "\n" text)
+      (concat (substring text 0 (match-beginning 0)) " …")
+    text))
+
+(defun jg-agent-comments--display-position (record)
+  "Return the buffer position at which RECORD's inline text is shown.
+That is the end of the last line covered by the record's anchor, so
+the inline text never starts on a line of its own."
+  (let ((end (plist-get record :end)))
+    (if (and (> end (plist-get record :beg))
+             (save-excursion (goto-char end) (bolp)))
+        (1- end)
+      end)))
+
 (defun jg-agent-comments--render (record)
-  "Give RECORD its anchoring overlay if it does not have one yet.
-The overlay spans the positions captured at add time (:beg and :end),
-carries the `jg-agent-comments' property and the snippet face, and
-evaporates when its buffer text is deleted.  The overlay is stored
-back into the record's :overlay."
+  "Give RECORD its anchoring and display overlays if it has none yet.
+The anchor overlay spans the positions captured at add time (:beg and
+:end), carries the `jg-agent-comments' property and the snippet face,
+shows the marker gutter as its before-string, and evaporates when its
+buffer text is deleted.  A zero-length display overlay at the end of
+the anchor's last line shows the comment inline, two-space padded and
+in the inline face, so the text never spans lines; it carries the
+`jg-agent-comments' property, evaporates, and is stored under
+:display-overlay.  Both overlays are stored back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (plist-get record :end)
                                  nil t nil)))
       (overlay-put overlay 'jg-agent-comments t)
       (overlay-put overlay 'face 'jg-agent-comments-snippet)
+      (overlay-put overlay 'before-string
+                   (propertize "▐ " 'face 'jg-agent-comments-marker))
       (overlay-put overlay 'evaporate t)
-      (plist-put record :overlay overlay))))
+      (plist-put record :overlay overlay)
+      (let* ((pos (jg-agent-comments--display-position record))
+             (display (make-overlay pos pos nil t nil)))
+        (overlay-put display 'jg-agent-comments t)
+        (overlay-put display 'after-string
+                     (propertize (concat "  "
+                                         (jg-agent-comments--inline-string
+                                          (plist-get record :text)))
+                                 'face 'jg-agent-comments-inline))
+        (overlay-put display 'evaporate t)
+        (plist-put record :display-overlay display)))))
 
 (defun jg-agent-comments--agent-text-at-point-p ()
   "Return non-nil when point is on agent output text."

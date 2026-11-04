@@ -48,5 +48,19 @@
     (jg-agent-comments--commit-edit-from-string "" 1 (point-max))
     (should (null jg-agent-comments--comments))))
 
+(ert-deftest jg-agent-comments-inline-elides-multiline ()
+  (should (equal (jg-agent-comments--inline-string "first\nsecond\nthird")
+                 "first …"))
+  (should (equal (jg-agent-comments--inline-string "only")
+                 "only")))
+
+(ert-deftest jg-agent-comments-render-strings-are-single-line ()
+  (with-temp-buffer
+    (insert "anchor")
+    (let ((record (jg-agent-comments--add 1 (point-max) "a\nb")))
+      (let ((ov (plist-get record :overlay)))
+        (should (not (string-match-p "\n" (or (overlay-get ov 'before-string) ""))))
+        (should (not (string-match-p "\n" (or (overlay-get ov 'after-string) ""))))))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here
