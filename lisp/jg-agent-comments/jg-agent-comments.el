@@ -234,6 +234,7 @@ by cancel, restores the pre-edit windows."
 (defvar-keymap jg-agent-comments-prefix-map
   ";" #'jg-agent-comments-comment
   "s" #'jg-agent-comments-send
+  "RET" #'jg-agent-comments-send
   "k" #'jg-agent-comments-delete-at-point
   "d" #'jg-agent-comments-delete-at-point)
 

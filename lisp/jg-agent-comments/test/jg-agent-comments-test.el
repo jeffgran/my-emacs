@@ -391,6 +391,13 @@ empty input area, and the comments wait for the next submission."
   (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; d")
               #'jg-agent-comments-delete-at-point)))
 
+(ert-deftest jg-agent-comments-send-binding-ret ()
+  "The \"C-c ;\" prefix binds \"RET\" to `jg-agent-comments-send'.
+Key notation parses \"RET\" as the return-key event, the same event a
+user pressing the return key produces."
+  (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; RET")
+              'jg-agent-comments-send)))
+
 (ert-deftest jg-agent-comments-highlight-covers-partial-line-selection ()
   (with-temp-buffer
     (insert "hello world")
