@@ -245,6 +245,97 @@ The record's body still updates."
       (should (= (length (window-list)) windows-before))
       (should (eq (window-buffer (selected-window)) source)))))
 
+(ert-deftest jg-agent-comments-edit-binding-e ()
+  "The \"C-c ;\" prefix binds \"e\" to `jg-agent-comments-edit-at-point'."
+  (should (eq (keymap-lookup jg-agent-comments-mode-map "C-c ; e")
+              'jg-agent-comments-edit-at-point)))
+
+(ert-deftest jg-agent-comments-edit-no-comment-errors ()
+  "Editing with point off any comment's anchor signals `user-error'.
+No edit buffer opens."
+  (with-temp-buffer
+    (insert "first line\nsecond line\n")
+    (jg-agent-comments--add 1 12 "note")
+    (goto-char 15)
+    (should-error (jg-agent-comments-edit-at-point) :type 'user-error)
+    (should (null (get-buffer "*jg-agent-comment*")))))
+
+(ert-deftest jg-agent-comments-edit-prefills-text ()
+  "Editing opens the comment buffer pre-filled with the comment's text."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "fix this later")))
+      (goto-char 1)
+      (jg-agent-comments-edit-at-point)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (should (equal (buffer-string) (plist-get record :text)))
+      (should (equal (buffer-string) "fix this later"))
+      (jg-agent-comments-cancel-edit))))
+
+(ert-deftest jg-agent-comments-edit-commit-overwrites ()
+  "Committing an edit overwrites the comment instead of appending.
+The record's text becomes the edit buffer's, the anchor overlay shows
+the new body, and the comment list keeps its length."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "old note"))
+           (overlay (plist-get record :overlay)))
+      (goto-char 1)
+      (jg-agent-comments-edit-at-point)
+      (erase-buffer)
+      (insert "new note")
+      (jg-agent-comments--commit-edit)
+      (should (equal (plist-get record :text) "new note"))
+      (should (string-match-p "new note"
+                              (overlay-get overlay 'after-string)))
+      (should-not (string-match-p "old note"
+                                  (overlay-get overlay 'after-string)))
+      (should (= (length jg-agent-comments--comments) 1))
+      (should (memq record jg-agent-comments--comments)))))
+
+(ert-deftest jg-agent-comments-edit-cancel-preserves ()
+  "Canceling an edit keeps the old comment exactly as it was."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "old note"))
+           (overlay (plist-get record :overlay))
+           (after (overlay-get overlay 'after-string)))
+      (goto-char 1)
+      (jg-agent-comments-edit-at-point)
+      (erase-buffer)
+      (insert "new note")
+      (jg-agent-comments-cancel-edit)
+      (should (equal (plist-get record :text) "old note"))
+      (should (equal (overlay-get overlay 'after-string) after))
+      (should (memq record jg-agent-comments--comments)))))
+
+(ert-deftest jg-agent-comments-edit-whitespace-commit-preserves ()
+  "Committing a whitespace-only edit keeps the old comment.
+The record and its display stay unchanged and the edit buffer closes."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "old note"))
+           (overlay (plist-get record :overlay))
+           (after (overlay-get overlay 'after-string)))
+      (goto-char 1)
+      (jg-agent-comments-edit-at-point)
+      (erase-buffer)
+      (insert "  \n  ")
+      (jg-agent-comments--commit-edit)
+      (should (equal (plist-get record :text) "old note"))
+      (should (equal (overlay-get overlay 'after-string) after))
+      (should (memq record jg-agent-comments--comments))
+      (should (null (get-buffer "*jg-agent-comment*"))))))
+
+(ert-deftest jg-agent-comments-edit-dead-anchor-errors ()
+  "Editing where the anchor overlay evaporated signals `user-error'."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (delete-overlay (plist-get record :overlay))
+      (goto-char 1)
+      (should-error (jg-agent-comments-edit-at-point) :type 'user-error))))
+
 (ert-deftest jg-agent-comments-mode-line-empty-when-none ()
   (with-temp-buffer
     (should (equal (jg-agent-comments--mode-line-string) ""))))

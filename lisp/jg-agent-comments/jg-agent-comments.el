@@ -161,12 +161,17 @@ Signal `user-error' when point is not on agent output."
       (cons (region-beginning) (region-end))
     (cons (pos-bol) (min (point-max) (1+ (pos-eol))))))
 
-(defun jg-agent-comments--commit-edit-from-string (text beg end &optional snippet)
+(defun jg-agent-comments--commit-edit-from-string (text beg end &optional snippet target)
   "Commit comment TEXT about the text between BEG and END.
 Pass SNIPPET through to `jg-agent-comments--add'.  Whitespace-only TEXT
-cancels the comment and records nothing."
+cancels the comment and records nothing.  With TARGET, a record, commit
+in replace mode instead: overwrite that record's text and re-render its
+anchor display, keeping the old comment for whitespace-only TEXT.  BEG,
+END and SNIPPET play no part in replace mode."
   (unless (string-match-p "\\`[[:space:]]*\\'" (or text ""))
-    (jg-agent-comments--add beg end text snippet)))
+    (if target
+        (jg-agent-comments--set-comment-text target text)
+      (jg-agent-comments--add beg end text snippet))))
 
 (defvar-local jg-agent-comments--edit-source nil
   "Buffer whose text the edit buffer's comment refers to.")
@@ -181,6 +186,12 @@ buffer.")
 
 (defvar-local jg-agent-comments--saved-winconf nil
   "Window configuration of the source buffer before the edit buffer opened.")
+
+(defvar-local jg-agent-comments--edit-replace-target nil
+  "Record that the edit buffer's commit overwrites, or nil.
+Non-nil when the edit buffer opened to edit an existing comment:
+commit replaces that record's text.  Nil when it opened for a fresh
+comment, which commits by append.")
 
 (defun jg-agent-comments--finish-edit ()
   "Kill the current edit buffer and restore the saved window configuration.
@@ -202,20 +213,25 @@ configuration is left or restoring it would fail."
   "Commit the comment that the current edit buffer holds.
 The record uses the snippet and the marker positions that the comment
 command captured.  Source buffer changes during editing do not change
-what the comment refers to."
+what the comment refers to.  In replace mode, the buffer holds a
+replacement for the record in `jg-agent-comments--edit-replace-target'
+instead, and the captured snippet and markers play no part."
   (interactive nil jg-agent-comments-edit-mode-map)
   (let* ((edit (current-buffer))
          (text (buffer-string))
          (source jg-agent-comments--edit-source)
          (snippet jg-agent-comments--edit-snippet)
-         (bounds jg-agent-comments--edit-bounds))
+         (bounds jg-agent-comments--edit-bounds)
+         (target jg-agent-comments--edit-replace-target))
     (when (buffer-live-p source)
       (with-current-buffer source
-        (jg-agent-comments--commit-edit-from-string
-         text
-         (marker-position (car bounds))
-         (marker-position (cdr bounds))
-         snippet)))
+        (if target
+            (jg-agent-comments--commit-edit-from-string text nil nil nil target)
+          (jg-agent-comments--commit-edit-from-string
+           text
+           (marker-position (car bounds))
+           (marker-position (cdr bounds))
+           snippet))))
     (with-current-buffer edit
       (jg-agent-comments--finish-edit))))
 
@@ -248,8 +264,30 @@ by cancel, restores the pre-edit windows."
     (setq-local jg-agent-comments--saved-winconf winconf)
     (use-local-map jg-agent-comments-edit-mode-map)))
 
+(defun jg-agent-comments-edit-at-point ()
+  "Edit the comment whose anchor overlay covers point.
+Open the comment buffer pre-filled with that comment's text.  Commit
+overwrites the comment's text and refreshes its anchor display;
+cancel keeps the old comment.  Signal `user-error' when point is not
+on any comment."
+  (interactive nil jg-agent-comments-mode-map)
+  (let ((record (jg-agent-comments--comment-at-point)))
+    (unless record
+      (user-error "No comment at point"))
+    (let* ((winconf (current-window-configuration))
+           (source (current-buffer)))
+      (pop-to-buffer (get-buffer-create "*jg-agent-comment*"))
+      (erase-buffer)
+      (text-mode)
+      (setq-local jg-agent-comments--edit-source source)
+      (setq-local jg-agent-comments--saved-winconf winconf)
+      (setq-local jg-agent-comments--edit-replace-target record)
+      (insert (plist-get record :text))
+      (use-local-map jg-agent-comments-edit-mode-map))))
+
 (defvar-keymap jg-agent-comments-prefix-map
   ";" #'jg-agent-comments-comment
+  "e" #'jg-agent-comments-edit-at-point
   "s" #'jg-agent-comments-send
   "RET" #'jg-agent-comments-send
   "k" #'jg-agent-comments-delete-at-point
