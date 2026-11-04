@@ -50,12 +50,17 @@
       (should (null (overlay-buffer (plist-get record :overlay)))))))
 
 (ert-deftest jg-agent-comments-refuses-non-agent-text ()
+  "A plain comint buffer without agent output refuses to comment."
   (with-temp-buffer
+    (comint-mode)
     (insert "user typed input")
-    (should-error (jg-agent-comments--region-or-line))))
+    (let ((err (should-error (jg-agent-comments--region-or-line)
+                             :type 'user-error)))
+      (should (equal (error-message-string err) "Not on agent output")))))
 
 (ert-deftest jg-agent-comments-refuses-live-prompt-input ()
   (with-temp-buffer
+    (comint-mode)
     (insert "Claude> hello")
     (put-text-property 1 9 'field 'output)
     (let ((prompt-start (copy-marker 1))
@@ -68,6 +73,42 @@
             (should-error (jg-agent-comments--region-or-line)))
         (set-marker prompt-start nil)
         (set-marker prompt-end nil)))))
+
+(ert-deftest jg-agent-comments-comments-work-on-file-buffer-line ()
+  "A comment command run on a file-buffer line records a comment.
+The commentable gate does not apply its agent-output rules outside
+comint-derived buffers."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (jg-agent-comments-mode 1)
+    (goto-char (point-min))
+    (forward-line 1)
+    (let ((bounds (jg-agent-comments--region-or-line)))
+      (jg-agent-comments--add (car bounds) (cdr bounds) "line note"))
+    (should (= (length jg-agent-comments--comments) 1))))
+
+(ert-deftest jg-agent-comments-comments-work-on-file-buffer-region ()
+  "A comment command run on a multi-line region in a file buffer
+records a comment."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (jg-agent-comments-mode 1)
+    (goto-char (point-min))
+    (let ((transient-mark-mode t))
+      (push-mark (point-max) nil t))
+    (let ((bounds (jg-agent-comments--region-or-line)))
+      (jg-agent-comments--add (car bounds) (cdr bounds) "region note"))
+    (should (= (length jg-agent-comments--comments) 1))
+    (should (equal (plist-get (car jg-agent-comments--comments) :text)
+                   "region note"))))
+
+(ert-deftest jg-agent-comments-comments-work-on-file-buffer-last-line ()
+  "A comment command run on the last line of a file buffer records a
+comment."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (jg-agent-comments-mode 1)
+    (goto-char (point-max))
+    (let ((bounds (jg-agent-comments--region-or-line)))
+      (jg-agent-comments--add (car bounds) (cdr bounds) "last note"))
+    (should (= (length jg-agent-comments--comments) 1))))
 
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
@@ -480,6 +521,24 @@ prose.  Kill the process after BODY."
              (let ((pmark (process-mark proc)))
                ,@body))
          (delete-process proc)))))
+
+(defmacro jg-agent-comments-test--with-file-buffer (contents &rest body)
+  "Run BODY in a file-visiting temp buffer holding CONTENTS.
+Bind `file' to the buffer's file name.  Kill the buffer and delete
+the file after BODY, without any kill prompting."
+  (declare (indent 1) (debug t))
+  `(let ((file (make-temp-file "jg-agent-comments-test")))
+     (unwind-protect
+         (with-current-buffer (find-file-noselect file)
+           (insert ,contents)
+           ,@body)
+       (let ((buffer (find-buffer-visiting file)))
+         (when buffer
+           (with-current-buffer buffer
+             (set-buffer-modified-p nil))
+           (let (kill-buffer-query-functions)
+             (kill-buffer buffer)))
+         (ignore-errors (delete-file file))))))
 
 (ert-deftest jg-agent-comments-submit-advice-augments-typed-input ()
   "A submission with pending comments carries the comment block.

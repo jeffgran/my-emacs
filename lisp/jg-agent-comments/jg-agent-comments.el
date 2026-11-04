@@ -143,14 +143,17 @@ never goes stale.  Leave a dead overlay alone.  Return RECORD."
 (require 'comint)
 
 (defun jg-agent-comments--agent-text-at-point-p ()
-  "Return non-nil when point is on agent output text.
-The live input area after the last prompt is not agent output.  When
-`comint-last-prompt' is non-nil, refuse point at or after its end
-marker.  Otherwise apply only the field check."
-  (and (or (not (bound-and-true-p comint-last-prompt))
-           (< (point) (marker-position (cdr comint-last-prompt))))
-       (or (eq (get-char-property (point) 'field) 'output)
-           (eq (get-char-property (max (point-min) (1- (point))) 'field) 'output))))
+  "Return non-nil when point is on text that can take a comment.
+Buffers that do not derive from `comint-mode' are fully commentable.
+Comint-derived buffers keep the agent-shell rules: the live input area
+after the last prompt is not agent output.  When `comint-last-prompt'
+is non-nil, refuse point at or after its end marker.  Otherwise apply
+only the field check."
+  (or (not (derived-mode-p 'comint-mode))
+      (and (or (not (bound-and-true-p comint-last-prompt))
+               (< (point) (marker-position (cdr comint-last-prompt))))
+           (or (eq (get-char-property (point) 'field) 'output)
+               (eq (get-char-property (max (point-min) (1- (point))) 'field) 'output)))))
 
 (defun jg-agent-comments--region-or-line ()
   "Return the bounds (BEG . END) of the agent text to comment on.
