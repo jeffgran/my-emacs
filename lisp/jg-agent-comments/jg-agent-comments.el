@@ -262,6 +262,7 @@ by cancel, restores the pre-edit windows."
     (setq-local jg-agent-comments--edit-bounds (cons beg end))
     (setq-local jg-agent-comments--edit-snippet snippet)
     (setq-local jg-agent-comments--saved-winconf winconf)
+    (setq-local jg-agent-comments--edit-replace-target nil)
     (use-local-map jg-agent-comments-edit-mode-map)))
 
 (defun jg-agent-comments-edit-at-point ()
@@ -407,8 +408,9 @@ comments."
 (defun jg-agent-comments--comment-at-point ()
   "Return the record whose live anchor overlay covers point.
 A record matches when its anchor overlay is live, carries the
-`jg-agent-comments' property, and spans point.  Return nil when no
-record matches."
+`jg-agent-comments' property, and spans point.  When several anchor
+overlays cover point, the most recently added comment wins.  Return
+nil when no record matches."
   (seq-find
    (lambda (record)
      (let ((overlay (plist-get record :overlay)))

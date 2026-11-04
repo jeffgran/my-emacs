@@ -278,13 +278,15 @@ The record's text becomes the edit buffer's, the anchor overlay shows
 the new body, and the comment list keeps its length."
   (with-temp-buffer
     (insert "agent prose")
-    (let* ((record (jg-agent-comments--add 1 (point-max) "old note"))
+    (let* ((windows-before (length (window-list)))
+           (record (jg-agent-comments--add 1 (point-max) "old note"))
            (overlay (plist-get record :overlay)))
       (goto-char 1)
       (jg-agent-comments-edit-at-point)
       (erase-buffer)
       (insert "new note")
       (jg-agent-comments--commit-edit)
+      (should (= (length (window-list)) windows-before))
       (should (equal (plist-get record :text) "new note"))
       (should (string-match-p "new note"
                               (overlay-get overlay 'after-string)))
@@ -516,6 +518,42 @@ empty input area, and the comments wait for the next submission."
       (should (eq (jg-agent-comments--comment-at-point) record))
       (goto-char 6)
       (should (eq (jg-agent-comments--comment-at-point) record)))))
+
+(ert-deftest jg-agent-comments-matcher-most-recent-wins
+    ()
+  "The matcher prefers the most recently added comment.
+With several anchor overlays covering point, the newest record wins.
+Deleting at that point removes the newer record and keeps the older."
+  (with-temp-buffer
+    (insert "first line\nsecond line\n")
+    (let ((older (jg-agent-comments--add 1 6 "older note")))
+      (let ((newer (jg-agent-comments--add 3 8 "newer note")))
+        (goto-char 4)
+        (should (eq (jg-agent-comments--comment-at-point) newer))
+        (should (equal (plist-get (jg-agent-comments--comment-at-point)
+                                  :text)
+                       "newer note"))
+        (jg-agent-comments-delete-at-point)
+        (should (equal jg-agent-comments--comments (list older)))
+        (should (eq (jg-agent-comments--comment-at-point) older))
+        (should (equal (plist-get (jg-agent-comments--comment-at-point)
+                                  :text)
+                       "older note"))))))
+
+(ert-deftest jg-agent-comments-set-text-preserves-highlight-overlay ()
+  "Setting the text keeps a partial-line comment's highlight overlay.
+The overlay stays alive over the same bounds with the same face."
+  (with-temp-buffer
+    (insert "hello world")
+    (let* ((record (jg-agent-comments--add 1 6 "old note"))
+           (highlight (plist-get record :highlight-overlay)))
+      (jg-agent-comments--set-comment-text record "new note")
+      (should (overlayp highlight))
+      (should (overlay-buffer highlight))
+      (should (= (overlay-start highlight) 1))
+      (should (= (overlay-end highlight) 6))
+      (should (eq (overlay-get highlight 'face)
+                  'jg-agent-comments-highlight)))))
 
 (ert-deftest jg-agent-comments-matcher-end-of-line-inclusive ()
   "The matcher includes the newline position of a whole-line anchor."
