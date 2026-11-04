@@ -47,12 +47,18 @@ properties) as the record's :snippet.  Use SNIPPET as the :snippet when
 SNIPPET is non-nil.  The caller captured that text earlier.  Store TEXT
 as the comment body.  In a buffer visiting a file, record the anchor
 file relative to the project root as :file and the anchor's first and
-last line numbers as :line-beg and :line-end; chat buffers record nil
-for all three.  Render the record's overlay.  Push the record onto
+last line numbers as :line-beg and :line-end.  An end at the start of
+a line counts as the end of the previous line.  Chat buffers record
+nil for all three.  Render the record's overlay.  Push the record onto
 `jg-agent-comments--comments'.  Return the record, a plist with the
 shape (:snippet :text :file :line-beg :line-end :beg :end :overlay
 :highlight-overlay)."
   (let* ((in-file buffer-file-name)
+         (line-end-pos (if (and in-file
+                                (> end beg)
+                                (save-excursion (goto-char end) (bolp)))
+                           (1- end)
+                         end))
          (record (list :snippet (or snippet
                                     (substring-no-properties
                                      (filter-buffer-substring beg end)))
@@ -61,7 +67,8 @@ shape (:snippet :text :file :line-beg :line-end :beg :end :overlay
                                (file-relative-name
                                 in-file (jg-agent-comments--project-root)))
                        :line-beg (when in-file (line-number-at-pos beg))
-                       :line-end (when in-file (line-number-at-pos end))
+                       :line-end (when in-file
+                                   (line-number-at-pos line-end-pos))
                        :beg beg
                        :end end
                        :overlay nil)))

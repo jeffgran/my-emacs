@@ -147,6 +147,38 @@ to the project root and the anchor line numbers."
       (should (= (plist-get record :line-beg) 1))
       (should (= (plist-get record :line-end) 3)))))
 
+(ert-deftest jg-agent-comments-add-command-line-bounds-end-on-anchor-line ()
+  "The comment command's line bounds record the anchor line only.
+The command's line anchor ends at the start of the next line; the
+recorded range ends on the anchor's line: \"path:2\", not
+\"path:2-3\"."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (goto-char (point-min))
+    (forward-line 1)
+    (let* ((bounds (jg-agent-comments--region-or-line))
+           (record (jg-agent-comments--add (car bounds) (cdr bounds)
+                                           "line note")))
+      (should (= (plist-get record :line-beg) 2))
+      (should (= (plist-get record :line-end) 2))
+      (should (equal (jg-agent-comments--location-string record)
+                     (concat (file-name-nondirectory file) ":2"))))))
+
+(ert-deftest jg-agent-comments-add-command-region-bounds-end-on-last-covered-line ()
+  "The comment command's region bounds record the covered lines.
+A region over lines 1 to 3 ends at the start of line 4; the recorded
+range ends on line 3: \"path:1-3\", not \"path:1-4\"."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree\nfour"
+    (goto-char (point-min))
+    (let ((transient-mark-mode t))
+      (push-mark (save-excursion (forward-line 3) (point)) nil t)
+      (let* ((bounds (jg-agent-comments--region-or-line))
+             (record (jg-agent-comments--add (car bounds) (cdr bounds)
+                                             "region note")))
+        (should (= (plist-get record :line-beg) 1))
+        (should (= (plist-get record :line-end) 3))
+        (should (equal (jg-agent-comments--location-string record)
+                       (concat (file-name-nondirectory file) ":1-3")))))))
+
 (ert-deftest jg-agent-comments-add-chat-records-no-file ()
   "A chat-buffer comment records no file and no line numbers."
   (with-temp-buffer
