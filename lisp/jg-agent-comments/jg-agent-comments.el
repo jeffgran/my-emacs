@@ -401,7 +401,7 @@ directory counts as the same project."
   "Return the file comments that ride along with this buffer's send.
 Scan every enabled buffer that visits a file in this buffer's project
 and holds pending file comments.  Return the records, each paired with
-its home buffer, in buffer-list order."
+its home buffer, in reverse buffer-list order."
   (let ((candidates '())
         (contributing '()))
     (dolist (buffer (buffer-list))
@@ -452,13 +452,15 @@ The file entries follow after one blank line, grouped per file in
 ascending path order.")
 
 (defun jg-agent-comments--location-string (record)
-  "Return RECORD's anchor location, \"path:line\" or \"path:beg-end\"."
+  "Return RECORD's anchor location, \"path:line\" or \"path:beg-end\".
+Without a line number, return just the path."
   (let ((file (plist-get record :file))
         (beg (plist-get record :line-beg))
         (end (plist-get record :line-end)))
-    (if (and end (/= beg end))
-        (format "%s:%d-%d" file beg end)
-      (format "%s:%d" file beg))))
+    (cond ((null beg) file)
+          ((and end (/= beg end))
+           (format "%s:%d-%d" file beg end))
+          (t (format "%s:%d" file beg)))))
 
 (defun jg-agent-comments--file-entry-string (record)
   "Return RECORD rendered as one entry of the file section.
@@ -482,7 +484,7 @@ line number, then by anchor position."
           (< line-a line-b))))))
 
 (defun jg-agent-comments--compose (&optional records)
-  "Return RECORDS as one prompt string in buffer order.
+  "Return RECORDS as one prompt string.
 RECORDS defaults to this buffer's pending comments.  Records without
 :file are chat comments: those with a live anchor overlay sort by
 :beg, the rest come last, keeping their relative order.  Records with

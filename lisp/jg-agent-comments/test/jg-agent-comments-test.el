@@ -226,6 +226,12 @@ the order the comments were added in."
     (should (equal (jg-agent-comments--compose)
                    "Inline comments on files:\n\nlib/a.js:3-5\n> prose one\n  note a\n\nlib/b.js:7\n> prose one\n  note b"))))
 
+(ert-deftest jg-agent-comments-location-string-without-line ()
+  "A record without a line number shows just its path."
+  (should (equal (jg-agent-comments--location-string
+                  (list :file "lib/a.js" :line-beg nil :line-end nil))
+                 "lib/a.js")))
+
 (ert-deftest jg-agent-comments-compose-mixes-chat-and-file-sections ()
   "Chat comments compose first, then the file section follows."
   (with-temp-buffer
