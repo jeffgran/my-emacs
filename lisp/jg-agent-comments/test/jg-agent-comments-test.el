@@ -128,6 +128,37 @@ buffers keep getting the mode only through the agent-shell hook."
     (jg-agent-comments-global-mode -1)
     (should-not jg-agent-comments-mode)))
 
+(ert-deftest jg-agent-comments-add-records-relative-file-and-line ()
+  "A comment on line 3 of a temp file records the file path relative
+to the project root and the anchor line numbers."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (goto-char (point-min))
+    (forward-line 2)
+    (let ((record (jg-agent-comments--add (pos-bol) (pos-eol) "note")))
+      (should (equal (plist-get record :file)
+                     (file-name-nondirectory file)))
+      (should (= (plist-get record :line-beg) 3))
+      (should (= (plist-get record :line-end) 3)))))
+
+(ert-deftest jg-agent-comments-add-records-line-range ()
+  "A comment over a region spanning lines records first and last line."
+  (jg-agent-comments-test--with-file-buffer "one\ntwo\nthree"
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (should (= (plist-get record :line-beg) 1))
+      (should (= (plist-get record :line-end) 3)))))
+
+(ert-deftest jg-agent-comments-add-chat-records-no-file ()
+  "A chat-buffer comment records no file and no line numbers."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (should (plist-member record :file))
+      (should (null (plist-get record :file)))
+      (should (plist-member record :line-beg))
+      (should (null (plist-get record :line-beg)))
+      (should (plist-member record :line-end))
+      (should (null (plist-get record :line-end))))))
+
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
     (insert "agent said things")

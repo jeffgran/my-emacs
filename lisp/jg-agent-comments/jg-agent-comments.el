@@ -30,29 +30,41 @@ A dim amber, matching the gutter marker's warning hue.")
 
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
-Each record is a plist with the shape (:snippet :text :beg :end
-:overlay :highlight-overlay): :beg and :end are the buffer positions
-the comment refers to, :snippet is the captured buffer text, :text is
-the comment body, :overlay is the overlay anchoring the record (nil
-until rendered), and :highlight-overlay is the overlay tinting a
-partial-line selection (nil when the selection covers whole lines).")
+Each record is a plist with the shape (:snippet :text :file :line-beg
+:line-end :beg :end :overlay :highlight-overlay): :beg and :end are
+the buffer positions the comment refers to, :file is the anchor file
+relative to the project root and :line-beg and :line-end are the
+anchor's first and last line numbers (all nil in chat buffers),
+:snippet is the captured buffer text, :text is the comment body,
+:overlay is the overlay anchoring the record (nil until rendered),
+and :highlight-overlay is the overlay tinting a partial-line selection
+(nil when the selection covers whole lines).")
 
 (defun jg-agent-comments--add (beg end text &optional snippet)
   "Record a comment about buffer text between BEG and END.
 Capture the covered text (including invisible parts, without text
 properties) as the record's :snippet.  Use SNIPPET as the :snippet when
 SNIPPET is non-nil.  The caller captured that text earlier.  Store TEXT
-as the comment body.  Render the record's overlay.  Push the record
-onto `jg-agent-comments--comments'.  Return the record, a plist with
-the shape (:snippet :text :beg :end :overlay
+as the comment body.  In a buffer visiting a file, record the anchor
+file relative to the project root as :file and the anchor's first and
+last line numbers as :line-beg and :line-end; chat buffers record nil
+for all three.  Render the record's overlay.  Push the record onto
+`jg-agent-comments--comments'.  Return the record, a plist with the
+shape (:snippet :text :file :line-beg :line-end :beg :end :overlay
 :highlight-overlay)."
-  (let ((record (list :snippet (or snippet
-                                   (substring-no-properties
-                                    (filter-buffer-substring beg end)))
-                      :text text
-                      :beg beg
-                      :end end
-                      :overlay nil)))
+  (let* ((in-file buffer-file-name)
+         (record (list :snippet (or snippet
+                                    (substring-no-properties
+                                     (filter-buffer-substring beg end)))
+                       :text text
+                       :file (when in-file
+                               (file-relative-name
+                                in-file (jg-agent-comments--project-root)))
+                       :line-beg (when in-file (line-number-at-pos beg))
+                       :line-end (when in-file (line-number-at-pos end))
+                       :beg beg
+                       :end end
+                       :overlay nil)))
     (jg-agent-comments--render record)
     (push record jg-agent-comments--comments)
     record))
@@ -143,6 +155,21 @@ never goes stale.  Leave a dead overlay alone.  Return RECORD."
   record)
 
 (require 'comint)
+(require 'project)
+
+(defun jg-agent-comments--project-root ()
+  "Return the project root directory this buffer belongs to.
+The root comes from `project-current' for the directory of the file
+this buffer visits, or for `default-directory' when it visits none.
+Without a project, a file-visiting buffer falls back to its file's
+directory and any other buffer to `default-directory'."
+  (let ((dir (or (and buffer-file-name
+                      (file-name-directory buffer-file-name))
+                 default-directory)))
+    (let ((project (project-current nil dir)))
+      (if project
+          (project-root project)
+        dir))))
 
 (defun jg-agent-comments--agent-text-at-point-p ()
   "Return non-nil when point is on text that can take a comment.
