@@ -108,13 +108,36 @@
   (should (equal (jg-agent-comments--inline-string "only")
                  "only")))
 
-(ert-deftest jg-agent-comments-render-strings-are-single-line ()
+(ert-deftest jg-agent-comments-render-shows-comment-below-anchor ()
   (with-temp-buffer
     (insert "anchor")
-    (let ((record (jg-agent-comments--add 1 (point-max) "a\nb")))
-      (let ((ov (plist-get record :overlay)))
-        (should (not (string-match-p "\n" (or (overlay-get ov 'before-string) ""))))
-        (should (not (string-match-p "\n" (or (overlay-get ov 'after-string) ""))))))))
+    (let* ((record (jg-agent-comments--add 1 (point-max) "first line\nsecond line"))
+           (ov (plist-get record :overlay))
+           (after (overlay-get ov 'after-string)))
+      (should (overlayp ov))
+      (should (overlay-buffer ov))
+      (should after)
+      (should (string-prefix-p "\n" after))
+      (should (string-match-p "first line" after))
+      (should (null (overlay-get ov 'before-string)))
+      (should (null (overlay-get ov 'display))))))
+
+(ert-deftest jg-agent-comments-render-elides-multiline-comment ()
+  (with-temp-buffer
+    (insert "anchor")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "first\nsecond"))
+           (after (overlay-get (plist-get record :overlay) 'after-string)))
+      (should (equal after "\n▐ first …")))))
+
+(ert-deftest jg-agent-comments-render-after-string-faces ()
+  (with-temp-buffer
+    (insert "anchor")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "first line"))
+           (after (overlay-get (plist-get record :overlay) 'after-string)))
+      (should (eq (get-text-property 1 'face after)
+                  'jg-agent-comments-marker))
+      (should (eq (get-text-property (length "\n▐ ") 'face after)
+                  'jg-agent-comments-inline)))))
 
 (ert-deftest jg-agent-comments-add-renders-single-live-overlay ()
   (with-temp-buffer
@@ -125,12 +148,9 @@
            (after (overlay-get ov 'after-string)))
       (should (overlayp ov))
       (should (overlay-buffer ov))
-      (should (overlay-get ov 'before-string))
-      (should after)
+      (should (string-prefix-p "\n" after))
       (should (string-match-p "first line" after))
-      (should (not (string-match-p "\n" after)))
-      (should (eq (get-text-property 0 'face after)
-                  'jg-agent-comments-inline))
+      (should (null (overlay-get ov 'before-string)))
       (should-not (memq :display-overlay record)))))
 
 (ert-deftest jg-agent-comments-anchor-has-no-face ()

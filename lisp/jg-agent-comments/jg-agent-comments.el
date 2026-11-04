@@ -59,8 +59,7 @@ lines."
 (defun jg-agent-comments--display-position (record)
   "Return the buffer position where RECORD's anchor overlay ends.
 That is the end of the last line covered by the record's anchor.  The
-inline text shows at that position, so it never starts on a line of
-its own."
+comment shows on a new line after that position."
   (let ((end (plist-get record :end)))
     (if (and (> end (plist-get record :beg))
              (save-excursion (goto-char end) (bolp)))
@@ -71,22 +70,21 @@ its own."
   "Give RECORD its anchor overlay if it has none yet.
 The overlay spans the anchor text from :beg through the display
 position.  It carries the `jg-agent-comments' property.  It shows the
-marker gutter as its before-string.  It shows the comment inline as its
-after-string: two-space padded, in the inline face, and elided to one
-line.  It evaporates when a buffer change empties it.  The overlay is
-stored back into the record."
+comment on its own line below the anchor as its after-string: a
+newline, then the marker gutter in the marker face, then the comment
+text in the inline face, elided to one line.  It evaporates when a
+buffer change empties it.  The overlay is stored back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (jg-agent-comments--display-position record)
                                  nil t nil)))
       (overlay-put overlay 'jg-agent-comments t)
-      (overlay-put overlay 'before-string
-                   (propertize "▐ " 'face 'jg-agent-comments-marker))
       (overlay-put overlay 'after-string
-                   (propertize (concat "  "
-                                       (jg-agent-comments--inline-string
-                                        (plist-get record :text)))
-                               'face 'jg-agent-comments-inline))
+                   (concat "\n"
+                           (propertize "▐ " 'face 'jg-agent-comments-marker)
+                           (propertize (jg-agent-comments--inline-string
+                                        (plist-get record :text))
+                                       'face 'jg-agent-comments-inline)))
       (overlay-put overlay 'evaporate t)
       (plist-put record :overlay overlay))))
 
