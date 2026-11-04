@@ -235,7 +235,35 @@
     (should (equal (jg-agent-comments--compose)
                    "> agent prose one\n  why?\n  explain\n\n> agent prose two\n  ok"))))
 
+(ert-deftest jg-agent-comments-augment-prompt-appends-comment-block ()
+  "Augmenting a prompt appends the header and the composed entries.
+The typed input comes first, then a blank line, then the header, then
+the entries."
+  (with-temp-buffer
+    (insert "agent prose")
+    (jg-agent-comments--add 1 (point-max) "note")
+    (should (equal (jg-agent-comments--augment-prompt "my question")
+                   "my question\n\n---\nInline comments replying to specific parts of your previous message:\n> agent prose\n  note"))))
+
+(ert-deftest jg-agent-comments-augment-prompt-without-comments-is-identity ()
+  "Augmenting a prompt without pending comments returns the input unchanged."
+  (with-temp-buffer
+    (should (equal (jg-agent-comments--augment-prompt "my question")
+                   "my question"))))
+
+(ert-deftest jg-agent-comments-augment-prompt-without-input-returns-block ()
+  "Augmenting a nil prompt returns the header and the entries alone.
+`jg-agent-comments-send' submits this shape: no prompt text above the
+comment block."
+  (with-temp-buffer
+    (insert "agent prose")
+    (jg-agent-comments--add 1 (point-max) "note")
+    (should (equal (jg-agent-comments--augment-prompt nil)
+                   "---\nInline comments replying to specific parts of your previous message:\n> agent prose\n  note"))))
+
 (ert-deftest jg-agent-comments-send-uses-prompt-queue-and-clears ()
+  "Sending submits the header and the composed entries as one prompt.
+The prompt carries no other text above the comment block."
   (with-temp-buffer
     (insert "agent prose")
     (jg-agent-comments--add 1 (point-max) "note")
@@ -243,12 +271,111 @@
       (cl-letf (((symbol-function 'agent-shell-prompt-queue)
                  (lambda (prompt) (setq submitted prompt))))
         (jg-agent-comments-send))
-      (should (string-prefix-p "> agent prose" submitted))
+      (should (equal submitted
+                     "---\nInline comments replying to specific parts of your previous message:\n> agent prose\n  note"))
       (should (null jg-agent-comments--comments)))))
 
 (ert-deftest jg-agent-comments-send-without-comments-is-noop ()
   (with-temp-buffer
     (should (progn (jg-agent-comments-send) t))))
+
+(ert-deftest jg-agent-comments-submit-advice-installed ()
+  "The package advises `agent-shell-submit' around with the submit wrapper.
+The advice is in place after this file loads, before agent-shell
+defines the function."
+  (should (advice-member-p #'jg-agent-comments--submit-advice
+                            'agent-shell-submit)))
+
+(defmacro jg-agent-comments-test--with-input (typed &rest body)
+  "Run BODY in a temp buffer that holds TYPED as the live prompt input.
+The buffer holds agent prose, a fake prompt, then TYPED.  Bind `proc'
+to a pipe process for the buffer, `pmark' to its process mark at the
+start of the live input, and `prose-end' to the end of the agent
+prose.  Kill the process after BODY."
+  (declare (indent 1) (debug t))
+  `(with-temp-buffer
+     (insert "agent prose")
+     (let ((prose-end (point))
+           (proc (start-process "jg-agent-comments-test" (current-buffer)
+                                "cat")))
+       (unwind-protect
+           (progn
+             (insert "\nClaude> ")
+             (set-marker (process-mark proc) (point))
+             (insert ,typed)
+             (let ((pmark (process-mark proc)))
+               ,@body))
+         (delete-process proc)))))
+
+(ert-deftest jg-agent-comments-submit-advice-augments-typed-input ()
+  "A submission with pending comments carries the comment block.
+The submit function reads the augmented prompt from the input area.
+The comments clear after the submission."
+  (jg-agent-comments-test--with-input "my question"
+    (jg-agent-comments--add (point-min) prose-end "note")
+    (jg-agent-comments-mode 1)
+    (let ((sent nil))
+      (jg-agent-comments--submit-advice
+       (lambda ()
+         (setq sent (buffer-substring-no-properties pmark (point-max)))
+         (set-marker pmark (point-max))
+         (insert "\n")))
+      (should (equal sent
+                     "my question\n\n---\nInline comments replying to specific parts of your previous message:\n> agent prose\n  note"))
+      (should (null jg-agent-comments--comments)))))
+
+(ert-deftest jg-agent-comments-submit-advice-restores-input-when-refused ()
+  "A refused submission restores the typed input and keeps the comments.
+`agent-shell-submit' refuses a busy shell before it commits the input.
+The wrapper re-signals the refusal, restores the typed input, and
+leaves the comments pending for the next submission."
+  (jg-agent-comments-test--with-input "my question"
+    (jg-agent-comments--add (point-min) prose-end "note")
+    (jg-agent-comments-mode 1)
+    (should-error (jg-agent-comments--submit-advice
+                   (lambda () (user-error "Busy, please wait")))
+                  :type 'user-error)
+    (should (equal (buffer-substring-no-properties pmark (point-max))
+                   "my question"))
+    (should jg-agent-comments--comments)))
+
+(ert-deftest jg-agent-comments-submit-advice-passes-through-without-comments ()
+  "Without pending comments the submit function receives the typed input as-is."
+  (jg-agent-comments-test--with-input "my question"
+    (jg-agent-comments-mode 1)
+    (let ((sent :nothing))
+      (jg-agent-comments--submit-advice
+       (lambda ()
+         (setq sent (buffer-substring-no-properties pmark (point-max)))))
+      (should (equal sent "my question"))
+      (should (equal (buffer-substring-no-properties pmark (point-max))
+                     "my question")))))
+
+(ert-deftest jg-agent-comments-submit-advice-passes-through-empty-input ()
+  "An empty prompt submits as before and keeps the comments pending.
+No typed input means no augmentation: the submit function sees the
+empty input area, and the comments wait for the next submission."
+  (jg-agent-comments-test--with-input ""
+    (jg-agent-comments--add (point-min) prose-end "note")
+    (jg-agent-comments-mode 1)
+    (let ((sent :nothing))
+      (jg-agent-comments--submit-advice
+       (lambda ()
+         (setq sent (buffer-substring-no-properties pmark (point-max)))))
+      (should (equal sent ""))
+      (should (equal (buffer-substring-no-properties pmark (point-max)) ""))
+      (should jg-agent-comments--comments))))
+
+(ert-deftest jg-agent-comments-submit-advice-passes-through-mode-off ()
+  "The advice does not act in buffers where the mode is off."
+  (jg-agent-comments-test--with-input "my question"
+    (jg-agent-comments--add (point-min) prose-end "note")
+    (let ((sent :nothing))
+      (jg-agent-comments--submit-advice
+       (lambda ()
+         (setq sent (buffer-substring-no-properties pmark (point-max)))))
+      (should (equal sent "my question"))
+      (should jg-agent-comments--comments))))
 
 (ert-deftest jg-agent-comments-delete-at-point-removes-record ()
   (with-temp-buffer

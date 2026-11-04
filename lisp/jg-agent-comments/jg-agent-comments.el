@@ -305,6 +305,27 @@ keeping their relative order.  Entries are separated by a blank line."
                        (nreverse dead))
                "\n\n")))
 
+(defconst jg-agent-comments--block-header
+  "---\nInline comments replying to specific parts of your previous message:\n"
+  "Header that introduces the composed comment block below a prompt.
+A separator line, then a line that tells the agent what the block
+holds.  Ends with a newline; the composed entries follow directly.")
+
+(defun jg-agent-comments--augment-prompt (input)
+  "Return INPUT with the pending comments appended as a block.
+When no comments are pending, return INPUT unchanged.  Otherwise
+append to INPUT a blank line, then `jg-agent-comments--block-header',
+then the entries from `jg-agent-comments--compose'.  A nil or
+whitespace-only INPUT drops the input part: the return value is the
+header and the entries alone."
+  (if (null jg-agent-comments--comments)
+      input
+    (let ((block (concat jg-agent-comments--block-header
+                         (jg-agent-comments--compose))))
+      (if (or (null input) (string-empty-p (string-trim input)))
+          block
+        (concat input "\n\n" block)))))
+
 (defun jg-agent-comments--clear ()
   "Forget all pending comments and delete their overlays."
   (dolist (record jg-agent-comments--comments)
@@ -318,11 +339,13 @@ keeping their relative order.  Entries are separated by a blank line."
 
 (defun jg-agent-comments-send ()
   "Submit all pending comments to the agent as one prompt, then clear.
-Say so and do nothing when there are no pending comments."
+The prompt carries the block header above the composed entries and no
+other text.  Say so and do nothing when there are no pending
+comments."
   (interactive)
   (if (null jg-agent-comments--comments)
       (message "No pending comments")
-    (agent-shell-prompt-queue (jg-agent-comments--compose))
+    (agent-shell-prompt-queue (jg-agent-comments--augment-prompt nil))
     (jg-agent-comments--clear)))
 
 (defun jg-agent-comments-delete-at-point ()
@@ -350,6 +373,74 @@ point is not on any comment."
         (delete-overlay overlay)))
     (setq jg-agent-comments--comments
           (delq record jg-agent-comments--comments))))
+
+(declare-function agent-shell-submit "agent-shell" ())
+
+(defun jg-agent-comments--splice-input (pmark text)
+  "Replace the live input area, which starts at PMARK, with TEXT.
+PMARK is the process mark of the shell buffer's process.  Keep PMARK
+at the start of the inserted TEXT, where `comint-send-input' expects
+the input area to start."
+  (save-excursion
+    (let ((start (marker-position pmark)))
+      (goto-char start)
+      (let ((inhibit-read-only t))
+        (delete-region start (point-max))
+        (insert text))
+      (set-marker pmark start))))
+
+(defun jg-agent-comments--submit-advice (orig &rest _)
+  "ORIG is `agent-shell-submit': make pending comments ride along with RET.
+RET in an agent-shell buffer runs `agent-shell-submit', which reads
+the typed input from the live input area: the process mark through
+the end of the buffer.
+
+When this buffer has the mode on, comments pending, and typed input
+at the prompt, splice the augmented prompt from
+`jg-agent-comments--augment-prompt' into the input area before ORIG
+runs.  ORIG submits that text, so the transcript and the history show
+what the agent received.  Clear the comments after ORIG submits.
+
+Every other case calls ORIG untouched: no comments, no typed input,
+no process, or the mode off all keep the regular submit path exactly
+as it was.
+
+When ORIG signals, restore the typed input when the input area still
+holds the spliced text.  `agent-shell-submit' refuses before it
+commits the input, so this is the normal refusal path: the typed
+input stays editable, the comments stay pending, and they ride along
+the next submission.  When the input area changed, the submission
+committed; leave the buffer alone.  Re-signal either way."
+  (let* ((buffer (current-buffer))
+         (proc (get-buffer-process buffer)))
+    (if (not (and (bound-and-true-p jg-agent-comments-mode)
+                  jg-agent-comments--comments
+                  proc))
+        (funcall orig)
+      (let* ((pmark (process-mark proc))
+             (input (buffer-substring-no-properties
+                     (marker-position pmark) (point-max))))
+        (if (string-empty-p (string-trim input))
+            (funcall orig)
+          (let ((augmented (jg-agent-comments--augment-prompt input)))
+            (condition-case err
+                (progn
+                  (jg-agent-comments--splice-input pmark augmented)
+                  (let ((result (funcall orig)))
+                    (jg-agent-comments--clear)
+                    result))
+              (error
+               (when (buffer-live-p buffer)
+                 (with-current-buffer buffer
+                   (when (string= augmented
+                                  (buffer-substring-no-properties
+                                   (marker-position pmark) (point-max)))
+                     (jg-agent-comments--splice-input pmark input))))
+               (signal (car err) (cdr err))))))))))
+
+;; `advice-add' holds this advice on the still-undefined symbol; it
+;; applies when agent-shell later defines `agent-shell-submit'.
+(advice-add 'agent-shell-submit :around #'jg-agent-comments--submit-advice)
 
 (provide 'jg-agent-comments)
 ;;; jg-agent-comments.el ends here
