@@ -13,6 +13,7 @@
 ## Global Constraints
 
 - Package root: `/Users/jgran/.emacs.d/lisp/jg-agent-comments/jg-agent-comments.el`; tests in `/Users/jgran/.emacs.d/lisp/jg-agent-comments/test/`.
+- Test files load via `helper.el`, which also requires `jg-agent-comments-test` (so the batch command actually discovers the tests).
 - Package must load without agent-shell present: `(require 'agent-shell nil t)` plus `declare-function` for `agent-shell-prompt-queue`. No hard require at top level.
 - Overlay/carrier display strings must never contain newlines (multi-line `display` strings hang Emacs redisplay).
 - Snippets come from `filter-buffer-substring` (display-accurate, keeps folded bodies, strips properties) — never `buffer-substring-no-properties`.
@@ -60,6 +61,7 @@ In `test/jg-agent-comments-test.el`:
 (add-to-list 'load-path
              (expand-file-name ".." (file-name-directory load-file-name)))
 (require 'jg-agent-comments)
+(require 'jg-agent-comments-test)
 ```
 
 - [ ] **Step 2: Run test to verify it fails**
