@@ -585,15 +585,16 @@ dropped in the home buffers."
 (defun jg-agent-comments-send ()
   "Submit all pending comments to the agent as one prompt, then clear.
 The prompt carries the block header above the composed entries and no
-other text.  Say so and do nothing when there are no pending comments.
-In a buffer that does not derive from `comint-mode', say that the
-comments ride along with the next chat submission instead and do
-nothing."
+other text.  Say so and do nothing when no comments are pending here
+or in same-project file buffers.  In a buffer that does not derive
+from `comint-mode', say that the comments ride along with the next
+chat submission instead and do nothing."
   (interactive)
   (cond
    ((not (derived-mode-p 'comint-mode))
     (message "Comments here ride along: submit them from an agent-shell chat to send them"))
-   ((null jg-agent-comments--comments)
+   ((and (null jg-agent-comments--comments)
+         (null (jg-agent-comments--collect)))
     (message "No pending comments"))
    (t
     (agent-shell-prompt-queue (jg-agent-comments--augment-prompt nil))
@@ -654,15 +655,16 @@ RET in an agent-shell buffer runs `agent-shell-submit', which reads
 the typed input from the live input area: the process mark through
 the end of the buffer.
 
-When this buffer has the mode on, comments pending, and typed input
-at the prompt, splice the augmented prompt from
-`jg-agent-comments--augment-prompt' into the input area before ORIG
-runs.  ORIG submits that text, so the transcript and the history show
-what the agent received.  Clear the comments after ORIG submits.
+When this buffer has the mode on, pending comments exist here or in
+same-project file buffers, and typed input sits at the prompt, splice
+the augmented prompt from `jg-agent-comments--augment-prompt' into
+the input area before ORIG runs.  ORIG submits that text, so the
+transcript and the history show what the agent received.  Clear the
+comments after ORIG submits.
 
-Every other case calls ORIG untouched: no comments, no typed input,
-no process, or the mode off all keep the regular submit path exactly
-as it was.
+Every other case calls ORIG untouched: the mode off, no process, no
+typed input, and no comments pending here or in same-project file
+buffers keep the regular submit path exactly as it was.
 
 When ORIG signals, restore the typed input when the input area still
 holds the spliced text.  `agent-shell-submit' refuses before it
@@ -673,8 +675,9 @@ committed; leave the buffer alone.  Re-signal either way."
   (let* ((buffer (current-buffer))
          (proc (get-buffer-process buffer)))
     (if (not (and (bound-and-true-p jg-agent-comments-mode)
-                  jg-agent-comments--comments
-                  proc))
+                  proc
+                  (or jg-agent-comments--comments
+                      (jg-agent-comments--collect))))
         (funcall orig)
       (let* ((pmark (process-mark proc))
              (input (buffer-substring-no-properties
