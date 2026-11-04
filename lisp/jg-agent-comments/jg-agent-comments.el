@@ -366,6 +366,37 @@ comments]\" (singular for one)."
                '(:eval (jg-agent-comments--mode-line-string))
                'append))
 
+(defun jg-agent-comments--same-project-p (root)
+  "Return non-nil when this buffer's project root equals ROOT."
+  (and root
+       (equal (directory-file-name (expand-file-name root))
+              (directory-file-name
+               (expand-file-name
+                (jg-agent-comments--project-root))))))
+
+(defun jg-agent-comments--collect ()
+  "Return the file comments that ride along with this buffer's send.
+Scan every enabled buffer that visits a file in this buffer's project
+and holds pending file comments.  Return the records, each paired with
+its home buffer, in buffer-list order."
+  (let ((candidates '())
+        (contributing '()))
+    (dolist (buffer (buffer-list))
+      (when (and (not (eq buffer (current-buffer)))
+                 (buffer-local-value 'jg-agent-comments-mode buffer)
+                 (buffer-local-value 'buffer-file-name buffer)
+                 (buffer-local-value 'jg-agent-comments--comments buffer))
+        (push buffer candidates)))
+    (when candidates
+      (let ((root (jg-agent-comments--project-root)))
+        (dolist (buffer candidates)
+          (with-current-buffer buffer
+            (when (jg-agent-comments--same-project-p root)
+              (dolist (record jg-agent-comments--comments)
+                (when (plist-get record :file)
+                  (push (cons record buffer) contributing))))))))
+    (nreverse contributing)))
+
 (declare-function agent-shell-prompt-queue "agent-shell" (prompt))
 (require 'agent-shell nil t)
 
@@ -480,40 +511,72 @@ holds.  Ends with a newline; the composed entries follow directly.")
 
 (defun jg-agent-comments--augment-prompt (input)
   "Return INPUT with the pending comments appended as a block.
-When no comments are pending, return INPUT unchanged.  Otherwise
-append to INPUT a blank line, then `jg-agent-comments--block-header',
-then the entries from `jg-agent-comments--compose'.  A nil or
+The block holds this buffer's own comments plus the file comments that
+`jg-agent-comments--collect' gathers from same-project file buffers.
+When nothing is pending, return INPUT unchanged.  Otherwise append to
+INPUT a blank line, then the composed block, which carries the chat
+block header only when chat comments are among them.  A nil or
 whitespace-only INPUT drops the input part: the return value is the
-header and the entries alone."
-  (if (null jg-agent-comments--comments)
-      input
-    (let ((block (concat jg-agent-comments--block-header
-                         (jg-agent-comments--compose))))
-      (if (or (null input) (string-empty-p (string-trim input)))
-          block
-        (concat input "\n\n" block)))))
+block alone."
+  (let ((collected (jg-agent-comments--collect)))
+    (if (and (null jg-agent-comments--comments) (null collected))
+        input
+      (let* ((records (append jg-agent-comments--comments
+                              (mapcar #'car collected)))
+             (chat-p (seq-some (lambda (record)
+                                 (null (plist-get record :file)))
+                               records))
+             (block (jg-agent-comments--compose records))
+             (block (if chat-p
+                        (concat jg-agent-comments--block-header block)
+                      block)))
+        (if (or (null input) (string-empty-p (string-trim input)))
+            block
+          (concat input "\n\n" block))))))
 
-(defun jg-agent-comments--clear ()
-  "Forget all pending comments and delete their overlays."
-  (dolist (record jg-agent-comments--comments)
+(defun jg-agent-comments--delete-record-overlays (records)
+  "Delete the anchor and highlight overlays of RECORDS."
+  (dolist (record records)
     (let ((overlay (plist-get record :overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
         (delete-overlay overlay)))
     (let ((overlay (plist-get record :highlight-overlay)))
       (when (and (overlayp overlay) (overlay-buffer overlay))
-        (delete-overlay overlay))))
-  (setq jg-agent-comments--comments nil))
+        (delete-overlay overlay)))))
+
+(defun jg-agent-comments--clear ()
+  "Forget all pending comments and delete their overlays.
+Also clear the file buffers whose pending comments ride along with
+this buffer's own: their overlays are deleted and their records are
+dropped in the home buffers."
+  (jg-agent-comments--delete-record-overlays jg-agent-comments--comments)
+  (setq jg-agent-comments--comments nil)
+  (dolist (contributing (jg-agent-comments--collect))
+    (let ((buffer (cdr contributing)))
+      (when (buffer-live-p buffer)
+        (with-current-buffer buffer
+          (jg-agent-comments--delete-record-overlays
+           (list (car contributing)))
+          (setq jg-agent-comments--comments
+                (delq (car contributing)
+                      jg-agent-comments--comments)))))))
 
 (defun jg-agent-comments-send ()
   "Submit all pending comments to the agent as one prompt, then clear.
 The prompt carries the block header above the composed entries and no
-other text.  Say so and do nothing when there are no pending
-comments."
+other text.  Say so and do nothing when there are no pending comments.
+In a buffer that does not derive from `comint-mode', say that the
+comments ride along with the next chat submission instead and do
+nothing."
   (interactive)
-  (if (null jg-agent-comments--comments)
-      (message "No pending comments")
+  (cond
+   ((not (derived-mode-p 'comint-mode))
+    (message "Comments here ride along: submit them from an agent-shell chat to send them"))
+   ((null jg-agent-comments--comments)
+    (message "No pending comments"))
+   (t
     (agent-shell-prompt-queue (jg-agent-comments--augment-prompt nil))
-    (jg-agent-comments--clear)))
+    (jg-agent-comments--clear))))
 
 (defun jg-agent-comments--comment-at-point ()
   "Return the record whose live anchor overlay covers point.

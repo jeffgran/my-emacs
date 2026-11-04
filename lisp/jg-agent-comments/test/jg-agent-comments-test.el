@@ -226,6 +226,172 @@ block header."
                              (file-name-nondirectory file)
                              ":1\n> anchor text\n  note"))))))
 
+(ert-deftest jg-agent-comments-ride-along-augments-and-clears-same-project ()
+  "A chat submission collects the pending file comments of same-project
+file buffers into the prompt, and clearing reaches into those buffers."
+  (let ((project-dir (make-temp-file "jg-agent-comments-ride" 'dir)))
+    (unwind-protect
+        (let ((alpha (find-file-noselect
+                      (expand-file-name "alpha.js" project-dir)))
+              (beta (find-file-noselect
+                     (expand-file-name "beta.js" project-dir))))
+          (with-current-buffer alpha
+            (insert "alpha prose")
+            (jg-agent-comments-mode 1)
+            (jg-agent-comments--add (point-min) (point-max) "alpha note"))
+          (with-current-buffer beta
+            (insert "beta prose")
+            (jg-agent-comments-mode 1)
+            (jg-agent-comments--add (point-min) (point-max) "beta note"))
+          (let ((alpha-record (car (buffer-local-value
+                                    'jg-agent-comments--comments alpha)))
+                (beta-record (car (buffer-local-value
+                                   'jg-agent-comments--comments beta))))
+            (let ((default-directory project-dir))
+              (jg-agent-comments-test--with-input "my question"
+                (jg-agent-comments--add (point-min) prose-end "chat note")
+                (jg-agent-comments-mode 1)
+                (should (equal (jg-agent-comments--augment-prompt "my question")
+                               (concat "my question\n\n---\n"
+                                       "Inline comments replying to specific parts of your previous message:\n"
+                                       "> agent prose\n  chat note\n\n"
+                                       "Inline comments on files:\n\n"
+                                       "alpha.js:1\n> alpha prose\n  alpha note\n\n"
+                                       "beta.js:1\n> beta prose\n  beta note")))
+                (jg-agent-comments--clear)
+                (should (null jg-agent-comments--comments))
+                (with-current-buffer alpha
+                  (should (null jg-agent-comments--comments))
+                  (should (null (overlay-buffer
+                                 (plist-get alpha-record :overlay)))))
+                (with-current-buffer beta
+                  (should (null jg-agent-comments--comments))
+                  (should (null (overlay-buffer
+                                 (plist-get beta-record :overlay)))))))))
+      (dolist (name '("alpha.js" "beta.js"))
+        (let ((buffer (find-buffer-visiting
+                       (expand-file-name name project-dir))))
+          (when buffer
+            (with-current-buffer buffer
+              (set-buffer-modified-p nil))
+            (let (kill-buffer-query-functions)
+              (kill-buffer buffer)))))
+      (ignore-errors (delete-directory project-dir 'recursive)))))
+
+(ert-deftest jg-agent-comments-ride-along-ignores-other-projects ()
+  "A file buffer whose project root differs contributes nothing and
+keeps its comments when the chat clears."
+  (let ((project-dir (make-temp-file "jg-agent-comments-ride" 'dir))
+        (other-dir (make-temp-file "jg-agent-comments-other" 'dir)))
+    (unwind-protect
+        (let ((outsider (find-file-noselect
+                         (expand-file-name "outsider.js" other-dir))))
+          (with-current-buffer outsider
+            (insert "outsider prose")
+            (jg-agent-comments-mode 1)
+            (jg-agent-comments--add (point-min) (point-max) "outsider note"))
+          (let ((outsider-record (car (buffer-local-value
+                                       'jg-agent-comments--comments outsider))))
+            (let ((default-directory project-dir))
+              (jg-agent-comments-test--with-input "my question"
+                (jg-agent-comments--add (point-min) prose-end "chat note")
+                (jg-agent-comments-mode 1)
+                (should (equal (jg-agent-comments--augment-prompt "my question")
+                               (concat "my question\n\n---\n"
+                                       "Inline comments replying to specific parts of your previous message:\n"
+                                       "> agent prose\n  chat note")))
+                (jg-agent-comments--clear)
+                (should (null jg-agent-comments--comments))
+                (with-current-buffer outsider
+                  (should jg-agent-comments--comments)
+                  (should (overlay-buffer
+                           (plist-get outsider-record :overlay))))))))
+      (let ((buffer (find-buffer-visiting
+                     (expand-file-name "outsider.js" other-dir))))
+        (when buffer
+          (with-current-buffer buffer
+            (set-buffer-modified-p nil))
+          (let (kill-buffer-query-functions)
+            (kill-buffer buffer))))
+      (ignore-errors (delete-directory project-dir 'recursive))
+      (ignore-errors (delete-directory other-dir 'recursive)))))
+
+(ert-deftest jg-agent-comments-ride-along-refusal-keeps-file-comments ()
+  "A refused submission restores the typed input and keeps the file
+comments pending in their home buffers."
+  (let ((project-dir (make-temp-file "jg-agent-comments-ride" 'dir)))
+    (unwind-protect
+        (let ((alpha (find-file-noselect
+                      (expand-file-name "alpha.js" project-dir))))
+          (with-current-buffer alpha
+            (insert "alpha prose")
+            (jg-agent-comments-mode 1)
+            (jg-agent-comments--add (point-min) (point-max) "alpha note"))
+          (let ((default-directory project-dir))
+            (jg-agent-comments-test--with-input "my question"
+              (jg-agent-comments--add (point-min) prose-end "chat note")
+              (jg-agent-comments-mode 1)
+              (should-error (jg-agent-comments--submit-advice
+                             (lambda () (user-error "Busy, please wait")))
+                            :type 'user-error)
+              (should (equal (buffer-substring-no-properties pmark (point-max))
+                             "my question"))
+              (should jg-agent-comments--comments)
+              (with-current-buffer alpha
+                (should jg-agent-comments--comments))
+              (jg-agent-comments--clear))))
+      (let ((buffer (find-buffer-visiting
+                     (expand-file-name "alpha.js" project-dir))))
+        (when buffer
+          (with-current-buffer buffer
+            (set-buffer-modified-p nil))
+          (let (kill-buffer-query-functions)
+            (kill-buffer buffer))))
+      (ignore-errors (delete-directory project-dir 'recursive)))))
+
+(ert-deftest jg-agent-comments-ride-along-alone-skips-chat-header ()
+  "Collected file comments without chat comments compose without the
+chat block header."
+  (let ((project-dir (make-temp-file "jg-agent-comments-ride" 'dir)))
+    (unwind-protect
+        (let ((alpha (find-file-noselect
+                      (expand-file-name "alpha.js" project-dir))))
+          (with-current-buffer alpha
+            (insert "alpha prose")
+            (jg-agent-comments-mode 1)
+            (jg-agent-comments--add (point-min) (point-max) "alpha note"))
+          (let ((default-directory project-dir))
+            (with-temp-buffer
+              (should (equal (jg-agent-comments--augment-prompt nil)
+                             "Inline comments on files:\n\nalpha.js:1\n> alpha prose\n  alpha note")))))
+      (let ((buffer (find-buffer-visiting
+                     (expand-file-name "alpha.js" project-dir))))
+        (when buffer
+          (with-current-buffer buffer
+            (set-buffer-modified-p nil))
+          (let (kill-buffer-query-functions)
+            (kill-buffer buffer))))
+      (ignore-errors (delete-directory project-dir 'recursive)))))
+
+(ert-deftest jg-agent-comments-send-refuses-outside-chat ()
+  "Sending in a non-chat buffer says the comments ride along with the
+next chat submission instead, and queues nothing."
+  (jg-agent-comments-test--with-file-buffer "file prose"
+    (jg-agent-comments-mode 1)
+    (jg-agent-comments--add 1 (point-max) "note")
+    (let ((queued :nothing)
+          (said nil))
+      (cl-letf (((symbol-function 'agent-shell-prompt-queue)
+                 (lambda (prompt) (setq queued prompt)))
+                ((symbol-function 'message)
+                 (lambda (format-string &rest args)
+                   (setq said (apply #'format-message format-string args)))))
+        (jg-agent-comments-send))
+      (should (eq queued :nothing))
+      (should said)
+      (should (string-match-p "ride along" said))
+      (should jg-agent-comments--comments))))
+
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
     (insert "agent said things")
@@ -596,6 +762,7 @@ comment block."
   "Sending submits the header and the composed entries as one prompt.
 The prompt carries no other text above the comment block."
   (with-temp-buffer
+    (comint-mode)
     (insert "agent prose")
     (jg-agent-comments--add 1 (point-max) "note")
     (let ((submitted nil))
@@ -608,6 +775,7 @@ The prompt carries no other text above the comment block."
 
 (ert-deftest jg-agent-comments-send-without-comments-is-noop ()
   (with-temp-buffer
+    (comint-mode)
     (should (progn (jg-agent-comments-send) t))))
 
 (ert-deftest jg-agent-comments-submit-advice-installed ()
