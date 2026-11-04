@@ -21,10 +21,6 @@
   '((t :inherit 'font-lock-comment-face))
   "Face for inline comment text.")
 
-(defface jg-agent-comments-snippet
-  '((t :inherit 'shadow))
-  "Face for dimmed code snippets shown with a comment.")
-
 (defvar-local jg-agent-comments--comments nil
   "Buffer-local list of comment records, most recent first.
 Each record is a plist with the shape (:snippet :text :beg :end
@@ -74,17 +70,16 @@ its own."
 (defun jg-agent-comments--render (record)
   "Give RECORD its anchor overlay if it has none yet.
 The overlay spans the anchor text from :beg through the display
-position.  It carries the `jg-agent-comments' property and the snippet
-face.  It shows the marker gutter as its before-string.  It shows the
-comment inline as its after-string: two-space padded, in the inline
-face, and elided to one line.  It evaporates when a buffer change
-empties it.  The overlay is stored back into the record."
+position.  It carries the `jg-agent-comments' property.  It shows the
+marker gutter as its before-string.  It shows the comment inline as its
+after-string: two-space padded, in the inline face, and elided to one
+line.  It evaporates when a buffer change empties it.  The overlay is
+stored back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (jg-agent-comments--display-position record)
                                  nil t nil)))
       (overlay-put overlay 'jg-agent-comments t)
-      (overlay-put overlay 'face 'jg-agent-comments-snippet)
       (overlay-put overlay 'before-string
                    (propertize "▐ " 'face 'jg-agent-comments-marker))
       (overlay-put overlay 'after-string
@@ -134,9 +129,24 @@ buffer.")
 (defvar-local jg-agent-comments--edit-snippet nil
   "Anchor text that the comment command captured at comment time.")
 
+(defvar-local jg-agent-comments--saved-winconf nil
+  "Window configuration of the source buffer before the edit buffer opened.")
+
+(defun jg-agent-comments--finish-edit ()
+  "Kill the current edit buffer and restore the saved window configuration.
+Run with the edit buffer current.  Skip the restore when no window
+configuration is left or restoring it would fail."
+
+  (let ((conf jg-agent-comments--saved-winconf))
+    (kill-buffer (current-buffer))
+    (when (and conf (window-configuration-p conf))
+      (condition-case nil
+          (set-window-configuration conf)
+        (error nil)))))
+
 (defvar-keymap jg-agent-comments-edit-mode-map
   "C-c C-c" #'jg-agent-comments--commit-edit
-  "C-c C-k" #'kill-buffer)
+  "C-c C-k" #'jg-agent-comments-cancel-edit)
 
 (defun jg-agent-comments--commit-edit ()
   "Commit the comment that the current edit buffer holds.
@@ -144,25 +154,36 @@ The record uses the snippet and the marker positions that the comment
 command captured.  Source buffer changes during editing do not change
 what the comment refers to."
   (interactive nil jg-agent-comments-edit-mode-map)
-  (let ((text (buffer-string))
-        (source jg-agent-comments--edit-source)
-        (snippet jg-agent-comments--edit-snippet)
-        (bounds jg-agent-comments--edit-bounds))
-    (kill-buffer)
+  (let* ((edit (current-buffer))
+         (text (buffer-string))
+         (source jg-agent-comments--edit-source)
+         (snippet jg-agent-comments--edit-snippet)
+         (bounds jg-agent-comments--edit-bounds))
     (when (buffer-live-p source)
       (with-current-buffer source
         (jg-agent-comments--commit-edit-from-string
          text
          (marker-position (car bounds))
          (marker-position (cdr bounds))
-         snippet)))))
+         snippet)))
+    (with-current-buffer edit
+      (jg-agent-comments--finish-edit))))
+
+(defun jg-agent-comments-cancel-edit ()
+  "Discard the comment being edited and restore the window configuration.
+Kill the edit buffer without committing anything."
+  (interactive nil jg-agent-comments-edit-mode-map)
+  (jg-agent-comments--finish-edit))
 
 (defun jg-agent-comments-comment ()
   "Comment on the agent output at point in a dedicated edit buffer.
 Capture the anchor text and place its markers before the edit buffer
-opens.  A re-render during editing cannot change the captured text."
+opens.  A re-render during editing cannot change the captured text.
+Save the window configuration so that finishing the edit, by commit or
+by cancel, restores the pre-edit windows."
   (interactive)
-  (let* ((bounds (jg-agent-comments--region-or-line))
+  (let* ((winconf (current-window-configuration))
+         (bounds (jg-agent-comments--region-or-line))
          (source (current-buffer))
          (snippet (substring-no-properties
                    (filter-buffer-substring (car bounds) (cdr bounds))))
@@ -174,6 +195,7 @@ opens.  A re-render during editing cannot change the captured text."
     (setq-local jg-agent-comments--edit-source source)
     (setq-local jg-agent-comments--edit-bounds (cons beg end))
     (setq-local jg-agent-comments--edit-snippet snippet)
+    (setq-local jg-agent-comments--saved-winconf winconf)
     (use-local-map jg-agent-comments-edit-mode-map)))
 
 (defvar-keymap jg-agent-comments-prefix-map

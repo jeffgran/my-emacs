@@ -133,6 +133,48 @@
                   'jg-agent-comments-inline))
       (should-not (memq :display-overlay record)))))
 
+(ert-deftest jg-agent-comments-anchor-has-no-face ()
+  (with-temp-buffer
+    (insert "anchor")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "first line\nsecond line"))
+           (ov (plist-get record :overlay)))
+      (should-not (overlay-get ov 'face))
+      (should (string-match-p "first line" (overlay-get ov 'after-string))))))
+
+(ert-deftest jg-agent-comments-cancel-edit-kills-buffer-without-prompt ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (goto-char 1)
+    (let ((source (current-buffer)))
+      (jg-agent-comments-comment)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (insert "do not keep")
+      (let (prompted)
+        (cl-letf (((symbol-function 'completing-read)
+                   (lambda (&rest _) (setq prompted t) (error "completing-read called"))))
+          (jg-agent-comments-cancel-edit))
+        (should-not prompted)
+        (should (null (get-buffer "*jg-agent-comment*")))
+        (with-current-buffer source
+          (should (null jg-agent-comments--comments)))))))
+
+(ert-deftest jg-agent-comments-commit-restores-window-configuration ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (put-text-property (point-min) (point-max) 'field 'output)
+    (goto-char 1)
+    (set-window-buffer (selected-window) (current-buffer))
+    (let ((windows-before (length (window-list)))
+          (source (current-buffer)))
+      (jg-agent-comments-comment)
+      (should (equal (buffer-name) "*jg-agent-comment*"))
+      (should (> (length (window-list)) windows-before))
+      (insert "late comment")
+      (jg-agent-comments--commit-edit)
+      (should (= (length (window-list)) windows-before))
+      (should (eq (window-buffer (selected-window)) source)))))
+
 (ert-deftest jg-agent-comments-mode-line-empty-when-none ()
   (with-temp-buffer
     (should (equal (jg-agent-comments--mode-line-string) ""))))
