@@ -507,6 +507,27 @@ typed input and keeps the file comments in their home buffers."
               (kill-buffer buffer)))))
       (ignore-errors (delete-directory project-dir 'recursive)))))
 
+(ert-deftest jg-agent-comments-same-project-p-through-symlink ()
+  "A buffer whose file sits behind a symlinked directory shares the
+project with the real directory's root."
+  (let* ((real-dir (make-temp-file "jg-agent-comments-real" 'dir))
+         (link (concat real-dir "-link")))
+    (unwind-protect
+        (progn
+          (make-symbolic-link real-dir link)
+          (let ((file (expand-file-name "alpha.js" link)))
+            (with-current-buffer (find-file-noselect file)
+              (unwind-protect
+                  (progn
+                    (insert "alpha prose")
+                    (should (jg-agent-comments--same-project-p real-dir))
+                    (should (jg-agent-comments--same-project-p link)))
+                (set-buffer-modified-p nil)
+                (let (kill-buffer-query-functions)
+                  (kill-buffer))))))
+      (ignore-errors (delete-file link))
+      (ignore-errors (delete-directory real-dir 'recursive)))))
+
 (ert-deftest jg-agent-comments-send-refuses-outside-chat ()
   "Sending in a non-chat buffer says the comments ride along with the
 next chat submission instead, and queues nothing."

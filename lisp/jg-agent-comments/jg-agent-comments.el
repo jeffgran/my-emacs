@@ -389,12 +389,13 @@ comments]\" (singular for one)."
                'append))
 
 (defun jg-agent-comments--same-project-p (root)
-  "Return non-nil when this buffer's project root equals ROOT."
+  "Return non-nil when this buffer's project root equals ROOT.
+Compare the directory truenames, so a symlinked path to the same
+directory counts as the same project."
   (and root
-       (equal (directory-file-name (expand-file-name root))
-              (directory-file-name
-               (expand-file-name
-                (jg-agent-comments--project-root))))))
+       (file-equal-p (directory-file-name root)
+                     (directory-file-name
+                      (jg-agent-comments--project-root)))))
 
 (defun jg-agent-comments--collect ()
   "Return the file comments that ride along with this buffer's send.
