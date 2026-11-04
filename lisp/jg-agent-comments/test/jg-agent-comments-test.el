@@ -124,20 +124,26 @@
       (should (string-match-p "para one" after))
       (should (string-match-p "para two" after))
       (should-not (string-match-p " …" after))
-      (should (equal after "\n▐ para one\n  \n  para two")))))
+      (should (equal after "\n▐ para one\n▐ \n▐ para two")))))
 
 (ert-deftest jg-agent-comments-render-shows-every-line ()
   (with-temp-buffer
     (insert "anchor")
     (let* ((record (jg-agent-comments--add 1 (point-max) "one\ntwo\nthree"))
            (after (overlay-get (plist-get record :overlay) 'after-string)))
-      (should (equal after "\n▐ one\n  two\n  three")))))
+      (should (equal after "\n▐ one\n▐ two\n▐ three")))))
 
 (ert-deftest jg-agent-comments-render-text-renders-full-comment ()
   (let ((body (jg-agent-comments--render-text "one\ntwo\nthree")))
-    (should (string-prefix-p "▐ one" body))
-    (should (string-match-p "\n  two\n  three\\'" body))
+    (should (equal body "▐ one\n▐ two\n▐ three"))
     (should-not (string-match-p " …" body))))
+
+(ert-deftest jg-agent-comments-render-text-gutter-on-every-line ()
+  (should (equal (jg-agent-comments--render-text "para one\n\npara two")
+                 "▐ para one\n▐ \n▐ para two")))
+
+(ert-deftest jg-agent-comments-render-text-single-line ()
+  (should (equal (jg-agent-comments--render-text "note") "▐ note")))
 
 (ert-deftest jg-agent-comments-render-after-string-faces ()
   (with-temp-buffer
@@ -149,6 +155,8 @@
       (should (eq (get-text-property (length "\n▐ ") 'face after)
                   'jg-agent-comments-inline))
       (should (eq (get-text-property (length "\n▐ first line\n") 'face after)
+                  'jg-agent-comments-marker))
+      (should (eq (get-text-property (length "\n▐ first line\n▐ ") 'face after)
                   'jg-agent-comments-inline)))))
 
 (ert-deftest jg-agent-comments-add-renders-single-live-overlay ()

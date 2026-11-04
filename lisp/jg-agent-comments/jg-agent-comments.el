@@ -50,19 +50,13 @@ the shape (:snippet :text :beg :end :overlay)."
 
 (defun jg-agent-comments--render-text (text)
   "Return the propertized display body for the full comment TEXT.
-Prefix the first line with the \"▐ \" gutter in the marker face.
-Prefix every following line with two spaces.  Give each line's text
-the inline face; a blank line keeps just its two-space prefix."
-  (let* ((lines (split-string text "\n"))
-         (rest (cdr lines)))
-    (concat (propertize "▐ " 'face 'jg-agent-comments-marker)
-            (propertize (car lines) 'face 'jg-agent-comments-inline)
-            (mapconcat (lambda (line)
-                         (concat "\n"
-                                 (propertize (concat "  " line)
-                                             'face 'jg-agent-comments-inline)))
-                       rest
-                       ""))))
+Prefix every line with the \"▐ \" gutter in the marker face; give each
+line's text the inline face.  A blank line keeps just its gutter."
+  (mapconcat (lambda (line)
+               (concat (propertize "▐ " 'face 'jg-agent-comments-marker)
+                       (propertize line 'face 'jg-agent-comments-inline)))
+             (split-string text "\n")
+             "\n"))
 
 (defun jg-agent-comments--display-position (record)
   "Return the buffer position where RECORD's anchor overlay ends.
