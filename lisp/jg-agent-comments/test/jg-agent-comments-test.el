@@ -159,6 +159,36 @@
       (should (eq (get-text-property (length "\n▐ first line\n▐ ") 'face after)
                   'jg-agent-comments-inline)))))
 
+(ert-deftest jg-agent-comments-set-text-updates-record ()
+  "Setting the text stores the new body on the record."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "old note")))
+      (jg-agent-comments--set-comment-text record "new note")
+      (should (equal (plist-get record :text) "new note")))))
+
+(ert-deftest jg-agent-comments-set-text-rerenders-overlay ()
+  "Setting the text rebuilds the anchor overlay's after-string.
+The new body replaces the old, gutter glyphs included."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let* ((record (jg-agent-comments--add 1 (point-max) "old note"))
+           (ov (plist-get record :overlay)))
+      (jg-agent-comments--set-comment-text record "new note")
+      (let ((after (overlay-get ov 'after-string)))
+        (should (equal after "\n▐ new note"))
+        (should-not (string-match-p "old note" after))))))
+
+(ert-deftest jg-agent-comments-set-text-dead-overlay-no-error ()
+  "Setting the text on a record with a deleted anchor does not signal.
+The record's body still updates."
+  (with-temp-buffer
+    (insert "agent prose")
+    (let ((record (jg-agent-comments--add 1 (point-max) "note")))
+      (delete-overlay (plist-get record :overlay))
+      (should (jg-agent-comments--set-comment-text record "new note"))
+      (should (equal (plist-get record :text) "new note")))))
+
 (ert-deftest jg-agent-comments-add-renders-single-live-overlay ()
   (with-temp-buffer
     (insert "agent prose\n")

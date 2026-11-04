@@ -100,28 +100,45 @@ record under :highlight-overlay."
       (overlay-put overlay 'evaporate t)
       (plist-put record :highlight-overlay overlay))))
 
+(defun jg-agent-comments--anchor-after-string (record)
+  "Return the anchor overlay's after-string for RECORD.
+A newline, then the full comment body rendered by
+`jg-agent-comments--render-text': the comment shows on its own line
+below the anchor, one gutter glyph per line."
+  (concat "\n"
+          (jg-agent-comments--render-text (plist-get record :text))))
+
 (defun jg-agent-comments--render (record)
   "Give RECORD its anchor overlay if it has none yet.
 The overlay spans the anchor text from :beg through the display
 position.  It carries the `jg-agent-comments' property.  It shows the
-comment on its own line below the anchor as its after-string: a
-newline, then the full comment body rendered by
-`jg-agent-comments--render-text'.  It evaporates when a buffer change
-empties it.  A partial-line selection also gets a highlight overlay
-tinting exactly the selected text.  Both overlays are stored back
-into the record."
+comment on its own line below the anchor as its after-string, built by
+`jg-agent-comments--anchor-after-string'.  It evaporates when a buffer
+change empties it.  A partial-line selection also gets a highlight
+overlay tinting exactly the selected text.  Both overlays are stored
+back into the record."
   (unless (plist-get record :overlay)
     (let ((overlay (make-overlay (plist-get record :beg)
                                  (jg-agent-comments--display-position record)
                                  nil t nil)))
       (overlay-put overlay 'jg-agent-comments t)
       (overlay-put overlay 'after-string
-                   (concat "\n"
-                           (jg-agent-comments--render-text
-                            (plist-get record :text))))
+                   (jg-agent-comments--anchor-after-string record))
       (overlay-put overlay 'evaporate t)
       (plist-put record :overlay overlay))
     (jg-agent-comments--render-highlight record)))
+
+(defun jg-agent-comments--set-comment-text (record text)
+  "Set RECORD's comment body to TEXT and refresh its anchor display.
+Replace a live anchor overlay's after-string with the same construction
+`jg-agent-comments--render' gives a new record, so the displayed comment
+never goes stale.  Leave a dead overlay alone.  Return RECORD."
+  (plist-put record :text text)
+  (let ((overlay (plist-get record :overlay)))
+    (when (and (overlayp overlay) (overlay-buffer overlay))
+      (overlay-put overlay 'after-string
+                   (jg-agent-comments--anchor-after-string record))))
+  record)
 
 (require 'comint)
 
