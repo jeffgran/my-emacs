@@ -5,7 +5,9 @@
 
 ;;; Commentary:
 
-;; Inline comments for agent-shell buffers.
+;; Inline comments for agent-shell chat buffers and file-visiting
+;; buffers.  File comments ride along with the next chat submission in
+;; the same project.
 
 ;;; Code:
 
@@ -302,9 +304,22 @@ on any comment."
   "C-c ;" jg-agent-comments-prefix-map)
 
 (define-minor-mode jg-agent-comments-mode
-  "Inline comments for agent-shell buffers."
+  "Inline comments for agent-shell buffers and file-visiting buffers."
   :init-value nil
   :lighter nil)
+
+(defun jg-agent-comments--global-enable ()
+  "Turn `jg-agent-comments-mode' on in this buffer when it visits a file.
+Chat buffers never visit files, so the agent-shell hook and this
+global activation never overlap."
+  (when buffer-file-name
+    (jg-agent-comments-mode 1)))
+
+;; Turn the buffer mode on in every file-visiting buffer.  No path
+;; scoping: comment anchoring works anywhere, and magit-style buffers
+;; that cannot hold anchors keep the mode harmless until a later design.
+(define-globalized-minor-mode jg-agent-comments-global-mode
+  jg-agent-comments-mode jg-agent-comments--global-enable)
 
 (defvar jg-agent-comments--mode-line-registered nil
   "Non-nil once the mode-line entry has been added to `global-mode-string'.")

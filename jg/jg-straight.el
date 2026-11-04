@@ -54,10 +54,12 @@
   ;; for straight to build.  The package must load eagerly here (no :after):
   ;; jg-keys.el registers jg-agent-comments-mode-map in the emulation alist
   ;; at load time, and jg-straight.el loads first.  The mode attaches to
-  ;; agent-shell buffers via the hook below.
+  ;; agent-shell buffers via the hook below, and to file-visiting buffers
+  ;; via the global mode below.
   :straight (jg-agent-comments :type nil :local-repo "jg-agent-comments")
   :config
-  (add-hook 'agent-shell-mode-hook #'jg-agent-comments-mode))
+  (add-hook 'agent-shell-mode-hook #'jg-agent-comments-mode)
+  (jg-agent-comments-global-mode 1))
 
 (use-package jg-project-sidebar
   ;; The user's own global project-management sidebar, usurping the local

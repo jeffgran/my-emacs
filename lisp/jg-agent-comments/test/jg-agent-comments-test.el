@@ -110,6 +110,24 @@ comment."
       (jg-agent-comments--add (car bounds) (cdr bounds) "last note"))
     (should (= (length jg-agent-comments--comments) 1))))
 
+(ert-deftest jg-agent-comments-global-mode-enables-file-buffers ()
+  "The global mode turns the buffer mode on in file-visiting buffers,
+and off again when disabled."
+  (jg-agent-comments-test--with-file-buffer "file prose"
+    (jg-agent-comments-global-mode 1)
+    (should jg-agent-comments-mode)
+    (jg-agent-comments-global-mode -1)
+    (should-not jg-agent-comments-mode)))
+
+(ert-deftest jg-agent-comments-global-mode-skips-non-file-buffers ()
+  "The global mode leaves buffers that visit no file alone, so chat
+buffers keep getting the mode only through the agent-shell hook."
+  (with-temp-buffer
+    (jg-agent-comments-global-mode 1)
+    (should-not jg-agent-comments-mode)
+    (jg-agent-comments-global-mode -1)
+    (should-not jg-agent-comments-mode)))
+
 (ert-deftest jg-agent-comments-accepts-agent-output ()
   (with-temp-buffer
     (insert "agent said things")
