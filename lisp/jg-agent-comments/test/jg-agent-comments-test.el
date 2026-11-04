@@ -73,5 +73,29 @@
     (jg-agent-comments--add 1 (point-max) "two")
     (should (equal (jg-agent-comments--mode-line-string) " [2 comments]"))))
 
+(ert-deftest jg-agent-comments-compose-quotes-snippet-then-comment ()
+  (with-temp-buffer
+    (insert "agent prose one")
+    (jg-agent-comments--add 1 (point-max) "why?\nexplain")
+    (insert "\nagent prose two")   ; buffer is now "agent prose one\nagent prose two"
+    (jg-agent-comments--add 17 (point-max) "ok")
+    (should (equal (jg-agent-comments--compose)
+                   "> agent prose one\n  why?\n  explain\n\n> agent prose two\n  ok"))))
+
+(ert-deftest jg-agent-comments-send-uses-prompt-queue-and-clears ()
+  (with-temp-buffer
+    (insert "agent prose")
+    (jg-agent-comments--add 1 (point-max) "note")
+    (let ((submitted nil))
+      (cl-letf (((symbol-function 'agent-shell-prompt-queue)
+                 (lambda (prompt) (setq submitted prompt))))
+        (jg-agent-comments-send))
+      (should (string-prefix-p "> agent prose" submitted))
+      (should (null jg-agent-comments--comments)))))
+
+(ert-deftest jg-agent-comments-send-without-comments-is-noop ()
+  (with-temp-buffer
+    (should (progn (jg-agent-comments-send) t))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here

@@ -183,5 +183,62 @@ comments]\" (singular for one)."
 (declare-function agent-shell-prompt-queue "agent-shell" (prompt))
 (require 'agent-shell nil t)
 
+(defun jg-agent-comments--anchor-live-p (record)
+  "Return non-nil when RECORD's anchor overlay is alive."
+  (let ((overlay (plist-get record :overlay)))
+    (and (overlayp overlay) (overlay-buffer overlay))))
+
+(defun jg-agent-comments--entry-string (record)
+  "Return RECORD rendered as one entry of the composed prompt.
+The snippet's lines are each prefixed with \"> \" and the comment's
+lines with two spaces; a single trailing newline on the snippet is
+dropped."
+  (let ((snippet (plist-get record :snippet))
+        (text (plist-get record :text)))
+    (when (string-suffix-p "\n" snippet)
+      (setq snippet (substring snippet 0 -1)))
+    (concat (mapconcat (lambda (line) (concat "> " line))
+                       (split-string snippet "\n")
+                       "\n")
+            "\n"
+            (mapconcat (lambda (line) (concat "  " line))
+                       (split-string text "\n")
+                       "\n"))))
+
+(defun jg-agent-comments--compose ()
+  "Return all pending comments as one prompt string in buffer order.
+Records with a live anchor overlay sort by :beg; the rest come last,
+keeping their relative order.  Entries are separated by a blank line."
+  (let ((live '())
+        (dead '()))
+    (dolist (record jg-agent-comments--comments)
+      (if (jg-agent-comments--anchor-live-p record)
+          (push record live)
+        (push record dead)))
+    (mapconcat #'jg-agent-comments--entry-string
+               (append (sort (nreverse live)
+                             (lambda (a b)
+                               (< (plist-get a :beg) (plist-get b :beg))))
+                       (nreverse dead))
+               "\n\n")))
+
+(defun jg-agent-comments--clear ()
+  "Forget all pending comments and delete their overlays."
+  (dolist (record jg-agent-comments--comments)
+    (dolist (overlay (list (plist-get record :overlay)
+                           (plist-get record :display-overlay)))
+      (when (and (overlayp overlay) (overlay-buffer overlay))
+        (delete-overlay overlay))))
+  (setq jg-agent-comments--comments nil))
+
+(defun jg-agent-comments-send ()
+  "Submit all pending comments to the agent as one prompt, then clear.
+Say so and do nothing when there are no pending comments."
+  (interactive)
+  (if (null jg-agent-comments--comments)
+      (message "No pending comments")
+    (agent-shell-prompt-queue (jg-agent-comments--compose))
+    (jg-agent-comments--clear)))
+
 (provide 'jg-agent-comments)
 ;;; jg-agent-comments.el ends here
