@@ -371,5 +371,130 @@ index 0000001.." (substring hash 0 7) " 100644
     (should (string-match-p "No pending comments"
                             (jg-agent-comments-review-send)))))
 
+;;; Final-review fix pass
+
+(ert-deftest jg-agent-comments-review-visit-resolves-from-project-root ()
+  "The review doc lives in a subdirectory of the repo (like
+.reviews/): paths resolve against the project root, not the doc's
+directory."
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (hash (let ((default-directory repo))
+                 (string-trim
+                  (shell-command-to-string "git hash-object fixture.el"))))
+         (doc (concat "Target: git diff " head ".." head "\n"
+"
+==============================================================
+1/1 — t
+==============================================================
+prose
+
+--- diff: fixture.el ---
+diff --git a/fixture.el b/fixture.el
+index 0000001.." (substring hash 0 7) " 100644
+--- a/fixture.el
++++ b/fixture.el
+@@ -1,1 +1,3 @@
+ (defun fixture ())
++added
++
+"))
+         (sub (file-name-as-directory (expand-file-name "subdir" repo))))
+    (unwind-protect
+        (progn
+          (make-directory sub t)
+          (with-current-buffer
+              (find-file-noselect (expand-file-name "doc.review" sub))
+            (insert doc)
+            (jg-agent-comments-review-mode)
+            (let ((jg-agent-comments-review--target
+                   (list :kind 'range :left head :right head :paths nil))
+                  (sections jg-agent-comments-review--sections))
+              (should (equal
+                       (jg-agent-comments-review--view-target
+                        (nth 1 sections) 1)
+                       (list 'worktree
+                             (expand-file-name "fixture.el" repo) 1))))
+            (set-buffer-modified-p nil)
+            (kill-buffer (current-buffer))))
+      (delete-directory repo t))))
+
+(ert-deftest jg-agent-comments-review-open-blob-shows-content ()
+  "git rejects absolute paths in rev:path: the blob view strips the
+project root before calling git show, and the buffer holds content."
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (default-directory repo))
+    (unwind-protect
+        (let ((buffer (jg-agent-comments-review--open-blob
+                       head (expand-file-name "fixture.el" repo))))
+          (with-current-buffer buffer
+            (should (string-prefix-p "(defun fixture ())"
+                                     (buffer-string)))))
+      (kill-buffer (get-buffer
+                    (format "*review %s:%s*"
+                            head (expand-file-name "fixture.el" repo))))
+      (delete-directory repo t))))
+
+(ert-deftest jg-agent-comments-review-parse-diff-marker-range-suffix ()
+  "A diff marker may carry the sliced line range after the path: the
+path survives without the suffix."
+  (should (equal (jg-agent-comments-review--diff-marker
+                  "--- diff: services/limiter.js :40-58 ---")
+                 "services/limiter.js"))
+  (should (equal (jg-agent-comments-review--diff-marker
+                  "--- diff: plain.el ---")
+                 "plain.el")))
+
+(ert-deftest jg-agent-comments-review-font-locks-diff-content ()
+  "Diff content gets diff faces; prose dash lines do not."
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (font-lock-ensure)
+    ;; probe mid-line: the face spans the line's characters
+    (goto-char (point-min))
+    (re-search-forward "^- a bullet")
+    (should-not (eq (get-text-property (match-beginning 0) 'face)
+                    'diff-added))
+    (goto-char (point-min))
+    (re-search-forward "^+added one")
+    (should (eq (get-text-property (match-beginning 0) 'face) 'diff-added))
+    (goto-char (point-min))
+    (re-search-forward "^--- diff: ")
+    (should (eq (get-text-property (match-beginning 0) 'face)
+                'jg-agent-comments-review-marker))
+    (re-search-forward "^--- a/some dir")
+    (should (get-text-property (match-beginning 0) 'face))))
+
+(ert-deftest jg-agent-comments-review-visit-excerpt-uses-worktree ()
+  "Excerpts quote the working file: RET opens the file, never a blob,
+whatever the target is."
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (doc (concat "Target: git diff " head ".." head "\n"
+"
+==============================================================
+1/1 — t
+==============================================================
+prose
+
+--- excerpt: fixture.el :1-2 ---
+  (defun fixture ())
+"))
+         (sections (jg-agent-comments-review--parse doc))
+         (default-directory repo))
+    (unwind-protect
+        (let ((jg-agent-comments-review--target
+               (list :kind 'range :left head :right head :paths nil)))
+          (should (equal (jg-agent-comments-review--view-target
+                          (nth 1 sections) 1)
+                         (list 'worktree
+                               (expand-file-name "fixture.el" repo) 1))))
+      (delete-directory repo t))))
+
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here

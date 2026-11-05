@@ -50,9 +50,15 @@ leave :left, :right and :paths nil."
       (string-match-p "\\`Not covered by the walkthrough" line)))
 
 (defun jg-agent-comments-review--diff-marker (line)
-  "Return the path in LINE when it is a diff marker, else nil."
-  (and (string-match "\\`--- diff: \\(.*\\) ---\\'" line)
-       (match-string 1 line)))
+  "Return the path in LINE when it is a diff marker, else nil.
+The marker may carry the sliced line range after the path; the path
+survives without the suffix."
+  (cond
+   ((string-match
+     "\\`--- diff: \\(.*\\) :[0-9]+-[0-9]+ ---\\'" line)
+    (match-string 1 line))
+   ((string-match "\\`--- diff: \\(.*\\) ---\\'" line)
+    (match-string 1 line))))
 
 (defun jg-agent-comments-review--excerpt-marker (line)
   "Return (PATH BEG END) when LINE is an excerpt marker, else nil."
@@ -289,31 +295,37 @@ marker keyword."
      ((string-prefix-p " " line) 'diff-context)
      (t nil))))
 
-(defun jg-agent-comments-review--next-diff-line (limit)
-  "Font-lock inner matcher over a diff section's content lines.
-Point sits just past the previous content line.  Match the line at
-point when it still belongs to the diff section; return nil at the
-section boundary, leaving point there for the outer keywords."
-  (when (< (point) limit)
-    (let ((bol (line-beginning-position))
-          (eol (line-end-position))
-          (line (buffer-substring (line-beginning-position)
-                                  (line-end-position))))
-      (unless (string-match-p "\\`\\(=\\{2,\\}\\|--- \\)" line)
-        (set-match-data (list bol eol))
+(defun jg-agent-comments-review--match-diff-line (limit)
+  "Font-lock matcher: match the next diff-content line up to LIMIT.
+A line belongs to a diff section when the nearest section opener
+above it is that section's --- diff: marker.  Prose dash lines and
+banner lines sit under other openers and never match, whatever they
+start with.  Match one line per call, advancing point, until LIMIT."
+  (catch 'done
+    (while (< (point) limit)
+      (let* ((bol (line-beginning-position))
+             (eol (line-end-position))
+             (line (buffer-substring bol eol)))
         (goto-char (if (= eol (point-max)) eol (1+ eol)))
-        t))))
+        (when (and (not (string-empty-p line))
+                   (save-excursion
+                     (goto-char bol)
+                     (re-search-backward
+                      "^\\(=\\{2,\\}\\|--- \\(?:diff\\|excerpt\\): \\)"
+                      nil t))
+                   (string-match-p "^--- diff: " (match-string 0)))
+          (set-match-data (list bol eol))
+          (throw 'done t))))
+    nil))
 
 (defconst jg-agent-comments-review--keywords
   '(("^=+$" . 'jg-agent-comments-review-banner)
     ("^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\).*$"
      . 'jg-agent-comments-review-title)
-    ("^--- \\(?:diff\\|excerpt\\): .* ---\\'"
+    ("^--- \\(?:diff\\|excerpt\\): .* ---$"
      . 'jg-agent-comments-review-marker)
-    ("^--- diff: .*\\'"
-     (jg-agent-comments-review--next-diff-line
-      (forward-line 1) nil
-      (0 (jg-agent-comments-review--diff-line-face)))))
+    (jg-agent-comments-review--match-diff-line
+     (0 (jg-agent-comments-review--diff-line-face))))
   "Font-lock keywords for review documents.
 The last keyword enters a diff section through its marker line and
 faces each content line until the next banner or marker; prose dash
@@ -365,8 +377,8 @@ diff output; this mode styles both, folds sections, navigates
 between them, and lets `jg-agent-comments-mode' comment on anything
 in the document with citations back to the reviewed text."
   (setq-local jg-agent-comments-review-mode t)
-  (setq font-lock-defaults
-        '((jg-agent-comments-review--keywords) nil t))
+  (setq-local font-lock-defaults
+              '((jg-agent-comments-review--keywords) nil t))
   (setq-local outline-regexp "^\\(=\\{2,\\}\\|--- \\)")
   (setq-local outline-heading-end-regexp "\n")
   (jg-agent-comments-review--set-context)
@@ -416,13 +428,20 @@ Return (worktree PATH LINE) when the working tree file holds the
 reviewed content, (blob REV PATH LINE) when the revision's own
 content must be shown instead: deleted files, drifted files, and
 every target whose content is not the working tree.  PATH is
-absolute, resolved against the default directory."
+absolute, resolved against the project root — the review document
+itself may live in a subdirectory like .reviews/."
   (let* ((path (plist-get section :path))
          (target jg-agent-comments-review--target)
          (kind (plist-get target :kind))
-         (full (expand-file-name path)))
-    (if (memq kind '(worktree staged))
-        (list 'worktree full file-line)
+         (full (expand-file-name path
+                                 (jg-agent-comments--project-root))))
+    (cond
+     ;; excerpts quote the working file: open it whatever the target
+     ((eq (plist-get section :kind) 'excerpt)
+      (list 'worktree full file-line))
+     ((memq kind '(worktree staged))
+      (list 'worktree full file-line))
+     (t
       (let* ((hashes (jg-agent-comments-review--index-hashes section))
              (right (cdr hashes))
              (live (and right
@@ -436,15 +455,20 @@ absolute, resolved against the default directory."
                 (if (and right (string-prefix-p "0000000" right))
                     (plist-get target :left)
                   (plist-get target :right))
-                full file-line))))))
+                full file-line)))))))
 
 (defun jg-agent-comments-review--open-blob (rev path)
   "Open REV's PATH in a read-only review blob buffer.
 The buffer visits the revision's own content — deleted files,
 drifted files — and its review context cites PATH's line numbers at
 REV, so comments made there cite the blob."
-  (let ((buffer (get-buffer-create
-                 (format "*review %s:%s*" rev path))))
+  (let* ((root (jg-agent-comments--project-root))
+         (rel (let ((r (file-relative-name path root)))
+                ;; git rejects absolute paths in rev:path; fall back to
+                ;; the raw path when it lives outside the project
+                (if (string-prefix-p ".." r) path r)))
+         (buffer (get-buffer-create
+                  (format "*review %s:%s*" rev path))))
     (with-current-buffer buffer
       (let ((inhibit-read-only t))
         (erase-buffer)
@@ -453,7 +477,7 @@ REV, so comments made there cite the blob."
           (concat "git show "
                   (shell-quote-argument rev)
                   ":"
-                  (shell-quote-argument path)))))
+                  (shell-quote-argument rel)))))
       (jg-agent-comments-mode 1)
       (setq-local jg-agent-comments--review-context
                   (lambda (beg end)
