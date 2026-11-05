@@ -187,5 +187,64 @@ against the excerpt's first line)."
                       (push section sections))))
       (nreverse sections))))
 
+(defvar-local jg-agent-comments-review--sections nil
+  "Buffer-local cache of this review document's parsed sections.
+Set when the mode activates; see `jg-agent-comments-review--parse'.")
+
+(defvar-local jg-agent-comments-review--target nil
+  "Buffer-local plist describing this document's review target.
+The parse of the document's Target: line; see
+`jg-agent-comments-review--target-parse'.")
+
+(defun jg-agent-comments-review--citation-for (beg-line end-line sections target)
+  "Return the citation for document lines BEG-LINE to END-LINE.
+SECTIONS is the parsed document, TARGET the parse of its Target:
+line.  Return nil when the lines name no reviewed content: banner or
+prose lines sit in no diff or excerpt section.  A diff selection that
+deletes nothing cites the right-side rev with new-side line numbers;
+an all-deletion selection cites the left-side rev with old-side line
+numbers.  Excerpt selections cite the file on disk, \"@ worktree\".
+Worktree and staged targets cite \"@ worktree\" for both sides."
+  (let* ((section (seq-find (lambda (s)
+                              (and (>= beg-line (plist-get s :beg))
+                                   (<= beg-line (plist-get s :end))))
+                            sections))
+         (kind (plist-get section :kind)))
+    (when (memq kind '(diff excerpt))
+      (let* ((last-line (min end-line (plist-get section :end)))
+             (new-vals '()) (old-vals '()))
+        (cl-loop for k from beg-line to last-line
+                 do (let ((new (cdr (assq k (plist-get section :new-map))))
+                          (old (cdr (assq k (plist-get section :old-map)))))
+                      (when new (push new new-vals))
+                      (when old (push old old-vals))))
+        (let* ((added new-vals)
+               (all-deleted (and (null added) old-vals))
+               (rev (pcase (plist-get target :kind)
+                      ((or 'worktree 'staged 'files) "worktree")
+                      ('range (if all-deleted
+                                  (plist-get target :left)
+                                (plist-get target :right)))
+                      ('commit (plist-get target :right))))
+               (nums (cond (added new-vals) (all-deleted old-vals))))
+          (when nums
+            (let ((beg-num (apply #'min nums))
+                  (end-num (apply #'max nums)))
+              (if (= beg-num end-num)
+                  (format "%s:%d @ %s" (plist-get section :path)
+                          beg-num rev)
+                (format "%s:%d-%d @ %s" (plist-get section :path)
+                        beg-num end-num rev)))))))))
+
+(defun jg-agent-comments-review--citation (beg end)
+  "Return the citation for the selection between BEG and END.
+Positions in the current review buffer.  The value installed as
+`jg-agent-comments--review-context' in review buffers."
+  (jg-agent-comments-review--citation-for
+   (line-number-at-pos beg)
+   (line-number-at-pos end)
+   jg-agent-comments-review--sections
+   jg-agent-comments-review--target))
+
 (provide 'jg-agent-comments-review)
 ;;; jg-agent-comments-review.el ends here
