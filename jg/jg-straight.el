@@ -59,7 +59,10 @@
   :straight (jg-agent-comments :type nil :local-repo "jg-agent-comments")
   :config
   (add-hook 'agent-shell-mode-hook #'jg-agent-comments-mode)
-  (jg-agent-comments-global-mode 1))
+  (jg-agent-comments-global-mode 1)
+  ;; Review documents open with the review mode: the autoload makes
+  ;; the entry command available before the review module loads.
+  (autoload 'jg-agent-comments-review-open "jg-agent-comments-review" nil t))
 
 (use-package jg-project-sidebar
   ;; The user's own global project-management sidebar, usurping the local
