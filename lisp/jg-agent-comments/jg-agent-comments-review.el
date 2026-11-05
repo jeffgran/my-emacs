@@ -116,7 +116,7 @@ both.  Blank and meta lines map to neither."
                   (setq old (string-to-number (match-string 1 line))
                         new (string-to-number (match-string 3 line))))
                  ((string-match-p
-                   "\\`\\(diff --git\\|index \\|--- \\|+++ \\|\\\\\\)" line))
+                   "\\`\\(diff --git\\|index \\|--- \\|\\+\\+\\+ \\|\\\\\\)" line))
                  ((and new (string-prefix-p "+" line))
                   (setq new-map (cons (cons (1+ i) new) new-map))
                   (setq new (1+ new)))
