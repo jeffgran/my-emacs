@@ -558,6 +558,19 @@ stays visible."
     (goto-char (point-min))
     (re-search-forward "^Prose about the change")
     (should-not (invisible-p (point)))))
+(ert-deftest jg-agent-comments-review-fold-from-header-toggles ()
+  "TAB on a header folds; TAB again on the still-visible header
+unfolds, even though the fold covers only the body below it."
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (jg-agent-comments-review-next-section) ; on the 1/1 title
+    (jg-agent-comments-review-toggle-fold)
+    (jg-agent-comments-review-toggle-fold) ; same position: unfold
+    (goto-char (point-min))
+    (re-search-forward "^Prose about the change")
+    (should-not (invisible-p (point)))))
 
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here

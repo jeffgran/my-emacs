@@ -377,8 +377,9 @@ into `jg-agent-comments--review-context'."
   "Return the 1-based number of the document's last line."
   (save-excursion (goto-char (point-max)) (line-number-at-pos)))
 
-(defun jg-agent-comments-review--fold-section-at (line)
-  "Fold the section containing document LINE.
+(defun jg-agent-comments-review--fold-range (line)
+  "Return (BEG . END) buffer positions of the fold for the section
+containing document LINE.
 A step or uncovered section folds with everything it owns — prose
 and content markers alike — up to the next title.  A diff or excerpt
 section folds just its body, the marker line staying visible."
@@ -406,29 +407,41 @@ section folds just its body, the marker line staying visible."
                   (jg-agent-comments-review--document-end-line)))
             (plist-get section :end))))
     (save-excursion
-      (let ((beg (progn (goto-char (point-min))
-                        (forward-line (1- body-line))
-                        (point)))
-            (end (progn (goto-char (point-min))
-                        (forward-line end-line)
-                        (point))))
-        (when (< beg end)
+      (cons (progn (goto-char (point-min))
+                   (forward-line (1- body-line))
+                   (point))
+            (progn (goto-char (point-min))
+                   (forward-line end-line)
+                   (point))))))
+
+(defun jg-agent-comments-review-toggle-fold ()
+  "Fold or unfold the section under point.
+Point inside an existing fold unfolds it; on a section header, the
+fold matches by its range, so toggling from the still-visible
+header unfolds again."
+  (interactive)
+  (let* ((range (jg-agent-comments-review--fold-range (line-number-at-pos)))
+         (beg (car range))
+         (end (cdr range))
+         (covering (seq-find
+                    (lambda (o)
+                      (overlay-get o 'jg-agent-comments-review-fold))
+                    (overlays-at (point))))
+         (matching (seq-find
+                    (lambda (o)
+                      (and (overlay-get o 'jg-agent-comments-review-fold)
+                           (= (overlay-start o) beg)
+                           (= (overlay-end o) end)))
+                    (overlays-in beg end))))
+    (cond
+     ;; point inside a fold unfolds it, whatever section it came from
+     (covering (delete-overlay covering))
+     (matching (delete-overlay matching))
+     (t (when (< beg end)
           (let ((overlay (make-overlay beg end)))
             (overlay-put overlay 'invisible t)
             (overlay-put overlay 'jg-agent-comments-review-fold t)
             (overlay-put overlay 'evaporate t)))))))
-
-(defun jg-agent-comments-review-toggle-fold ()
-  "Fold or unfold the section under point.
-Point inside an existing fold unfolds it."
-  (interactive)
-  (let ((covering (seq-find
-                   (lambda (o)
-                     (overlay-get o 'jg-agent-comments-review-fold))
-                   (overlays-at (point)))))
-    (if covering
-        (delete-overlay covering)
-      (jg-agent-comments-review--fold-section-at (line-number-at-pos)))))
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.review\\'" . jg-agent-comments-review-mode))
