@@ -346,5 +346,30 @@ index 0000001.." (substring hash 0 7) " 100644
                       'blob)))
       (delete-directory repo t))))
 
+;;; Send
+
+(ert-deftest jg-agent-comments-review-send-queues-and-clears ()
+  (with-temp-buffer ; the review buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (jg-agent-comments--add (point-min) (+ 5 (point-min)) "looks wrong")
+    (let* ((shell (get-buffer-create " *mock shell*"))
+           (queued nil))
+      (cl-letf (((symbol-function 'jg-agent-comments-review--shell-buffer)
+                 (lambda () shell))
+                ((symbol-function 'agent-shell-prompt-queue)
+                 (lambda (prompt) (setq queued prompt))))
+        (jg-agent-comments-review-send)
+        (should (string-match-p "looks wrong" queued))
+        (should (string-match-p "Inline comments replying to" queued))
+        (should (null jg-agent-comments--comments))))))
+
+(ert-deftest jg-agent-comments-review-send-without-comments-says-so ()
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (should (string-match-p "No pending comments"
+                            (jg-agent-comments-review-send)))))
+
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here

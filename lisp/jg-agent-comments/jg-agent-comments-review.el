@@ -378,7 +378,11 @@ in the document with citations back to the reviewed text."
   (define-key jg-agent-comments-review-mode-map (kbd "TAB")
         #'outline-cycle)
   (define-key jg-agent-comments-review-mode-map (kbd "RET")
-        #'jg-agent-comments-review-visit-at-point))
+        #'jg-agent-comments-review-visit-at-point)
+  (define-key jg-agent-comments-review-mode-map "s"
+        #'jg-agent-comments-review-send)
+  (define-key jg-agent-comments-review-mode-map "q"
+        #'jg-agent-comments-review-quit))
 
 ;;;###autoload
 (defun jg-agent-comments-review-open (path)
@@ -499,6 +503,50 @@ content; otherwise open the revision's own blob read-only."
        (jg-agent-comments-review--open-blob rev path)
        (goto-char (point-min))
        (forward-line (1- line))))))
+
+
+;;; Send
+
+(defun jg-agent-comments-review--shell-buffer ()
+  "Return the agent-shell buffer of this review document's project.
+The most recent live shell wins; ask when several are live, and
+error when this project has none."
+  (let ((root (jg-agent-comments--project-root)))
+    (pcase (seq-filter
+            (lambda (buffer)
+              (with-current-buffer buffer
+                (and (derived-mode-p 'agent-shell-mode)
+                     (jg-agent-comments--same-project-p root))))
+            (buffer-list))
+      (`(,shell) shell)
+      (`() (user-error "No agent-shell buffer for this project"))
+      (shells (get-buffer
+               (completing-read "Send review comments to: "
+                                (mapcar #'buffer-name shells)))))))
+
+(defun jg-agent-comments-review-send ()
+  "Send this review's pending comments to the agent, then clear.
+Compose this buffer's comments plus same-project ride-along file
+comments into one prompt, queue it into the project's agent-shell
+buffer, and clear every contributed comment.  Say so and do nothing
+when nothing is pending here or in same-project file buffers."
+  (interactive)
+  (if (and (null jg-agent-comments--comments)
+           (null (jg-agent-comments--collect)))
+      (message "No pending comments")
+    (let ((prompt (jg-agent-comments--augment-prompt nil))
+          (shell (jg-agent-comments-review--shell-buffer)))
+      (with-current-buffer shell
+        (agent-shell-prompt-queue prompt))
+      (jg-agent-comments--clear))))
+
+(defun jg-agent-comments-review-quit ()
+  "Quit the review window, warning when comments are pending."
+  (interactive)
+  (when (and jg-agent-comments--comments
+             (not (y-or-n-p "Pending comments; quit anyway? ")))
+    (user-error "Cancelled"))
+  (quit-window))
 
 (provide 'jg-agent-comments-review)
 ;;; jg-agent-comments-review.el ends here
