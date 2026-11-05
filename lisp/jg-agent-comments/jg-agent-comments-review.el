@@ -111,13 +111,13 @@ both.  Blank and meta lines map to neither."
                         new (string-to-number (match-string 3 line))))
                  ((string-match-p
                    "\\`\\(diff --git\\|index \\|--- \\|+++ \\|\\\\\\)" line))
-                 ((string-prefix-p "+" line)
+                 ((and new (string-prefix-p "+" line))
                   (setq new-map (cons (cons (1+ i) new) new-map))
                   (setq new (1+ new)))
-                 ((string-prefix-p "-" line)
+                 ((and old (string-prefix-p "-" line))
                   (setq old-map (cons (cons (1+ i) old) old-map))
                   (setq old (1+ old)))
-                 ((string-prefix-p " " line)
+                 ((and new old (string-prefix-p " " line))
                   (setq new-map (cons (cons (1+ i) new) new-map))
                   (setq old-map (cons (cons (1+ i) old) old-map))
                   (setq new (1+ new))
@@ -245,6 +245,139 @@ Positions in the current review buffer.  The value installed as
    (line-number-at-pos end)
    jg-agent-comments-review--sections
    jg-agent-comments-review--target))
+
+
+;;; Review mode
+
+(require 'diff-mode)
+(require 'outline)
+
+(defface jg-agent-comments-review-banner
+  '((t :inherit 'font-lock-comment-face))
+  "Face for the ====== banner lines of a review document.")
+
+(defface jg-agent-comments-review-title
+  '((t :inherit 'font-lock-function-name-face :weight bold))
+  "Face for a review document's section title lines.")
+
+(defface jg-agent-comments-review-marker
+  '((t :inherit 'font-lock-preprocessor-face :weight bold))
+  "Face for the --- diff:/excerpt: marker lines of a review document.")
+
+(defun jg-agent-comments-review--diff-line-face ()
+  "Return the diff face for the content line in the match data.
+Only lines inside a diff section reach this; prose dash lines never
+do, because font-lock enters diff regions only through the diff
+marker keyword."
+  (let ((line (buffer-substring (match-beginning 0) (match-end 0))))
+    (cond
+     ((string-prefix-p "diff --git" line) 'diff-file-header)
+     ((string-prefix-p "index " line) 'diff-header)
+     ((string-prefix-p "--- " line) 'diff-header)
+     ((string-prefix-p "+++ " line) 'diff-header)
+     ((string-prefix-p "@@" line) 'diff-hunk-header)
+     ((string-prefix-p "+" line) 'diff-added)
+     ((string-prefix-p "-" line) 'diff-removed)
+     ((string-prefix-p " " line) 'diff-context)
+     (t nil))))
+
+(defun jg-agent-comments-review--next-diff-line (limit)
+  "Font-lock inner matcher over a diff section's content lines.
+Point sits just past the previous content line.  Match the line at
+point when it still belongs to the diff section; return nil at the
+section boundary, leaving point there for the outer keywords."
+  (when (< (point) limit)
+    (let ((bol (line-beginning-position))
+          (eol (line-end-position))
+          (line (buffer-substring (line-beginning-position)
+                                  (line-end-position))))
+      (unless (string-match-p "\\`\\(=\\{2,\\}\\|--- \\)" line)
+        (set-match-data (list bol eol))
+        (goto-char (if (= eol (point-max)) eol (1+ eol)))
+        t))))
+
+(defconst jg-agent-comments-review--keywords
+  '(("^=+$" . 'jg-agent-comments-review-banner)
+    ("^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\).*$"
+     . 'jg-agent-comments-review-title)
+    ("^--- \\(?:diff\\|excerpt\\): .* ---\\'"
+     . 'jg-agent-comments-review-marker)
+    ("^--- diff: .*\\'"
+     (jg-agent-comments-review--next-diff-line
+      (forward-line 1) nil
+      (0 (jg-agent-comments-review--diff-line-face)))))
+  "Font-lock keywords for review documents.
+The last keyword enters a diff section through its marker line and
+faces each content line until the next banner or marker; prose dash
+lines outside a diff section are never visited by it.")
+
+(defun jg-agent-comments-review-next-section ()
+  "Move point to the next section title of the review document."
+  (interactive)
+  (if (re-search-forward
+       "^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\)" nil t)
+      (beginning-of-line)
+    (goto-char (point-max))))
+
+(defun jg-agent-comments-review-previous-section ()
+  "Move point to the previous section title of the review document."
+  (interactive)
+  (if (re-search-backward
+       "^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\)" nil t)
+      (beginning-of-line)
+    (goto-char (point-min))))
+
+(defun jg-agent-comments-review--set-context ()
+  "Parse this review document and set its buffer-local context.
+Cache the sections and the target, and install the citation function
+into `jg-agent-comments--review-context'."
+  (setq jg-agent-comments-review--sections
+        (jg-agent-comments-review--parse (buffer-string)))
+  (save-excursion
+    (goto-char (point-min))
+    (setq jg-agent-comments-review--target
+          (and (re-search-forward "^Target: .*$" nil t)
+               (jg-agent-comments-review--target-parse
+                (buffer-substring (line-beginning-position)
+                                  (line-end-position))))))
+  (setq jg-agent-comments--review-context
+        #'jg-agent-comments-review--citation))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.review\\'" . jg-agent-comments-review-mode))
+
+(defvar jg-agent-comments-review-mode nil
+  "Non-nil in buffers running `jg-agent-comments-review-mode'.")
+
+;;;###autoload
+(define-derived-mode jg-agent-comments-review-mode text-mode "Review"
+  "Major mode for reading an agent's review document.
+A review document interleaves commentary prose with verbatim git
+diff output; this mode styles both, folds sections, navigates
+between them, and lets `jg-agent-comments-mode' comment on anything
+in the document with citations back to the reviewed text."
+  (setq-local jg-agent-comments-review-mode t)
+  (setq font-lock-defaults
+        '((jg-agent-comments-review--keywords) nil t))
+  (setq-local outline-regexp "^\\(=\\{2,\\}\\|--- \\)")
+  (setq-local outline-heading-end-regexp "\n")
+  (jg-agent-comments-review--set-context)
+  (jg-agent-comments-mode 1)
+  (define-key jg-agent-comments-review-mode-map "n"
+        #'jg-agent-comments-review-next-section)
+  (define-key jg-agent-comments-review-mode-map "p"
+        #'jg-agent-comments-review-previous-section)
+  (define-key jg-agent-comments-review-mode-map (kbd "TAB")
+        #'outline-cycle))
+
+;;;###autoload
+(defun jg-agent-comments-review-open (path)
+  "Open the review document at PATH in the review mode.
+The flow the review document is written for: the agent names the
+file, the user opens it."
+  (interactive "fReview document: ")
+  (find-file path))
+
 
 (provide 'jg-agent-comments-review)
 ;;; jg-agent-comments-review.el ends here

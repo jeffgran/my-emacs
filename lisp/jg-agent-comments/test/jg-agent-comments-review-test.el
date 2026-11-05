@@ -151,5 +151,48 @@ containing NEEDLE."
       (should (null (jg-agent-comments-review--citation-for
                      prose prose sections target))))))
 
+(ert-deftest jg-agent-comments-review-mode-enables-comment-mode ()
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (should jg-agent-comments-review-mode)
+    (should jg-agent-comments-mode)
+    (should (functionp jg-agent-comments--review-context))))
+
+(ert-deftest jg-agent-comments-review-mode-caches-sections ()
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (should (= (length jg-agent-comments-review--sections) 3))))
+
+(ert-deftest jg-agent-comments-review-mode-sets-target ()
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (should (eq (plist-get jg-agent-comments-review--target :kind) 'range))
+    (should (equal (plist-get jg-agent-comments-review--target :right) "bbb"))))
+
+(ert-deftest jg-agent-comments-review-navigation-moves-between-titles ()
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (jg-agent-comments-review-next-section)
+    (should (looking-at "^\\([0-9]+/[0-9]+\\|Not covered\\)"))
+    (jg-agent-comments-review-previous-section)
+    (should (= (point) (point-min)))))
+
+(ert-deftest jg-agent-comments-review-citation-context-cites-diff-line ()
+  ;; the buffer's review context, called on a `+' line, returns the
+  ;; citation the engine will record
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (forward-line (1- (jg-agent-comments-review-test--line-of "+added one")))
+    (should (equal (funcall jg-agent-comments--review-context
+                            (point) (line-end-position))
+                   "some dir/file with spaces.el:7 @ bbb"))))
+
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here
