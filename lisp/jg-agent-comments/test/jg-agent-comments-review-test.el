@@ -496,5 +496,68 @@ prose
                                (expand-file-name "fixture.el" repo) 1))))
       (delete-directory repo t))))
 
+(ert-deftest jg-agent-comments-review-next-section-moves-off-title ()
+  "From a section title, n moves to the NEXT title, not itself."
+  (with-temp-buffer
+    (insert "=====\n1/1 — a\n=====\nprose\n=====\n2/2 — b\n=====\nprose\n")
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (jg-agent-comments-review-next-section) ; lands on 1/1
+    (jg-agent-comments-review-next-section) ; must reach 2/2
+    (should (looking-at "^2/2"))))
+
+(ert-deftest jg-agent-comments-review-previous-section-moves-off-title ()
+  "From a section title, p moves to the PREVIOUS title."
+  (with-temp-buffer
+    (insert "=====\n1/1 — a\n=====\nprose\n=====\n2/2 — b\n=====\nprose\n")
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (jg-agent-comments-review-next-section)
+    (jg-agent-comments-review-next-section) ; on 2/2
+    (jg-agent-comments-review-previous-section)
+    (should (looking-at "^1/1"))))
+
+(ert-deftest jg-agent-comments-review-fold-from-header-hides-section ()
+  "TAB on a section header folds the whole section — prose and
+content markers alike — up to the next title, which stays visible."
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (jg-agent-comments-review-next-section) ; on the 1/1 title
+    (jg-agent-comments-review-toggle-fold)
+    (goto-char (point-min))
+    (re-search-forward "^1/1 — The Subject")
+    (should-not (invisible-p (point)))
+    (re-search-forward "^Prose about the change")
+    (should (invisible-p (point)))
+    (re-search-forward "^--- diff: ")
+    (should (invisible-p (point)))
+    ;; the next section's title stays visible
+    (re-search-forward "^--- excerpt: ")
+    (jg-agent-comments-review-toggle-fold) ; unfold from inside
+    (goto-char (point-min))
+    (re-search-forward "^Prose about the change")
+    (should-not (invisible-p (point)))))
+
+(ert-deftest jg-agent-comments-review-fold-from-diff-folds-content-only ()
+  "TAB on diff content folds just that diff section; its marker line
+stays visible."
+  (with-temp-buffer
+    (insert jg-agent-comments-review--sample-artifact)
+    (jg-agent-comments-review-mode)
+    (goto-char (point-min))
+    (re-search-forward "^--- diff: ")
+    (jg-agent-comments-review-toggle-fold)
+    (goto-char (point-min))
+    (re-search-forward "^--- diff: ")
+    (should-not (invisible-p (point)))
+    (re-search-forward "^diff --git")
+    (should (invisible-p (point)))
+    ;; prose in the enclosing step is untouched
+    (goto-char (point-min))
+    (re-search-forward "^Prose about the change")
+    (should-not (invisible-p (point)))))
+
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here

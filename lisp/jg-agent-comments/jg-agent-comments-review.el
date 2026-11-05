@@ -264,7 +264,6 @@ Positions in the current review buffer.  The value installed as
 ;;; Review mode
 
 (require 'diff-mode)
-(require 'outline)
 
 (defface jg-agent-comments-review-banner
   '((t :inherit 'font-lock-comment-face))
@@ -331,19 +330,30 @@ The last keyword enters a diff section through its marker line and
 faces each content line until the next banner or marker; prose dash
 lines outside a diff section are never visited by it.")
 
+(defconst jg-agent-comments-review--title-re
+  "^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\)"
+  "Regular expression matching a section title line.")
+
 (defun jg-agent-comments-review-next-section ()
   "Move point to the next section title of the review document."
   (interactive)
-  (if (re-search-forward
-       "^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\)" nil t)
+  ;; step off a title first: from its beginning, the search would
+  ;; re-match the current line and never move
+  (when (save-excursion (beginning-of-line)
+                        (looking-at jg-agent-comments-review--title-re))
+    (forward-line 1))
+  (if (re-search-forward jg-agent-comments-review--title-re nil t)
       (beginning-of-line)
     (goto-char (point-max))))
 
 (defun jg-agent-comments-review-previous-section ()
   "Move point to the previous section title of the review document."
   (interactive)
-  (if (re-search-backward
-       "^\\(?:[0-9]+/[0-9]+ — \\|Not covered by the walkthrough\\)" nil t)
+  ;; step off a title first, for the same re-match hazard
+  (when (save-excursion (beginning-of-line)
+                        (looking-at jg-agent-comments-review--title-re))
+    (forward-line -1))
+  (if (re-search-backward jg-agent-comments-review--title-re nil t)
       (beginning-of-line)
     (goto-char (point-min))))
 
@@ -363,6 +373,63 @@ into `jg-agent-comments--review-context'."
   (setq jg-agent-comments--review-context
         #'jg-agent-comments-review--citation))
 
+(defun jg-agent-comments-review--document-end-line ()
+  "Return the 1-based number of the document's last line."
+  (save-excursion (goto-char (point-max)) (line-number-at-pos)))
+
+(defun jg-agent-comments-review--fold-section-at (line)
+  "Fold the section containing document LINE.
+A step or uncovered section folds with everything it owns — prose
+and content markers alike — up to the next title.  A diff or excerpt
+section folds just its body, the marker line staying visible."
+  (let* ((sections jg-agent-comments-review--sections)
+         (section (or (seq-find
+                       (lambda (s)
+                         (and (>= line (plist-get s :beg))
+                              (<= line (plist-get s :end))))
+                       sections)
+                      (user-error "Nothing to fold here")))
+         (kind (plist-get section :kind))
+         (whole-step (memq kind '(step uncovered)))
+         (body-line (if whole-step
+                        (+ (plist-get section :beg) 3)
+                      (1+ (plist-get section :beg))))
+         (end-line
+          (if whole-step
+              (let ((next-title
+                     (seq-find
+                      (lambda (s)
+                        (memq (plist-get s :kind) '(step uncovered)))
+                      (cdr (memq section sections)))))
+                (if next-title
+                    (1- (plist-get next-title :beg))
+                  (jg-agent-comments-review--document-end-line)))
+            (plist-get section :end))))
+    (save-excursion
+      (let ((beg (progn (goto-char (point-min))
+                        (forward-line (1- body-line))
+                        (point)))
+            (end (progn (goto-char (point-min))
+                        (forward-line end-line)
+                        (point))))
+        (when (< beg end)
+          (let ((overlay (make-overlay beg end)))
+            (overlay-put overlay 'invisible t)
+            (overlay-put overlay 'jg-agent-comments-review-fold t)
+            (overlay-put overlay 'evaporate t)))))))
+
+(defun jg-agent-comments-review-toggle-fold ()
+  "Fold or unfold the section under point.
+Point inside an existing fold unfolds it."
+  (interactive)
+  (let ((covering (seq-find
+                   (lambda (o)
+                     (overlay-get o 'jg-agent-comments-review-fold))
+                   (overlays-at (point)))))
+    (if covering
+        (delete-overlay covering)
+      (jg-agent-comments-review--fold-section-at (line-number-at-pos)))))
+
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.review\\'" . jg-agent-comments-review-mode))
 
@@ -379,8 +446,6 @@ in the document with citations back to the reviewed text."
   (setq-local jg-agent-comments-review-mode t)
   (setq-local font-lock-defaults
               '((jg-agent-comments-review--keywords) nil t))
-  (setq-local outline-regexp "^\\(=\\{2,\\}\\|--- \\)")
-  (setq-local outline-heading-end-regexp "\n")
   (jg-agent-comments-review--set-context)
   (jg-agent-comments-mode 1)
   (define-key jg-agent-comments-review-mode-map "n"
@@ -388,7 +453,7 @@ in the document with citations back to the reviewed text."
   (define-key jg-agent-comments-review-mode-map "p"
         #'jg-agent-comments-review-previous-section)
   (define-key jg-agent-comments-review-mode-map (kbd "TAB")
-        #'outline-cycle)
+        #'jg-agent-comments-review-toggle-fold)
   (define-key jg-agent-comments-review-mode-map (kbd "RET")
         #'jg-agent-comments-review-visit-at-point)
   (define-key jg-agent-comments-review-mode-map "s"
