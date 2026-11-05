@@ -132,7 +132,8 @@ sections.  :beg and :end are 1-based document line numbers spanning
 the section; :title names step and uncovered sections; :path names
 diff and excerpt sections; :new-map and :old-map map document lines
 to file lines (diff sections per hunk, excerpt sections sequentially
-against the excerpt's first line)."
+against the excerpt's first line).  Diff sections carry :index, the
+verbatim index line naming both sides' blob hashes."
   (let* ((lines (split-string string "\n"))
          (starts '())
          (i 0))
@@ -165,14 +166,21 @@ against the excerpt's first line)."
                                  :path (plist-get start :path))))
                       (pcase kind
                         (`diff
-                         (let ((maps (jg-agent-comments-review--line-maps
-                                      lines
-                                      (plist-get start :body-start)
-                                      (1- end))))
+                         (let* ((maps (jg-agent-comments-review--line-maps
+                                       lines
+                                       (plist-get start :body-start)
+                                       (1- end)))
+                                (index (catch 'index
+                                         (cl-loop for k from (plist-get start :body-start)
+                                                  to (1- end)
+                                                  for l = (nth k lines)
+                                                  when (string-prefix-p "index " l)
+                                                  do (throw 'index l)))))
                            (setq section
                                  (append section
                                          (list :new-map (car maps)
-                                               :old-map (cdr maps))))))
+                                               :old-map (cdr maps)
+                                               :index index)))))
                         (`excerpt
                          (let ((map '())
                                (file (plist-get start :excerpt-beg)))
@@ -368,7 +376,9 @@ in the document with citations back to the reviewed text."
   (define-key jg-agent-comments-review-mode-map "p"
         #'jg-agent-comments-review-previous-section)
   (define-key jg-agent-comments-review-mode-map (kbd "TAB")
-        #'outline-cycle))
+        #'outline-cycle)
+  (define-key jg-agent-comments-review-mode-map (kbd "RET")
+        #'jg-agent-comments-review-visit-at-point))
 
 ;;;###autoload
 (defun jg-agent-comments-review-open (path)
@@ -378,6 +388,117 @@ file, the user opens it."
   (interactive "fReview document: ")
   (find-file path))
 
+
+
+;;; RET: visit the reviewed content
+
+(defun jg-agent-comments-review--index-hashes (section)
+  "Return (LEFT . RIGHT) blob hash prefixes from SECTION's :index.
+Nil when the section carries no index line."
+  (when-let* ((index (plist-get section :index)))
+    (string-match
+     "\\`index \\([0-9a-f]+\\)\\.\\.\\([0-9a-f]+\\)" index)
+    (cons (match-string 1 index) (match-string 2 index))))
+
+(defun jg-agent-comments-review--hash-object (path)
+  "Return the git hash of the file at PATH, or nil when missing."
+  (with-temp-buffer
+    (and (zerop (call-process "git" nil t nil "hash-object" "--" path))
+         (string-trim (buffer-string)))))
+
+(defun jg-agent-comments-review--view-target (section file-line)
+  "Decide where to view SECTION's content at FILE-LINE.
+Return (worktree PATH LINE) when the working tree file holds the
+reviewed content, (blob REV PATH LINE) when the revision's own
+content must be shown instead: deleted files, drifted files, and
+every target whose content is not the working tree.  PATH is
+absolute, resolved against the default directory."
+  (let* ((path (plist-get section :path))
+         (target jg-agent-comments-review--target)
+         (kind (plist-get target :kind))
+         (full (expand-file-name path)))
+    (if (memq kind '(worktree staged))
+        (list 'worktree full file-line)
+      (let* ((hashes (jg-agent-comments-review--index-hashes section))
+             (right (cdr hashes))
+             (live (and right
+                        (file-exists-p full)
+                        (string-prefix-p right
+                                         (jg-agent-comments-review--hash-object
+                                          full)))))
+        (if live
+            (list 'worktree full file-line)
+          (list 'blob
+                (if (and right (string-prefix-p "0000000" right))
+                    (plist-get target :left)
+                  (plist-get target :right))
+                full file-line))))))
+
+(defun jg-agent-comments-review--open-blob (rev path)
+  "Open REV's PATH in a read-only review blob buffer.
+The buffer visits the revision's own content — deleted files,
+drifted files — and its review context cites PATH's line numbers at
+REV, so comments made there cite the blob."
+  (let ((buffer (get-buffer-create
+                 (format "*review %s:%s*" rev path))))
+    (with-current-buffer buffer
+      (let ((inhibit-read-only t))
+        (erase-buffer)
+        (insert
+         (shell-command-to-string
+          (concat "git show "
+                  (shell-quote-argument rev)
+                  ":"
+                  (shell-quote-argument path)))))
+      (jg-agent-comments-mode 1)
+      (setq-local jg-agent-comments--review-context
+                  (lambda (beg end)
+                    (let ((b (line-number-at-pos beg))
+                          (e (line-number-at-pos end)))
+                      (if (= b e)
+                          (format "%s:%d @ %s" path b rev)
+                        (format "%s:%d-%d @ %s" path b e rev)))))
+      (read-only-mode 1))
+    (pop-to-buffer buffer)
+    buffer))
+
+(defun jg-agent-comments-review--file-line-at-point ()
+  "Return (SECTION . FILE-LINE) for the content under point.
+Signal a user error when point names no reviewed content: banner and
+prose lines, and diff header lines, have no file line to visit."
+  (let* ((doc-line (line-number-at-pos))
+         (section (seq-find
+                   (lambda (s)
+                     (and (memq (plist-get s :kind) '(diff excerpt))
+                          (>= doc-line (plist-get s :beg))
+                          (<= doc-line (plist-get s :end))))
+                   jg-agent-comments-review--sections)))
+    (unless section
+      (user-error "Nothing to view here"))
+    (let ((file-line (or (cdr (assq doc-line
+                                    (plist-get section :new-map)))
+                         (cdr (assq doc-line
+                                    (plist-get section :old-map))))))
+      (unless file-line
+        (user-error "Nothing to view here"))
+      (cons section file-line))))
+
+(defun jg-agent-comments-review-visit-at-point ()
+  "View the reviewed content under point.
+Open the working tree file at that line when it holds the reviewed
+content; otherwise open the revision's own blob read-only."
+  (interactive)
+  (pcase-let ((`(,section . ,file-line)
+               (jg-agent-comments-review--file-line-at-point)))
+    (pcase (jg-agent-comments-review--view-target section file-line)
+      (`(worktree ,path ,line)
+       (pop-to-buffer (find-file-noselect path))
+       (goto-char (point-min))
+       (forward-line (1- line)))
+      (`(blob ,rev ,path ,line)
+       (jg-agent-comments-review--open-blob rev path)
+       (goto-char (point-min))
+       (forward-line (1- line))))))
 
 (provide 'jg-agent-comments-review)
 ;;; jg-agent-comments-review.el ends here

@@ -194,5 +194,157 @@ containing NEEDLE."
                             (point) (line-end-position))
                    "some dir/file with spaces.el:7 @ bbb"))))
 
+;;; RET: visit working file or blob
+
+(defun jg-agent-comments-review-test--git (repo &rest args)
+  "Run git with ARGS in REPO, return stdout, error on failure."
+  (let ((default-directory repo))
+    (shell-command-to-string
+     (concat "git " (mapconcat #'identity args " ")))))
+
+(defun jg-agent-comments-review-test--make-repo ()
+  "Create a temp git repo with a fixture.el and a deleted gone.el.
+Return the repo directory.  fixture.el has two committed revisions;
+gone.el existed in the first commit and the second commit deletes it.
+Repos live under the repo's git-ignored var/ directory: git refuses
+sandboxed writes outside it."
+  (let* ((root (or (locate-dominating-file
+                    (or load-file-name default-directory) ".git")
+                   default-directory))
+         (scratch (file-name-as-directory
+                   (expand-file-name "var/tmp/jg-agent-comments-review-test"
+                                     root)))
+         (dir (progn (make-directory scratch t)
+                     (file-name-as-directory
+                      (make-temp-file (expand-file-name "repo-" scratch)
+                                      t))))
+         (default-directory dir))
+    (call-process "git" nil nil nil "init")
+    (call-process "git" nil nil nil "config" "user.email" "t@t")
+    (call-process "git" nil nil nil "config" "user.name" "t")
+    (with-temp-file (expand-file-name "fixture.el" dir)
+      (insert "(defun fixture ())\n"))
+    (with-temp-file (expand-file-name "gone.el" dir)
+      (insert "(defun gone ())\n"))
+    (call-process "git" nil nil nil "add" "-A")
+    (call-process "git" nil nil nil "commit" "-m" "first")
+    (with-temp-file (expand-file-name "fixture.el" dir)
+      (insert "(defun fixture ())\n\n(defun fixture-two ())\n"))
+    (call-process "git" nil nil nil "rm" "--cached" "gone.el")
+    (call-process "git" nil nil nil "add" "-A")
+    (call-process "git" nil nil nil "commit" "-m" "second")
+    dir))
+
+(ert-deftest jg-agent-comments-review-visit-unchanged-file-uses-worktree ()
+  ;; fixture.el is unchanged in the worktree at the diff's right rev:
+  ;; a section whose index line's right blob matches the file opens
+  ;; the worktree file
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (artifact (concat "Target: git diff " head ".." head "\n"))
+         (fixture-path (expand-file-name "fixture.el" repo))
+         (hash (let ((default-directory repo))
+                 (string-trim
+                  (shell-command-to-string "git hash-object fixture.el"))))
+         (doc (concat artifact "
+==============================================================
+1/1 — t
+==============================================================
+prose
+
+--- diff: fixture.el ---
+diff --git a/fixture.el b/fixture.el
+index 0000001.." (substring hash 0 7) " 100644
+--- a/fixture.el
++++ b/fixture.el
+@@ -1,1 +1,3 @@
+ (defun fixture ())
++added
++
+"))
+         (sections (jg-agent-comments-review--parse doc)))
+    (unwind-protect
+        (let ((default-directory repo)
+              (jg-agent-comments-review--target
+               (list :kind 'range :left head :right head :paths nil)))
+          (should (equal (jg-agent-comments-review--view-target
+                          (nth 1 sections) 1)
+                         (list 'worktree fixture-path 1))))
+      (delete-directory repo t))))
+
+(ert-deftest jg-agent-comments-review-visit-deleted-file-opens-blob ()
+  ;; gone.el is missing from the worktree: its blob view it is
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (first (string-trim
+                 (jg-agent-comments-review-test--git repo "rev-parse" "HEAD~1")))
+         (blob (string-trim
+                (jg-agent-comments-review-test--git
+                 repo "rev-parse" (concat head ":gone.el"))))
+         (doc (concat "Target: git diff " first ".." head "\n"
+"
+==============================================================
+1/1 — t
+==============================================================
+prose
+
+--- diff: gone.el ---
+diff --git a/gone.el b/gone.el
+deleted file mode 100644
+index " (substring blob 0 7) "..0000000
+--- a/gone.el
++++ /dev/null
+@@ -1,1 +0,0 @@
+-(defun gone ())
+"))
+         (sections (jg-agent-comments-review--parse doc)))
+    (unwind-protect
+        (let ((default-directory repo)
+              (jg-agent-comments-review--target
+               (list :kind 'range :left first :right head :paths nil)))
+          (should (eq (car (jg-agent-comments-review--view-target
+                            (nth 1 sections) 1))
+                      'blob)))
+      (delete-directory repo t))))
+
+(ert-deftest jg-agent-comments-review-visit-drifted-file-opens-blob ()
+  ;; fixture.el drifts in the worktree after the diff was taken: blob
+  (let* ((repo (jg-agent-comments-review-test--make-repo))
+         (head (string-trim
+                (jg-agent-comments-review-test--git repo "rev-parse" "HEAD")))
+         (hash (string-trim
+                (shell-command-to-string "git hash-object fixture.el")))
+         (doc (concat "Target: git diff " head ".." head "\n"
+"
+==============================================================
+1/1 — t
+==============================================================
+prose
+
+--- diff: fixture.el ---
+diff --git a/fixture.el b/fixture.el
+index 0000001.." (substring hash 0 7) " 100644
+--- a/fixture.el
++++ b/fixture.el
+@@ -1,1 +1,3 @@
+ (defun fixture ())
++added
++
+"))
+         (sections (jg-agent-comments-review--parse doc)))
+    (unwind-protect
+        (let ((default-directory repo)
+              (jg-agent-comments-review--target
+               (list :kind 'range :left head :right head :paths nil)))
+          ;; drift: append a line to the worktree file
+          (with-temp-file (expand-file-name "fixture.el" repo)
+            (insert "(defun fixture ())\n\n(defun fixture-two ())\n\ndrifted\n"))
+          (should (eq (car (jg-agent-comments-review--view-target
+                            (nth 1 sections) 1))
+                      'blob)))
+      (delete-directory repo t))))
+
 (provide 'jg-agent-comments-review-test)
 ;;; jg-agent-comments-review-test.el ends here
