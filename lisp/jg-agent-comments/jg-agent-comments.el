@@ -59,14 +59,19 @@ as the comment body.  In a buffer visiting a file, record the anchor
 file relative to the project root as :file and the anchor's first and
 last line numbers as :line-beg and :line-end.  An end at the start of
 a line counts as the end of the previous line.  Chat buffers record
-nil for all three.  When `jg-agent-comments--review-context' returns a
-citation for the selection, record it as :citation and leave :file,
-:line-beg and :line-end nil: the comment anchors by its citation and
-travels as a chat comment.  Render the record's overlay.  Push the
+nil for all three.  In a buffer with `jg-agent-comments--review-context'
+set, leave :file, :line-beg and :line-end nil: a selection naming
+reviewed text records it as :citation and travels as a chat comment;
+a selection naming no reviewed text (prose, banners) also travels as
+a plain chat comment.  Render the record's overlay.  Push the
 record onto `jg-agent-comments--comments'.  Return the record, a plist
 with the shape (:snippet :text :file :line-beg :line-end :citation
 :beg :end :overlay :highlight-overlay)."
-  (let* ((in-file buffer-file-name)
+  ;; A review buffer anchors every comment by its citation, or as a
+  ;; plain chat comment when the selection names no reviewed text:
+  ;; never by the review document's own file and lines.
+  (let* ((in-file (and (null jg-agent-comments--review-context)
+                       buffer-file-name))
          (citation (when jg-agent-comments--review-context
                      (funcall jg-agent-comments--review-context beg end)))
          (line-end-pos (if (and in-file

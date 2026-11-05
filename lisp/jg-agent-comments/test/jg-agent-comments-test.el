@@ -1306,6 +1306,19 @@ prompt."
     (let ((augmented (jg-agent-comments--augment-prompt nil)))
       (should (string-match-p "Inline comments replying to" augmented))
       (should (string-match-p "lisp/foo.el:3-4 @ abc1234" augmented)))))
+(ert-deftest jg-agent-comments-review-context-prose-travels-as-chat ()
+  "In a review buffer, a selection naming no reviewed text travels
+as a plain chat comment: no citation, no file anchor."
+  (with-temp-buffer
+    (let ((buffer-file-name "/tmp/not-a-real-project/review-doc.review"))
+      (setq-local jg-agent-comments--review-context
+                  (lambda (_beg _end) nil))
+      (insert "prose line")
+      (jg-agent-comments--add 1 (point-max) "question")
+      (let ((record (car jg-agent-comments--comments)))
+        (should (null (plist-get record :citation)))
+        (should (null (plist-get record :file)))
+        (should (null (plist-get record :line-beg)))))))
 
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here
