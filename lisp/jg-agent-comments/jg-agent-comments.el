@@ -40,6 +40,16 @@ anchor's first and last line numbers (all nil in chat buffers),
 and :highlight-overlay is the overlay tinting a partial-line selection
 (nil when the selection covers whole lines).")
 
+(defvar-local jg-agent-comments--review-context nil
+  "Buffer-local citation source for comments made in a review buffer.
+Nil everywhere else, so records anchor as usual.  When non-nil, a
+function of the selection's BEG and END buffer positions returning a
+citation string naming the reviewed text the way the agent needs it —
+path, line range, and revision — or nil when the selection names no
+reviewed text.  A non-nil result anchors the comment by its citation:
+the record's :file, :line-beg and :line-end stay nil and the record
+travels as a chat comment.")
+
 (defun jg-agent-comments--add (beg end text &optional snippet)
   "Record a comment about buffer text between BEG and END.
 Capture the covered text (including invisible parts, without text
@@ -49,12 +59,18 @@ as the comment body.  In a buffer visiting a file, record the anchor
 file relative to the project root as :file and the anchor's first and
 last line numbers as :line-beg and :line-end.  An end at the start of
 a line counts as the end of the previous line.  Chat buffers record
-nil for all three.  Render the record's overlay.  Push the record onto
-`jg-agent-comments--comments'.  Return the record, a plist with the
-shape (:snippet :text :file :line-beg :line-end :beg :end :overlay
-:highlight-overlay)."
+nil for all three.  When `jg-agent-comments--review-context' returns a
+citation for the selection, record it as :citation and leave :file,
+:line-beg and :line-end nil: the comment anchors by its citation and
+travels as a chat comment.  Render the record's overlay.  Push the
+record onto `jg-agent-comments--comments'.  Return the record, a plist
+with the shape (:snippet :text :file :line-beg :line-end :citation
+:beg :end :overlay :highlight-overlay)."
   (let* ((in-file buffer-file-name)
+         (citation (when jg-agent-comments--review-context
+                     (funcall jg-agent-comments--review-context beg end)))
          (line-end-pos (if (and in-file
+                                (null citation)
                                 (> end beg)
                                 (save-excursion (goto-char end) (bolp)))
                            (1- end)
@@ -63,12 +79,14 @@ shape (:snippet :text :file :line-beg :line-end :beg :end :overlay
                                     (substring-no-properties
                                      (filter-buffer-substring beg end)))
                        :text text
-                       :file (when in-file
+                       :file (when (and in-file (null citation))
                                (file-relative-name
                                 in-file (jg-agent-comments--project-root)))
-                       :line-beg (when in-file (line-number-at-pos beg))
-                       :line-end (when in-file
+                       :line-beg (when (and in-file (null citation))
+                                   (line-number-at-pos beg))
+                       :line-end (when (and in-file (null citation))
                                    (line-number-at-pos line-end-pos))
+                       :citation citation
                        :beg beg
                        :end end
                        :overlay nil)))
@@ -430,14 +448,17 @@ its home buffer, in reverse buffer-list order."
 
 (defun jg-agent-comments--entry-string (record)
   "Return RECORD rendered as one entry of the composed prompt.
+A record with a :citation opens its entry with the citation line.
 The snippet's lines are each prefixed with \"> \" and the comment's
 lines with two spaces; a single trailing newline on the snippet is
 dropped."
-  (let ((snippet (plist-get record :snippet))
+  (let ((citation (plist-get record :citation))
+        (snippet (plist-get record :snippet))
         (text (plist-get record :text)))
     (when (string-suffix-p "\n" snippet)
       (setq snippet (substring snippet 0 -1)))
-    (concat (mapconcat (lambda (line) (concat "> " line))
+    (concat (and citation (concat citation "\n"))
+            (mapconcat (lambda (line) (concat "> " line))
                        (split-string snippet "\n")
                        "\n")
             "\n"

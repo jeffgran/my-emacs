@@ -1269,5 +1269,43 @@ prompt."
                (lambda (&rest _) (error "prompted"))))
       (kill-buffer (current-buffer)))))
 
+;;; Review citations
+
+(ert-deftest jg-agent-comments-add-records-citation-from-review-context ()
+  (with-temp-buffer
+    (setq-local jg-agent-comments--review-context
+                (lambda (_beg _end) "lisp/foo.el:3-4 @ abc1234"))
+    (insert "reviewed text")
+    (jg-agent-comments--add 1 (point-max) "why?")
+    (should (equal (plist-get (car jg-agent-comments--comments) :citation)
+                   "lisp/foo.el:3-4 @ abc1234"))))
+
+(ert-deftest jg-agent-comments-review-context-suppresses-file-anchor ()
+  (with-temp-buffer
+    (let ((buffer-file-name "/tmp/not-a-real-project/review-doc.review"))
+      (setq-local jg-agent-comments--review-context
+                  (lambda (_beg _end) "lisp/foo.el:3-4 @ abc1234"))
+      (insert "reviewed text")
+      (jg-agent-comments--add 1 (point-max) "why?")
+      (let ((record (car jg-agent-comments--comments)))
+        (should (null (plist-get record :file)))
+        (should (null (plist-get record :line-beg)))))))
+
+(ert-deftest jg-agent-comments-entry-string-with-citation ()
+  (should (equal (jg-agent-comments--entry-string
+                  (list :citation "lisp/foo.el:3-4 @ abc1234"
+                        :snippet "line one\nline two"
+                        :text "note"))
+                 "lisp/foo.el:3-4 @ abc1234\n> line one\n> line two\n  note")))
+
+(ert-deftest jg-agent-comments-compose-places-cited-entry-in-chat-section ()
+  (with-temp-buffer
+    (setq-local jg-agent-comments--comments
+                (list (list :citation "lisp/foo.el:3-4 @ abc1234"
+                            :snippet "sel" :text "note" :beg 1 :end 4)))
+    (let ((augmented (jg-agent-comments--augment-prompt nil)))
+      (should (string-match-p "Inline comments replying to" augmented))
+      (should (string-match-p "lisp/foo.el:3-4 @ abc1234" augmented)))))
+
 (provide 'jg-agent-comments-test)
 ;;; jg-agent-comments-test.el ends here
