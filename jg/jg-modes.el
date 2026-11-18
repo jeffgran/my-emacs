@@ -85,7 +85,7 @@
 ;;(setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header magit-insert-tags-header))
 (setq magit-status-headers-hook '(magit-insert-error-header magit-insert-diff-filter-header magit-insert-head-branch-header magit-insert-upstream-branch-header magit-insert-push-branch-header)) ; remove tags header, it's slow and I don't care about it
 
-(setq auth-sources '("~/.authinfo"))
+(setq auth-sources '("~/.netrc"))
 
 (setq forge-post-mode-hook nil) ;; turns on flyspell by default which has annoying keybindings that conflict with jg-*-mode
 
