@@ -45,8 +45,60 @@
   :bind (
          :map agent-shell-mode-map
          ("C-RET" . newline)
+         ("M-a /" . jg/agent-shell-pick-skill)
          )
-  )
+  :init
+  (defcustom jg/opencode-skill-dirs
+    '("~/.agents/skills" "~/.config/opencode/skills")
+    "Directories scanned for skills (one SKILL.md per subdirectory)."
+    :type '(repeat directory))
+
+  (defun jg/skill--meta (dir)
+    "Return (ID NAME DESCRIPTION) for the skill in directory DIR, or nil."
+    (let ((file (expand-file-name "SKILL.md" dir)))
+      (when (and (file-directory-p dir) (file-readable-p file))
+        (with-temp-buffer
+          (insert-file-contents file nil 0 4096)
+          (let* ((text (buffer-string))
+                 (id (file-name-nondirectory (directory-file-name dir)))
+                 (name (and (string-match "^name:[ \t]*\\(.*?\\)[ \t]*$" text)
+                            (match-string 1 text)))
+                 (desc (and (string-match "^description:[ \t]*\\(.*?\\)[ \t]*$" text)
+                            (match-string 1 text)))
+                 (short (if (and desc (> (length desc) 110))
+                            (concat (substring desc 0 107) "...")
+                          (or desc ""))))
+            (list id (or name id) (or short "")))))))
+
+    (defun jg/opencode-skill-entries ()
+      "Return an alist of (LABEL . ID) for every installed skill."
+      (let ((seen (make-hash-table :test #'equal))
+            (result '()))
+        (dolist (dir (seq-filter #'file-directory-p
+                                 (mapcar #'expand-file-name jg/opencode-skill-dirs)))
+          (dolist (sub (directory-files dir t "\\`[^.]" 'nosort))
+            (when (file-directory-p sub)
+              (pcase-let* ((`(,id ,name ,desc) (jg/skill--meta sub)))
+                (unless (gethash id seen)
+                  (puthash id t seen)
+                  (push (cons (format "%-28s %s" name desc) id) result))))))
+        (nreverse result)))
+
+    (defun jg/agent-shell-pick-skill ()
+      "Browse installed skills and insert an invocation into the agent prompt."
+      (interactive)
+      (let* ((entries (jg/opencode-skill-entries))
+             (label (completing-read (format "Skill (%d installed): " (length entries))
+                                     entries nil t))
+             (id (cdr (assoc label entries)))
+             (text (format "use the %s skill: " id)))
+        (cond
+         ((and (fboundp 'agent-shell--insert-to-shell-buffer) (agent-shell-buffers))
+          (agent-shell--insert-to-shell-buffer :text text))
+         (t
+          (kill-new text)
+          (message "No agent-shell buffer open; copied to kill-ring: %s" text)))))
+    )
 
 (use-package jg-agent-comments
   ;; Inline comments for agent-shell buffers.  Source of truth lives in
