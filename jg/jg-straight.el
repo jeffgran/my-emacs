@@ -543,7 +543,114 @@
   :straight (:host github :repo "dnouri/markdown-table-wrap"
                    :files ("markdown-table-wrap.el" "markdown-table-wrap-pretty.el"))
   :custom
-  (markdown-table-wrap-pretty-default-on-major-modes '(markdown-mode poly-markdown-mode)))
+  (markdown-table-wrap-pretty-default-on-major-modes '(markdown-mode poly-markdown-mode))
+  :config
+  ;; The package measures column widths in cells of the frame's monospace
+  ;; font, but draws its overlays with the `default' face, which
+  ;; `variable-pitch-mode'/`mixed-pitch-mode' remap to a proportional font
+  ;; in reading buffers.  Redraw overlays with `fixed-pitch' so the drawn
+  ;; text matches the measured width.
+  (defun jg/markdown-table-wrap-pretty-fixed-pitch (orig-fn beg end &optional width)
+    "Render pretty-table overlays with `fixed-pitch' instead of `default'.
+Column widths are measured in cells of the frame's monospace font;
+`fixed-pitch' keeps the drawn text in that font even when
+`variable-pitch-mode' or `mixed-pitch-mode' remaps `default'."
+    (let ((pretty (funcall orig-fn beg end width)))
+      (when pretty
+        (dolist (ov (overlays-in beg end))
+          (when (overlay-get ov 'markdown-table-wrap-pretty-display)
+            (overlay-put ov 'face 'fixed-pitch))))
+      pretty))
+  (advice-add 'markdown-table-wrap-pretty--decorate-table :around
+              #'jg/markdown-table-wrap-pretty-fixed-pitch)
+  ;; Replacing display overlays give no cursor entry into pretty tables.
+  ;; This mode undecorates the table at point so its raw text is
+  ;; selectable, and re-decorates it when point leaves.
+  (defvar-local jg/mtwp-revealed nil
+    "Marker pairs (BEG . END) of tables currently revealed.")
+
+  (defun jg/mtwp-reveal--overlaps-p (entry beg end)
+    "Return non-nil when marker pair ENTRY overlaps BEG..END."
+    (let ((mb (marker-position (car entry)))
+          (me (marker-position (cdr entry))))
+      (and mb me (< mb end) (< beg me))))
+
+  (defun jg/mtwp-reveal--record (beg end)
+    "Record table BEG..END unless `jg/mtwp-revealed' already holds it."
+    (unless (cl-some (lambda (entry) (jg/mtwp-reveal--overlaps-p entry beg end))
+                     jg/mtwp-revealed)
+      (push (cons (copy-marker beg) (copy-marker end)) jg/mtwp-revealed)))
+
+  (defun jg/mtwp-reveal--redecorate (beg end)
+    "Re-render the table around BEG..END when its text still parses."
+    (when (and beg end (> end beg) markdown-table-wrap-pretty-mode)
+      (let ((bounds (markdown-table-wrap-pretty--table-bounds beg)))
+        (when (and bounds
+                   (not (markdown-table-wrap-pretty--table-pretty-p
+                         (car bounds) (cdr bounds))))
+          (condition-case nil
+              (markdown-table-wrap-pretty--decorate-table
+               (car bounds) (cdr bounds))
+            (error nil))))))
+
+  (defun jg/mtwp-reveal--sweep (here)
+    "Re-decorate recorded tables that no longer contain point.
+HERE is the (BEG . END) of the table containing point, or nil."
+    (let ((keep nil))
+      (dolist (entry jg/mtwp-revealed)
+        (let ((beg (marker-position (car entry)))
+              (end (marker-position (cdr entry))))
+          (if (or (and beg end (> end beg)
+                       (>= (point) beg) (< (point) end))
+                  (and here (jg/mtwp-reveal--overlaps-p
+                             entry (car here) (cdr here))))
+              (push entry keep)
+            (jg/mtwp-reveal--redecorate beg end))))
+      (setq jg/mtwp-revealed (nreverse keep))))
+
+  (defun jg/mtwp-reveal--restore-all ()
+    "Re-decorate every revealed table and clear `jg/mtwp-revealed'."
+    (dolist (entry jg/mtwp-revealed)
+      (jg/mtwp-reveal--redecorate (marker-position (car entry))
+                                  (marker-position (cdr entry))))
+    (setq jg/mtwp-revealed nil))
+
+  (defun jg/mtwp-reveal--post-command ()
+    "Reveal the table at point; re-decorate tables point has left."
+    (when (and jg/markdown-table-wrap-pretty-reveal-mode
+               (or markdown-table-wrap-pretty-mode jg/mtwp-revealed))
+      (let ((bounds (markdown-table-wrap-pretty--table-bounds)))
+        (when (and bounds
+                   (markdown-table-wrap-pretty--table-pretty-p
+                    (car bounds) (cdr bounds)))
+          (markdown-table-wrap-pretty--undecorate-table
+           (car bounds) (cdr bounds))
+          (jg/mtwp-reveal--record (car bounds) (cdr bounds)))
+        (when jg/mtwp-revealed
+          (jg/mtwp-reveal--sweep bounds)))))
+
+  (define-minor-mode jg/markdown-table-wrap-pretty-reveal-mode
+    "Show the table at point as raw text.  Restore the pretty view when point leaves."
+    :lighter nil
+    (if jg/markdown-table-wrap-pretty-reveal-mode
+        (add-hook 'post-command-hook #'jg/mtwp-reveal--post-command nil t)
+      (remove-hook 'post-command-hook #'jg/mtwp-reveal--post-command t)
+      (jg/mtwp-reveal--restore-all)))
+
+  ;; Turn reveal mode on wherever pretty mode turns on, including
+  ;; `jg-visual-reading-mode', which calls the pretty mode directly.
+  (defun jg/markdown-table-wrap-pretty-reveal-on-pretty ()
+    "Enable reveal mode when pretty mode is on."
+    (when markdown-table-wrap-pretty-mode
+      (jg/markdown-table-wrap-pretty-reveal-mode 1)))
+  (add-hook 'markdown-table-wrap-pretty-mode-hook
+            #'jg/markdown-table-wrap-pretty-reveal-on-pretty)
+  ;; Hot reload: buffers already running pretty mode get reveal mode
+  ;; without a manual toggle.
+  (dolist (buffer (buffer-list))
+    (with-current-buffer buffer
+      (when (bound-and-true-p markdown-table-wrap-pretty-mode)
+        (jg/markdown-table-wrap-pretty-reveal-mode 1)))))
 
 (straight-use-package 'maxframe)
 (use-package mermaid-mode
@@ -762,6 +869,7 @@
     ;; no line numbers, a little breathing room between lines
     (variable-pitch-mode 1)
     (markdown-table-wrap-pretty-mode 1)
+    (jg/markdown-table-wrap-pretty-reveal-mode 1)
     ;;(display-line-numbers-mode -1)
     (setq-local line-spacing 0.1)
     (mixed-pitch-mode 1))
